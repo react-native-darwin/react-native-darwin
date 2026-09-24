@@ -71,7 +71,7 @@
       continue;
     }
 
-    UIView *box = [[UIView alloc] initWithFrame:rect];
+    UIView *box = [[RCTPlatformView alloc] initWithFrame:rect];  // [macOS] needs a flipped, layer-backed view
     box.backgroundColor = [UIColor clearColor];
 
     box.layer.borderWidth = 2.0f;
@@ -100,7 +100,7 @@
   }
 
   for (NSDictionary *rectangle in rectangles) {
-    UIView *view = [[UIView alloc] initWithFrame:[RCTConvert CGRect:rectangle]];
+    UIView *view = [[RCTPlatformView alloc] initWithFrame:[RCTConvert CGRect:rectangle]];  // [macOS] needs a flipped, layer-backed view
     view.backgroundColor = [UIColor colorWithRed:200 / 255.0 green:230 / 255.0 blue:255 / 255.0 alpha:0.8];
 
     [self addSubview:view];

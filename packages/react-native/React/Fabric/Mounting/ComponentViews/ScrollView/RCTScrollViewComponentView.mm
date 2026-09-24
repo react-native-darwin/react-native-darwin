@@ -150,7 +150,7 @@ RCTSendScrollEventForNativeAnimations_DEPRECATED(UIScrollView *scrollView, NSInt
     _isAccessibilityAPIUsed = NO;
     [self addSubview:_scrollView];
 
-    _containerView = [[UIView alloc] initWithFrame:CGRectZero];
+    _containerView = [[RCTPlatformView alloc] initWithFrame:CGRectZero];  // [macOS] needs a flipped, layer-backed view
     [_scrollView addSubview:_containerView];
 
     [self.scrollViewDelegateSplitter addDelegate:self];

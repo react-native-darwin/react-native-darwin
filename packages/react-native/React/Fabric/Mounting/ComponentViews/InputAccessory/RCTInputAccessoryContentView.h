@@ -7,6 +7,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface RCTInputAccessoryContentView : UIView
+@interface RCTInputAccessoryContentView : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 @end

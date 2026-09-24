@@ -1,0 +1,45 @@
+# Sources excluded from the macOS build.
+#
+# One list, read by both macos/scripts/syntax-check.sh and the macOS podspec, so
+# the thing we measure and the thing we build can never drift apart.
+#
+# Everything here is rung 2 in MACOS-FORK.md section 4.1: rather than port a
+# module, leave it out. Each line is a path prefix, relative to
+# packages/react-native/. Blank lines and # comments are ignored.
+#
+# Two reasons appear below, and they are different:
+#
+#   no macOS concept   the feature does not exist on the platform
+#   deferred           it exists and we intend to port it, just not yet
+
+# --- no macOS concept ---------------------------------------------------------
+
+# Remote/local notifications route through UserNotifications and an app
+# delegate shape macOS does not share.
+Libraries/PushNotificationIOS/
+
+# No haptics.
+Libraries/Vibration/
+
+# No status bar. The menu bar is not a per-app, per-window equivalent.
+React/CoreModules/RCTStatusBarManager
+
+# UIActivityViewController has no AppKit counterpart; a Mac would use NSMenu or
+# NSSharingServicePicker, which is a different API, not a port.
+React/CoreModules/RCTActionSheetManager
+
+# --- deferred -----------------------------------------------------------------
+#
+# Dev-surface UI. Each is a window-and-chrome port rather than framework work,
+# and none of it is needed to render an app. Together these are ~900 lines in
+# react-native-macos.
+
+React/CoreModules/RCTRedBox
+React/CoreModules/RCTRedBox2
+React/Modules/RCTRedBox
+React/CoreModules/RCTDevMenu
+React/CoreModules/RCTPerfMonitor
+
+# Dev overlay drawn with UIStackView distribution constants that do not map onto
+# NSStackView's. Chrome, not framework.
+React/DevSupport/RCTPausedInDebuggerOverlayController

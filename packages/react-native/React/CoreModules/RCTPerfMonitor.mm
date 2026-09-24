@@ -172,7 +172,7 @@ RCT_EXPORT_MODULE()
     UIEdgeInsets safeInsets = RCTKeyWindow().safeAreaInsets;
 
     _container =
-        [[UIView alloc] initWithFrame:CGRectMake(safeInsets.left, safeInsets.top, 180, RCTPerfMonitorBarHeight)];
+        [[RCTPlatformView alloc] initWithFrame:CGRectMake(safeInsets.left, safeInsets.top, 180, RCTPerfMonitorBarHeight)];  // [macOS] needs a flipped, layer-backed view
     _container.layer.borderWidth = 2;
     _container.layer.borderColor = [UIColor lightGrayColor].CGColor;
     [_container addGestureRecognizer:self.gestureRecognizer];

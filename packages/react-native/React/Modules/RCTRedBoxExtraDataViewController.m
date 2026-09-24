@@ -178,7 +178,7 @@
 
 - (UIView *)tableView:(__unused UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
-  UIView *header = [UIView new];
+  UIView *header = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
   header.backgroundColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:1];
 
   UILabel *headerLabel = [UILabel new];

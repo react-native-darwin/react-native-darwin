@@ -916,7 +916,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   if (self.styleNeedsSwiftUIContainer) {
     if (_swiftUIWrapper == nullptr) {
       _swiftUIWrapper = [RCTSwiftUIContainerViewWrapper new];
-      UIView *swiftUIContentView = [[UIView alloc] init];
+      UIView *swiftUIContentView = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
       for (UIView *subview = nullptr in self.subviews) {
         [swiftUIContentView addSubview:subview];
       }
@@ -960,7 +960,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
 
   if (_useCustomContainerView) {
     if (!_containerView) {
-      _containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];
+      _containerView = [[RCTPlatformView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];  // [macOS] needs a flipped, layer-backed view
       for (UIView *subview = nullptr in effectiveContentView.subviews) {
         [_containerView addSubview:subview];
       }
