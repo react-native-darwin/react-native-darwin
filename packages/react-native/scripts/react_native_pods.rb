@@ -50,6 +50,10 @@ end
 def min_macos_version_supported
   return Helpers::Constants.min_macos_version_supported
 end
+
+def macos_excluded_files
+  return Helpers::Constants.macos_excluded_files
+end
 # macOS]
 
 # This function prepares the project for React Native, before processing

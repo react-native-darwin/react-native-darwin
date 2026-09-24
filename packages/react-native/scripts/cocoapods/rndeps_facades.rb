@@ -93,7 +93,11 @@ module RNDepsFacades
             "homepage" => "https://reactnative.dev/",
             "license" => "MIT",
             "authors" => "Meta Platforms, Inc. and its affiliates",
-            "platforms" => { "ios" => ios_version },
+            # [macOS] The facade must advertise every platform the prebuilt
+            # xcframework actually ships, or CocoaPods rejects a macOS target
+            # for a pod whose code is already present in that xcframework's
+            # macos-arm64_x86_64 slice.
+            "platforms" => { "ios" => ios_version, "osx" => Helpers::Constants.min_macos_version_supported },
             # Required podspec attribute, but never fetched: installed as a LOCAL
             # pod (`:path => <dir>`), which uses this spec in place and ships no
             # source_files. Placeholder only.

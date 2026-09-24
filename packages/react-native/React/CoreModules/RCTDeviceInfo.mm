@@ -188,7 +188,13 @@ static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
   RCTAssertMainQueue();
   UIScreen *mainScreen = UIScreen.mainScreen;
   CGSize screenSize = mainScreen.bounds.size;
+#if TARGET_OS_OSX // [macOS
+  // UIWindow is a UIView; NSWindow is not an NSView. The content view is the
+  // part whose bounds this code actually wants.
+  UIView *mainWindow = RCTKeyWindow().contentView;
+#else // macOS]
   UIView *mainWindow = RCTKeyWindow();
+#endif // [macOS]
 
   // We fallback to screen size if a key window is not found.
   CGSize windowSize = mainWindow ? mainWindow.bounds.size : screenSize;

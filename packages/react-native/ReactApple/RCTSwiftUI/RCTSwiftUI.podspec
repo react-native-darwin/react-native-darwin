@@ -25,7 +25,18 @@ Pod::Spec.new do |s|
   s.author                 = "Meta Platforms, Inc. and its affiliates"
   s.platforms              = min_supported_versions
   s.source                 = source
-  s.source_files           = podspec_sources("*.{h,m,swift}", "")
+  # [macOS
+  # The Swift source does `import UIKit`, which the compatibility layer cannot
+  # satisfy: it is a header shim, and Swift resolves modules, not headers. The
+  # pod is left empty on macOS -- RCTSwiftUIWrapper has a no-op implementation
+  # there, so the dependency chain from React-RCTFabric still resolves.
+  s.ios.source_files       = podspec_sources("*.{h,m,swift}", "")
+  s.tvos.source_files      = podspec_sources("*.{h,m,swift}", "")
+  s.visionos.source_files  = podspec_sources("*.{h,m,swift}", "")
+  # CocoaPods rejects a spec that is completely empty for a platform, so macOS
+  # gets the sources as preserved paths: present on disk, compiled by nothing.
+  s.osx.preserve_paths     = "*.{h,m,swift}"
+  # macOS]
   s.public_header_files    = "*.h"
   s.module_name            = "RCTSwiftUI"
   s.header_dir             = "RCTSwiftUI"

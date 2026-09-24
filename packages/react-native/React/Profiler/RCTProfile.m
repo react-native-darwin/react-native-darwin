@@ -394,7 +394,7 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
     RCTProfileEnd(RCTProfilingBridge(), ^(NSString *result) {
       NSString *outFile = [NSTemporaryDirectory() stringByAppendingString:@"tmp_trace.json"];
       [result writeToFile:outFile atomically:YES encoding:NSUTF8StringEncoding error:nil];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_OSX // [macOS]
       UIActivityViewController *activityViewController =
           [[UIActivityViewController alloc] initWithActivityItems:@[ [NSURL fileURLWithPath:outFile] ]
                                             applicationActivities:nil];
@@ -422,10 +422,12 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
 
 + (void)drag:(UIPanGestureRecognizer *)gestureRecognizer
 {
+#if !TARGET_OS_OSX // [macOS
   CGPoint translation = [gestureRecognizer translationInView:RCTProfileControlsWindow];
   RCTProfileControlsWindow.center =
       CGPointMake(RCTProfileControlsWindow.center.x + translation.x, RCTProfileControlsWindow.center.y + translation.y);
   [gestureRecognizer setTranslation:CGPointMake(0, 0) inView:RCTProfileControlsWindow];
+#endif // macOS]
 }
 
 @end
@@ -773,6 +775,8 @@ void RCTProfileSendResult(RCTBridge *bridge, NSString *route, NSData *data)
 
 void RCTProfileShowControls(void)
 {
+#if !TARGET_OS_OSX // [macOS
+
   static const CGFloat height = 30;
   static const CGFloat width = 60;
 
@@ -802,6 +806,7 @@ void RCTProfileShowControls(void)
   [window addGestureRecognizer:gestureRecognizer];
 
   RCTProfileControlsWindow = window;
+#endif // macOS]
 }
 
 void RCTProfileHideControls(void)

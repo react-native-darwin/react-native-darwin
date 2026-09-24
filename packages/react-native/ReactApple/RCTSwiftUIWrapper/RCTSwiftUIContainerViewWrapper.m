@@ -7,7 +7,11 @@
 
 #import "RCTSwiftUIContainerViewWrapper.h"
 
+#if !TARGET_OS_OSX // [macOS]
 @import RCTSwiftUI;
+#endif // [macOS]
+
+#if !TARGET_OS_OSX // [macOS]
 
 @interface RCTSwiftUIContainerViewWrapper ()
 @property (nonatomic, strong) RCTSwiftUIContainerView *swiftContainerView;
@@ -79,3 +83,69 @@
 }
 
 @end
+
+#else // [macOS
+
+/**
+ * The SwiftUI container backs CSS filter effects -- blur, grayscale, saturate,
+ * drop-shadow -- by hosting the view inside a SwiftUI hierarchy. The Swift half
+ * of it imports UIKit and so is not built for macOS.
+ *
+ * These are no-ops rather than an error: a view with a filter style renders
+ * without the filter instead of failing to render at all. Porting the container
+ * to SwiftUI-on-AppKit is separate work.
+ */
+@implementation RCTSwiftUIContainerViewWrapper
+
+- (UIView *_Nullable)contentView
+{
+  return nil;
+}
+
+- (UIView *_Nullable)hostingView
+{
+  return nil;
+}
+
+- (void)resetStyles
+{
+}
+
+- (void)updateContentView:(__unused UIView *)view
+{
+}
+
+- (void)updateBlurRadius:(__unused NSNumber *)radius
+{
+}
+
+- (void)updateGrayscale:(__unused NSNumber *)grayscale
+{
+}
+
+- (void)updateSaturation:(__unused NSNumber *)saturation
+{
+}
+
+- (void)updateContrast:(__unused NSNumber *)contrast
+{
+}
+
+- (void)updateHueRotate:(__unused NSNumber *)degrees
+{
+}
+
+- (void)updateDropShadow:(__unused NSNumber *)standardDeviation
+                       x:(__unused NSNumber *)x
+                       y:(__unused NSNumber *)y
+                   color:(__unused UIColor *)color
+{
+}
+
+- (void)updateLayoutWithBounds:(__unused CGRect)bounds
+{
+}
+
+@end
+
+#endif // macOS]
