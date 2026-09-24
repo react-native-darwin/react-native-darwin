@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * UIView class for <View> component.
  */
-@interface RCTViewComponentView : UIView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {
+@interface RCTViewComponentView : RCTPlatformView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
  @protected
   facebook::react::LayoutMetrics _layoutMetrics;
   facebook::react::SharedViewProps _props;

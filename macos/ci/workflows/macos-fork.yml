@@ -1,0 +1,44 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+#
+# Install to .github/workflows/macos-fork.yml.
+#
+# Kept here rather than in .github/ on purpose: .github is upstream's directory,
+# and anything we add there is an upstream file that counts against the budget
+# and conflicts on every rebase. See MACOS-FORK.md section 2.2.
+
+name: macOS fork
+
+on:
+  push:
+    branches: ["macos/**"]
+  pull_request:
+    branches: ["macos/**"]
+
+jobs:
+  budget:
+    name: Budget
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The budget is measured against the upstream tag, so the tag's
+          # history has to be present.
+          fetch-depth: 0
+      - name: Fetch upstream tag
+        run: |
+          git remote add upstream https://github.com/facebook/react-native.git || true
+          TAG=$(sed -n 's/^UPSTREAM_TAG = //p' MACOS-FORK.md | head -1)
+          git fetch --no-tags upstream "refs/tags/$TAG:refs/tags/$TAG"
+      - name: Check budget
+        run: ./macos/ci/check-budget.sh
+
+  uikit-compat:
+    name: UIKit compatibility layer
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run checks
+        run: ./macos/tests/run.sh

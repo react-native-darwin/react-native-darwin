@@ -49,7 +49,7 @@ extern
  */
 #pragma clang diagnostic push
 #pragma clang diagnostic warning "-Wdeprecated"
-__deprecated_msg("This API will be removed along with the legacy architecture.") @interface RCTRootView : UIView
+__deprecated_msg("This API will be removed along with the legacy architecture.") @interface RCTRootView : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 /**
  * - Designated initializer -

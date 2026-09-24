@@ -74,7 +74,7 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   // Add a wrapper so that the wrapper view managed by the
   // UINavigationController doesn't end up resetting the frames for
   //`contentView` which is a react-managed view.
-  _wrapperView = [[UIView alloc] initWithFrame:_contentView.bounds];
+  _wrapperView = [[RCTPlatformView alloc] initWithFrame:_contentView.bounds];  // [macOS] needs a flipped, layer-backed view
   [_wrapperView addSubview:_contentView];
   self.view = _wrapperView;
 }

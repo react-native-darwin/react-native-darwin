@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * UIView instance which represents the Surface
  */
-@interface RCTSurfaceView : UIView
+@interface RCTSurfaceView : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 - (instancetype)initWithSurface:(id<RCTSurfaceProtocol>)surface NS_DESIGNATED_INITIALIZER;
 

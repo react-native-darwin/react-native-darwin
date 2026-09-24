@@ -17,7 +17,7 @@
   if (self = [super init]) {
     self.autoresizingMask = UIViewAutoresizingFlexibleHeight;
 
-    _safeAreaContainer = [UIView new];
+    _safeAreaContainer = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
     _safeAreaContainer.translatesAutoresizingMaskIntoConstraints = NO;
     [self addSubview:_safeAreaContainer];
 
