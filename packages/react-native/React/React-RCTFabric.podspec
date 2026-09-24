@@ -50,6 +50,10 @@ Pod::Spec.new do |s|
   s.module_name            = module_name
   s.weak_framework         = "JavaScriptCore"
   s.framework              = "MobileCoreServices"
+  # [macOS] Drag and drop names what was dropped with UTType. On iOS the symbols
+  # come in with MobileCoreServices; the macOS remap of that is CoreServices,
+  # which does not carry them.
+  s.osx.framework          = "UniformTypeIdentifiers"
   s.pod_target_xcconfig    = {
     "HEADER_SEARCH_PATHS" => header_search_paths,
     "OTHER_CFLAGS" => "$(inherited) " + new_arch_flags,

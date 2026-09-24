@@ -28,7 +28,10 @@ const {
   generateRCTThirdPartyComponents,
 } = require('./generateRCTThirdPartyComponents');
 const {generateReactCodegenPodspec} = require('./generateReactCodegenPodspec');
-const {generateSchemaInfos} = require('./generateSchemaInfos');
+const {
+  extractSupportedApplePlatforms, // [macOS] filters the Apple providers by platform
+  generateSchemaInfos,
+} = require('./generateSchemaInfos');
 const {
   generateUnstableModulesRequiringMainQueueSetupProvider,
 } = require('./generateUnstableModulesRequiringMainQueueSetupProvider');
@@ -39,6 +42,7 @@ const {
   findCodegenEnabledLibraries,
   findDisabledLibrariesByPlatform,
   findReactNativeRootPath,
+  isReactNativeCoreLibrary, // [macOS] core libraries skip the platform filter
   pkgJsonIncludesGeneratedCode,
   readPkgJsonInDirectory,
   readReactNativeConfig,
@@ -72,6 +76,18 @@ function execute(
     codegenLog(`Analyzing ${path.join(projectRoot, 'package.json')}`);
 
     const supportedPlatforms = ['android', 'ios'];
+
+    // [macOS] macOS consumes the iOS codegen output -- same specs, same output
+    // directory, same native code. The only thing that differs is which
+    // libraries may appear in the generated Apple providers, because a library
+    // that does not support macOS is never compiled and its class would be nil.
+    // So normalise the target here and keep the real platform for that filter.
+    const applePlatform = targetPlatform === 'macos' ? 'macos' : null;
+    if (applePlatform != null) {
+      targetPlatform = 'ios';
+    }
+    // macOS]
+
     if (
       targetPlatform !== 'all' &&
       !supportedPlatforms.includes(targetPlatform)
@@ -152,15 +168,47 @@ function execute(
       }
 
       if (source === 'app' && platform !== 'android') {
+        // [macOS] Only libraries that support the platform being built.
+        //
+        // The generated providers map component and module names to classes via
+        // NSClassFromString, and put the result straight into a dictionary
+        // literal. A library whose podspec does not support this platform is
+        // never compiled, so its class is nil, and the dictionary throws
+        // "attempt to insert nil object from objects[0]" as the app starts.
+        //
+        // Every library supports iOS, so upstream never had to filter. An
+        // out-of-tree platform does: on macOS an app pulls in plenty of
+        // iOS-only modules through its dependency tree. macOS]
+        const applePlatformLibraries = libraries.filter(library => {
+          if (isReactNativeCoreLibrary(library.config.name)) {
+            return true;
+          }
+          let supported;
+          try {
+            supported = extractSupportedApplePlatforms(
+              library.config.name,
+              library.libraryPath,
+            );
+          } catch {
+            supported = null;
+          }
+          // No podspec, or one that says nothing, means no opinion. Keep the
+          // library, which is what upstream did for every platform.
+          return supported == null || supported[applePlatform ?? platform] !== false;
+        });
+
         // These components are only required by apps, not by libraries and are Apple specific.
-        generateRCTThirdPartyComponents(libraries, reactCodegenOutputPath);
+        generateRCTThirdPartyComponents(
+          applePlatformLibraries,
+          reactCodegenOutputPath,
+        );
         generateRCTModuleProviders(
           projectRoot,
           pkgJson,
-          libraries,
+          applePlatformLibraries,
           reactCodegenOutputPath,
         );
-        generateCustomURLHandlers(libraries, reactCodegenOutputPath);
+        generateCustomURLHandlers(applePlatformLibraries, reactCodegenOutputPath);
         generateUnstableModulesRequiringMainQueueSetupProvider(
           libraries,
           reactCodegenOutputPath,

@@ -11,6 +11,25 @@
 
 #import "UIKitDefines.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatEditMenuConfiguration;
+@class RCTUIKitCompatEditMenuInteraction;
+@class RCTUIKitCompatMenuController;
+@class RCTUIKitCompatPresentationController;
+@compatibility_alias UIEditMenuConfiguration RCTUIKitCompatEditMenuConfiguration;
+@compatibility_alias UIEditMenuInteraction RCTUIKitCompatEditMenuInteraction;
+@compatibility_alias UIMenuController RCTUIKitCompatMenuController;
+@compatibility_alias UIPresentationController RCTUIKitCompatPresentationController;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 enum {
@@ -137,7 +156,7 @@ typedef NS_ENUM(NSInteger, UIScrollViewKeyboardDismissMode) {
  * own contextual NSMenu. Both shapes are declared so the paragraph component
  * compiles; presenting is a no-op because AppKit already does it.
  */
-@interface UIEditMenuConfiguration : NSObject
+@interface RCTUIKitCompatEditMenuConfiguration : NSObject
 @property (nonatomic, readonly) CGPoint sourcePoint;
 @property (nonatomic, strong, nullable) id background;
 @property (nonatomic, assign) UIEdgeInsets contentInsets;
@@ -145,13 +164,13 @@ typedef NS_ENUM(NSInteger, UIScrollViewKeyboardDismissMode) {
 + (instancetype)configurationWithIdentifier:(nullable id)identifier sourcePoint:(CGPoint)sourcePoint;
 @end
 
-@interface UIEditMenuInteraction : NSObject
+@interface RCTUIKitCompatEditMenuInteraction : NSObject
 - (instancetype)initWithDelegate:(nullable id)delegate;
 - (void)presentEditMenuWithConfiguration:(UIEditMenuConfiguration *)configuration;
 - (void)dismissMenu;
 @end
 
-@interface UIMenuController : NSObject
+@interface RCTUIKitCompatMenuController : NSObject
 @property (class, nonatomic, readonly) UIMenuController *sharedMenuController;
 @property (nonatomic, readonly, getter=isMenuVisible) BOOL menuVisible;
 - (void)showMenuFromView:(NSView *)view rect:(CGRect)rect;
@@ -195,7 +214,7 @@ typedef NS_OPTIONS(NSUInteger, UIPopoverArrowDirection) {
  * rect directly, so these are recorded and read back by the presenting code
  * rather than driving a controller of their own.
  */
-@interface UIPresentationController : NSObject
+@interface RCTUIKitCompatPresentationController : NSObject
 @property (nonatomic, readonly, nullable) NSViewController *presentedViewController;
 @property (nonatomic, weak, nullable) id delegate;
 @property (nonatomic, weak, nullable) NSView *sourceView;

@@ -14,7 +14,7 @@
 
 #pragma mark - UILabel
 
-@implementation UILabel
+@implementation RCTUIKitCompatLabel
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -74,7 +74,7 @@
 
 #pragma mark - UIImageView
 
-@implementation UIImageView
+@implementation RCTUIKitCompatImageView
 
 - (instancetype)initWithImage:(NSImage *)image
 {
@@ -94,7 +94,7 @@
 
 #pragma mark - UIActivityIndicatorView
 
-@implementation UIActivityIndicatorView
+@implementation RCTUIKitCompatActivityIndicatorView
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -140,7 +140,7 @@
 
 #pragma mark - UISwitch
 
-@implementation UISwitch
+@implementation RCTUIKitCompatSwitch
 
 - (void)addTarget:(id)target action:(SEL)action forControlEvents:(__unused UIControlEvents)controlEvents
 {
@@ -167,7 +167,7 @@
 
 #pragma mark - UISlider
 
-@implementation UISlider
+@implementation RCTUIKitCompatSlider
 
 - (float)value
 {
@@ -208,7 +208,7 @@
 
 #pragma mark - UIButton
 
-@implementation UIButton {
+@implementation RCTUIKitCompatButton {
   NSMutableDictionary<NSNumber *, NSString *> *_titles;
   NSMutableDictionary<NSNumber *, UIColor *> *_titleColors;
   UILabel *_titleLabel;
@@ -319,7 +319,7 @@
 
 #pragma mark - Button configuration
 
-@implementation UIBackgroundConfiguration
+@implementation RCTUIKitCompatBackgroundConfiguration
 
 + (instancetype)clearConfiguration
 {
@@ -328,7 +328,7 @@
 
 @end
 
-@implementation UIButtonConfiguration
+@implementation RCTUIKitCompatButtonConfiguration
 
 + (instancetype)plainButtonConfiguration
 {
@@ -354,7 +354,7 @@
 
 #pragma mark - Input accessory
 
-@implementation UIBarButtonItem
+@implementation RCTUIKitCompatBarButtonItem
 
 - (instancetype)initWithTitle:(NSString *)title style:(NSInteger)style target:(id)target action:(SEL)action
 {
@@ -374,7 +374,7 @@
 
 @end
 
-@implementation UIToolbar
+@implementation RCTUIKitCompatToolbar
 
 - (void)setItems:(NSArray<UIBarButtonItem *> *)items animated:(__unused BOOL)animated
 {
@@ -390,7 +390,7 @@
 
 #pragma mark - UIRefreshControl
 
-@implementation UIRefreshControl
+@implementation RCTUIKitCompatRefreshControl
 
 - (void)beginRefreshing
 {
@@ -411,7 +411,7 @@
 
 #pragma mark - UITableView
 
-@implementation UIAction {
+@implementation RCTUIKitCompatAction {
   void (^_handler)(UIAction *);
 }
 
@@ -460,7 +460,7 @@
 
 @end
 
-@implementation UITableViewCell {
+@implementation RCTUIKitCompatTableViewCell {
   UILabel *_textLabel;
   UILabel *_detailTextLabel;
   NSView *_contentView;
@@ -477,7 +477,7 @@
 - (NSView *)contentView
 {
   if (_contentView == nil) {
-    _contentView = [[RCTPlatformView alloc] initWithFrame:self.bounds];
+    _contentView = [[RCTUIView alloc] initWithFrame:self.bounds];
     _contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     [self addSubview:_contentView];
   }
@@ -504,7 +504,7 @@
 
 @end
 
-@implementation UITableView {
+@implementation RCTUIKitCompatTableView {
   NSMutableDictionary<NSString *, Class> *_cellClasses;
   NSMutableDictionary<NSString *, UITableViewCell *> *_cells;
 }
@@ -582,7 +582,7 @@
 
 #pragma mark - Accessibility
 
-@implementation UIAccessibilityElement
+@implementation RCTUIKitCompatAccessibilityElement
 
 @synthesize accessibilityFrame = _accessibilityFrame;
 @synthesize isAccessibilityElement = _isAccessibilityElement;

@@ -21,7 +21,7 @@ class RCTComponentViewDescriptor final {
   /*
    * Associated (and owned) native view instance.
    */
-  __strong UIView<RCTComponentViewProtocol> *const view = nil;
+  __strong RCTUIView<RCTComponentViewProtocol> *const view = nil; // [macOS] see RCTComponentViewRegistry.h
 
   /*
    * Indicates a requirement to call on the view methods from

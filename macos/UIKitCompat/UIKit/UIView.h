@@ -14,6 +14,7 @@
 #import "UIColor.h"
 #import "UIEvent.h"
 #import "UIKitDefines.h"
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -86,9 +87,24 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * What the alias cannot carry is behaviour. A plain NSView is not flipped, is
  * not layer-backed, and has no -layoutSubviews. Views that React Native
- * creates itself need all three, and they get them from RCTPlatformView below.
+ * creates itself need all three, and they get them from RCTUIView below.
  */
 @compatibility_alias UIView NSView;
+
+/**
+ * `RCTPlatformView` is the name react-native-macos gives to "whatever a view is
+ * on this platform", and published macOS modules use it as a pointer type --
+ * react-native-reanimated assigns an `NSView<RCTComponentViewProtocol> *` to
+ * one. It has to mean NSView, not a subclass, or that assignment does not
+ * compile.
+ *
+ * So the two names divide the same way they do in react-native-macos:
+ * `RCTPlatformView` is the pointer type, `RCTUIView` is the concrete class.
+ * Here `UIView` is a third spelling of the first one.
+ */
+// RCTPlatformView is declared by RCTPlatformTypes.h, imported at the top of
+// this file: the RCT* vocabulary lives there precisely so an installed header
+// can use it without dragging the UIKit aliases along.
 
 /**
  * The concrete view class for anything React Native instantiates or subclasses.
@@ -103,19 +119,19 @@ NS_ASSUME_NONNULL_BEGIN
  * Upstream uses this name in exactly two positions, and never as a pointer
  * type:
  *
- *     @interface RCTView : RCTPlatformView        // superclass
- *     [[RCTPlatformView alloc] initWithFrame:f]   // instantiation
+ *     @interface RCTView : RCTUIView        // superclass
+ *     [[RCTUIView alloc] initWithFrame:f]   // instantiation
  *
  * Everything else keeps saying `UIView *`. That restriction is what keeps this
  * to about 20 upstream files instead of the 538 that react-native-macos edits,
  * and macos/ci/check-budget.sh enforces it.
  */
-@interface RCTPlatformView : NSView
+@interface RCTUIView : NSView
 
 // NSView already provides -clipsToBounds (10.9+), so it is not redeclared here.
 
 // UIKit subclasses override -canBecomeFirstResponder and expect the framework
-// to honour it. RCTPlatformView bridges that to AppKit's
+// to honour it. RCTUIView bridges that to AppKit's
 // -acceptsFirstResponder, and terminates the chain at NSView's own
 // implementation rather than bouncing back through the category.
 @property (nonatomic, readonly) BOOL canBecomeFirstResponder;

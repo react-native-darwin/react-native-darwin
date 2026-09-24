@@ -1,0 +1,8 @@
+# Generated or downloaded; none of it belongs in the fork.
+node_modules/
+Pods/
+build/
+HelloWorld.xcodeproj/
+HelloWorld.xcworkspace/
+package-lock.json
+Podfile.lock

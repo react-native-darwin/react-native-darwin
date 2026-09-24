@@ -26,7 +26,7 @@
 {
   [super viewDidLoad];
 
-  UIView *dimmingView = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+  UIView *dimmingView = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
   dimmingView.translatesAutoresizingMaskIntoConstraints = NO;
   dimmingView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
   [self.view addSubview:dimmingView];
@@ -44,7 +44,7 @@
   messageLabel.font = [UIFont boldSystemFontOfSize:16];
   messageLabel.textColor = [UIColor blackColor];
   messageLabel.translatesAutoresizingMaskIntoConstraints = NO;
-  UIView *messageContainer = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+  UIView *messageContainer = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
   [messageContainer addSubview:messageLabel];
   [NSLayoutConstraint activateConstraints:@[
     [messageLabel.topAnchor constraintEqualToAnchor:messageContainer.topAnchor constant:-1],

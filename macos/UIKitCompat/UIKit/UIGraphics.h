@@ -12,9 +12,26 @@
 
 #import "UIImage.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatGraphicsImageRendererFormat;
+@class RCTUIKitCompatGraphicsImageRendererContext;
+@class RCTUIKitCompatGraphicsImageRenderer;
+@compatibility_alias UIGraphicsImageRendererFormat RCTUIKitCompatGraphicsImageRendererFormat;
+@compatibility_alias UIGraphicsImageRendererContext RCTUIKitCompatGraphicsImageRendererContext;
+@compatibility_alias UIGraphicsImageRenderer RCTUIKitCompatGraphicsImageRenderer;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface UIGraphicsImageRendererFormat : NSObject
+@interface RCTUIKitCompatGraphicsImageRendererFormat : NSObject
 @property (nonatomic, assign) CGFloat scale;
 @property (nonatomic, assign) BOOL opaque;
 + (instancetype)defaultFormat;
@@ -34,14 +51,14 @@ NS_ASSUME_NONNULL_BEGIN
  * an NSGraphicsContext, so that is what the block receives; -CGContext gets you
  * the same CGContextRef UIKit would have given you.
  */
-@interface UIGraphicsImageRendererContext : NSObject
+@interface RCTUIKitCompatGraphicsImageRendererContext : NSObject
 @property (nonatomic, readonly) CGContextRef CGContext;
 - (instancetype)initWithGraphicsContext:(NSGraphicsContext *)context;
 - (void)fillRect:(CGRect)rect;
 - (void)strokeRect:(CGRect)rect;
 @end
 
-@interface UIGraphicsImageRenderer : NSObject
+@interface RCTUIKitCompatGraphicsImageRenderer : NSObject
 
 - (instancetype)initWithSize:(CGSize)size;
 - (instancetype)initWithSize:(CGSize)size format:(UIGraphicsImageRendererFormat *)format;

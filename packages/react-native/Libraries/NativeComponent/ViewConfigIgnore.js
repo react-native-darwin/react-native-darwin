@@ -39,7 +39,11 @@ export function DynamicallyInjectedByGestureHandler<T extends {...}>(
 export function ConditionallyIgnoredEventHandlers<
   const T extends {readonly [name: string]: true},
 >(value: T): T | void {
-  if (Platform.OS === 'ios') {
+  // [macOS] macOS declares its view props the same way iOS does, so it keeps
+  // these too. Reporting Platform.OS as 'macos' without this drops every event
+  // handler in the base view config -- including iOS's own -- and nothing that
+  // depends on them ever fires. macOS]
+  if (Platform.OS === 'ios' || Platform.OS === 'macos') {
     return value;
   }
   return undefined;

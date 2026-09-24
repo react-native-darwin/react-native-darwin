@@ -139,7 +139,9 @@ function generateRCTThirdPartyComponents(
     .flatMap(library => {
       const components = componentsInLibraries[library];
       return components.map(({componentName, className}) => {
-        return `\t\t@"${componentName}": NSClassFromString(@"${className}"), // ${library}`;
+        // [macOS] The class name, not NSClassFromString: the provider resolves
+        // it at runtime and skips what is not in the binary. See the template.
+        return `\t\t@"${componentName}": @"${className}", // ${library}`;
       });
     })
     .join('\n');

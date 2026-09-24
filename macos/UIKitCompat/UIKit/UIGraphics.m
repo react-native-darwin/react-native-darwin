@@ -8,7 +8,7 @@
 
 #import "UIGraphics.h"
 
-@implementation UIGraphicsImageRendererFormat
+@implementation RCTUIKitCompatGraphicsImageRendererFormat
 
 + (instancetype)defaultFormat
 {
@@ -29,7 +29,7 @@
 
 @end
 
-@implementation UIGraphicsImageRendererContext {
+@implementation RCTUIKitCompatGraphicsImageRendererContext {
   NSGraphicsContext *_context;
 }
 
@@ -58,7 +58,7 @@
 
 @end
 
-@implementation UIGraphicsImageRenderer {
+@implementation RCTUIKitCompatGraphicsImageRenderer {
   CGSize _size;
   UIGraphicsImageRendererFormat *_format;
 }

@@ -7,6 +7,7 @@
  */
 
 #import "UIColor.h"
+#import "UITraitCollection.h"
 
 @implementation NSColor (UIKitCompat)
 
@@ -14,7 +15,12 @@
 {
   return [NSColor colorWithName:nil
                 dynamicProvider:^NSColor *(NSAppearance *appearance) {
-                  return provider(appearance);
+                  // UIKit hands the provider a UITraitCollection and callers
+                  // read -userInterfaceStyle and -accessibilityContrast off it.
+                  // AppKit hands out an NSAppearance, which answers neither, so
+                  // passing it straight through raises "unrecognized selector"
+                  // the first time a dynamic colour is resolved.
+                  return provider([UITraitCollection traitCollectionWithAppearance:appearance]);
                 }];
 }
 

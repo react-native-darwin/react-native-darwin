@@ -41,7 +41,7 @@ NSString *const UIKeyboardAnimationDurationUserInfoKey = @"UIKeyboardAnimationDu
 NSString *const UIKeyboardAnimationCurveUserInfoKey = @"UIKeyboardAnimationCurveUserInfoKey";
 NSString *const UIKeyboardIsLocalUserInfoKey = @"UIKeyboardIsLocalUserInfoKey";
 
-@implementation UIDevice
+@implementation RCTUIKitCompatDevice
 
 + (UIDevice *)currentDevice
 {

@@ -144,6 +144,9 @@ struct PointerHasher {
   RCTIdentifierPool<17> _identifierPool;
 
   RCTSurfacePointerHandler *_pointerHandler;
+#if TARGET_OS_OSX // [macOS] the one touch a mouse can produce; see below
+  UITouch *_mouseTouch;
+#endif // macOS]
 }
 
 - (instancetype)init
@@ -301,6 +304,75 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
     }
   }
 }
+
+#if TARGET_OS_OSX // [macOS
+
+#pragma mark - Mouse-to-touch translation
+
+/**
+ * AppKit never calls the touch methods below.
+ *
+ * This class is a UIGestureRecognizer, which the shim aliases to
+ * NSGestureRecognizer, and it attaches to the surface view correctly -- but a
+ * gesture recognizer on AppKit is sent `-mouseDown:` and friends, not
+ * `-touchesBegan:withEvent:`. So the recognizer sat there receiving nothing,
+ * and `onPress`, `onTouchStart` and the whole responder system silently never
+ * fired. Nothing errors; the app simply is not clickable.
+ *
+ * A mouse is one touch, so the translation is a single UITouch carried through
+ * the gesture. It has to be the *same* object each time: the touch registry is
+ * keyed by identity, and a fresh instance per event would look like a new,
+ * unregistered touch.
+ */
+- (UITouch *)_touchForEvent:(NSEvent *)event phase:(UITouchPhase)phase
+{
+  if (_mouseTouch == nil) {
+    NSPoint inRoot = [_rootComponentView convertPoint:event.locationInWindow fromView:nil];
+    UIView *hitView = [_rootComponentView hitTest:inRoot] ?: _rootComponentView;
+    _mouseTouch = [[UITouch alloc] initWithEvent:event phase:phase view:hitView];
+  } else {
+    [_mouseTouch updateWithEvent:event phase:phase];
+  }
+  return _mouseTouch;
+}
+
+- (void)mouseDown:(NSEvent *)event
+{
+  [super mouseDown:event];
+
+  _mouseTouch = nil;
+  NSSet<UITouch *> *touches = [NSSet setWithObject:[self _touchForEvent:event phase:UITouchPhaseBegan]];
+  [self _registerTouches:touches];
+  [self _dispatchActiveTouches:[self _activeTouchesFromTouches:touches] eventType:RCTTouchEventTypeTouchStart];
+}
+
+- (void)mouseDragged:(NSEvent *)event
+{
+  [super mouseDragged:event];
+
+  if (_mouseTouch == nil) {
+    return;
+  }
+  NSSet<UITouch *> *touches = [NSSet setWithObject:[self _touchForEvent:event phase:UITouchPhaseMoved]];
+  [self _updateTouches:touches];
+  [self _dispatchActiveTouches:[self _activeTouchesFromTouches:touches] eventType:RCTTouchEventTypeTouchMove];
+}
+
+- (void)mouseUp:(NSEvent *)event
+{
+  [super mouseUp:event];
+
+  if (_mouseTouch == nil) {
+    return;
+  }
+  NSSet<UITouch *> *touches = [NSSet setWithObject:[self _touchForEvent:event phase:UITouchPhaseEnded]];
+  [self _updateTouches:touches];
+  [self _dispatchActiveTouches:[self _activeTouchesFromTouches:touches] eventType:RCTTouchEventTypeTouchEnd];
+  [self _unregisterTouches:touches];
+  _mouseTouch = nil;
+}
+
+#endif // macOS]
 
 #pragma mark - `UIResponder`-ish touch-delivery methods
 

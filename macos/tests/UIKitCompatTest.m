@@ -50,7 +50,7 @@ static int gFailures = 0;
 @end
 
 // A typical React Native view subclass.
-@interface RCTView : RCTPlatformView
+@interface RCTView : RCTUIView
 @property (nonatomic, assign) CGFloat borderRadius;
 @end
 
@@ -66,9 +66,9 @@ int main(void)
   @autoreleasepool {
     // Tier 3: a real class named UIView.
     RCTView *view = [[RCTView alloc] initWithFrame:CGRectMake(0, 0, 100, 50)];
-    CHECK(view != nil, "RCTPlatformView subclass allocates");
-    CHECK(view.isFlipped, "RCTPlatformView uses a top-left origin");
-    CHECK(view.wantsLayer, "RCTPlatformView is layer-backed");
+    CHECK(view != nil, "RCTUIView subclass allocates");
+    CHECK(view.isFlipped, "RCTUIView uses a top-left origin");
+    CHECK(view.wantsLayer, "RCTUIView is layer-backed");
 
     view.backgroundColor = [UIColor colorWithSRGBRed:1 green:0 blue:0 alpha:1];
     CHECK(view.backgroundColor != nil, "UIView.backgroundColor round-trips");
@@ -204,7 +204,7 @@ int main(void)
     CHECK(UIDevice.currentDevice.model.length > 0, "UIDevice.model reads hw.model");
     view.tag = 42;
     CHECK(view.tag == 42, "NSView.tag is writable");
-    UIView *plainForTint = [[RCTPlatformView alloc] initWithFrame:CGRectZero];
+    UIView *plainForTint = [[RCTUIView alloc] initWithFrame:CGRectZero];
     plainForTint.tintColor = [UIColor blueColor];
     CHECK(plainForTint.tintColor != nil, "NSView.tintColor round-trips");
 
@@ -213,7 +213,7 @@ int main(void)
     // That only works if `bounds.size` resizes the view the way UIKit does.
     // AppKit's own `setBounds:` would leave the frame at its old size, which
     // renders the whole tree correctly positioned and 0x0.
-    UIView *laidOut = [[RCTPlatformView alloc] initWithFrame:CGRectZero];
+    UIView *laidOut = [[RCTUIView alloc] initWithFrame:CGRectZero];
     laidOut.center = CGPointMake(150, 100);
     laidOut.bounds = CGRectMake(0, 0, 200, 80);
     CHECK(CGRectEqualToRect(laidOut.frame, CGRectMake(50, 60, 200, 80)),

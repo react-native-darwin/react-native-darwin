@@ -7,7 +7,7 @@
 
 #import "UIAlertController.h"
 
-@implementation UIAlertAction {
+@implementation RCTUIKitCompatAlertAction {
   void (^_handler)(UIAlertAction *);
 }
 
@@ -32,11 +32,11 @@
 
 @end
 
-@interface UIAlertAction (UIKitCompatPrivate)
+@interface RCTUIKitCompatAlertAction (UIKitCompatPrivate)
 - (void)UIKitCompatInvoke;
 @end
 
-@implementation UIActivityViewController {
+@implementation RCTUIKitCompatActivityViewController {
   NSArray *_activityItems;
 }
 
@@ -66,7 +66,7 @@
 
 @end
 
-@implementation UIAlertController {
+@implementation RCTUIKitCompatAlertController {
   NSMutableArray<UIAlertAction *> *_actions;
   NSMutableArray<UITextField *> *_textFields;
 }

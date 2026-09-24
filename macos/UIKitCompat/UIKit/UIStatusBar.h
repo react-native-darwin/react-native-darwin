@@ -11,6 +11,19 @@
 
 #import "UIKitDefines.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatStatusBarManager;
+@compatibility_alias UIStatusBarManager RCTUIKitCompatStatusBarManager;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, UIStatusBarAnimation) {
@@ -31,7 +44,7 @@ typedef NS_ENUM(NSInteger, UIStatusBarAnimation) {
  * statusBarFrame reports zero height, which is the truthful answer: there is no
  * status bar occluding your content on macOS.
  */
-@interface UIStatusBarManager : NSObject
+@interface RCTUIKitCompatStatusBarManager : NSObject
 
 @property (nonatomic, readonly) CGRect statusBarFrame;
 @property (nonatomic, readonly) UIStatusBarStyle statusBarStyle;

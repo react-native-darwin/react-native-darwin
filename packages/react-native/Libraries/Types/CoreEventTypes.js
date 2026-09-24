@@ -351,6 +351,17 @@ export type KeyEvent = Readonly<{
    * @see https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/isComposing
    */
   isComposing?: boolean,
+  // [macOS] Modifiers AppKit reports and no other platform has. Optional, so
+  // shared code that never reads them is unaffected.
+  /** @platform macos */
+  capsLockKey?: boolean,
+  /** @platform macos */
+  numericPadKey?: boolean,
+  /** @platform macos */
+  helpKey?: boolean,
+  /** @platform macos */
+  functionKey?: boolean,
+  // macOS]
 }>;
 
 export type KeyUpEvent = NativeSyntheticEvent<KeyEvent>;

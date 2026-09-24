@@ -7,11 +7,14 @@
 
 #import "UIEvent.h"
 
-@implementation UITouch {
+@implementation RCTUIKitCompatTouch {
   NSEvent *_event;
-  CGPoint _locationInWindow;
   CGPoint _previousLocationInWindow;
 }
+
+// _locationInWindow is now the backing store for the readonly property, so the
+// compiler synthesises the ivar.
+@synthesize locationInWindow = _locationInWindow;
 
 - (instancetype)initWithEvent:(NSEvent *)event phase:(UITouchPhase)phase view:(NSView *)view
 {
@@ -35,6 +38,15 @@
     _previousLocationInWindow = _locationInWindow;
   }
   return self;
+}
+
+- (void)updateWithEvent:(NSEvent *)event phase:(UITouchPhase)phase
+{
+  _event = event;
+  _phase = phase;
+  _timestamp = event.timestamp;
+  _previousLocationInWindow = _locationInWindow;
+  _locationInWindow = NSPointToCGPoint(event.locationInWindow);
 }
 
 - (CGFloat)azimuthAngleInView:(__unused NSView *)view
