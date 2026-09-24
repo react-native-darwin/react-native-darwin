@@ -84,6 +84,14 @@ module Helpers
             return '15.1'
         end
 
+        # [macOS
+        # Matches the minos of the macOS hermesvm.framework that upstream
+        # already publishes in every release tarball.
+        def self.min_macos_version_supported
+            return '11.0'
+        end
+        # macOS]
+
         def self.min_xcode_version_supported
             return '16.1'
         end

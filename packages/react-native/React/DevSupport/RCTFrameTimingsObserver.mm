@@ -43,7 +43,7 @@ struct FrameData {
 @implementation RCTFrameTimingsObserver {
   BOOL _screenshotsEnabled;
   RCTFrameTimingCallback _callback;
-  CADisplayLink *_displayLink;
+  RCTPlatformDisplayLink *_displayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   uint64_t _frameCounter;
   // Serial queue for encoding work (single background thread). We limit to 1
   // thread to minimize the performance impact of screenshot recording.
@@ -91,7 +91,7 @@ struct FrameData {
   auto now = HighResTimeStamp::now();
   [self _emitFrameTimingWithBeginTimestamp:now endTimestamp:now vsyncInterval:HighResDuration::zero()];
 
-  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(_displayLinkTick:)];
+  _displayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(_displayLinkTick:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 }
 
@@ -106,7 +106,7 @@ struct FrameData {
   }
 }
 
-- (void)_displayLinkTick:(CADisplayLink *)sender
+- (void)_displayLinkTick:(RCTPlatformDisplayLink *)sender  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   // CADisplayLink.timestamp and targetTimestamp are in the same timebase as
   // CACurrentMediaTime() / mach_absolute_time(), which on Apple platforms maps

@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateAnimations;
 
-- (void)stepAnimations:(CADisplayLink *)displaylink;
+- (void)stepAnimations:(RCTPlatformDisplayLink *)displaylink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 - (BOOL)isNodeManagedByFabric:(NSNumber *)tag;
 

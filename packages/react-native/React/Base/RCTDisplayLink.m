@@ -17,10 +17,10 @@
 #import "RCTProfile.h"
 
 #define RCTAssertRunLoop() \
-  RCTAssert(_runLoop == [NSRunLoop currentRunLoop], @"This method must be called on the CADisplayLink run loop")
+  RCTAssert(_runLoop == [NSRunLoop currentRunLoop], @"This method must be called on the RCTPlatformDisplayLink run loop")  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 @implementation RCTDisplayLink {
-  CADisplayLink *_jsDisplayLink;
+  RCTPlatformDisplayLink *_jsDisplayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   NSMutableSet<id<RCTDisplayLinkModuleHolder>> *_frameUpdateObservers;
   NSRunLoop *_runLoop;
 }
@@ -29,7 +29,7 @@
 {
   if ((self = [super init])) {
     _frameUpdateObservers = [NSMutableSet new];
-    _jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(_jsThreadUpdate:)];
+    _jsDisplayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(_jsThreadUpdate:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   }
 
   return self;
@@ -115,7 +115,7 @@
   }
 }
 
-- (void)_jsThreadUpdate:(CADisplayLink *)displayLink
+- (void)_jsThreadUpdate:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   RCTAssertRunLoop();
 

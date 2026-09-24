@@ -50,7 +50,7 @@ static NSUInteger RCTDeviceFreeMemory(void)
 @property (nonatomic, assign) NSUInteger maxBufferCount;
 @property (nonatomic, strong) NSOperationQueue *fetchQueue;
 @property (nonatomic, strong) dispatch_semaphore_t lock;
-@property (nonatomic, strong) CADisplayLink *displayLink;
+@property (nonatomic, strong) RCTPlatformDisplayLink *displayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 @end
 
@@ -149,7 +149,7 @@ static NSUInteger RCTDeviceFreeMemory(void)
   return _frameBuffer;
 }
 
-- (CADisplayLink *)displayLink
+- (RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   // We only need a displayLink in the case of animated images, so short-circuit this code and don't create one for most
   // of the use cases. Since this class is used for all RCTImageView's, this is especially important.
@@ -198,7 +198,7 @@ static NSUInteger RCTDeviceFreeMemory(void)
   return self.displayLink.isPaused;
 }
 
-- (void)displayDidRefresh:(CADisplayLink *)displayLink
+- (void)displayDidRefresh:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   // displaylink.duration -- time interval between frames, assuming maximumFramesPerSecond
   // displayLink.preferredFramesPerSecond (>= iOS 10) -- Set to 30 for displayDidRefresh to be called at 30 fps
