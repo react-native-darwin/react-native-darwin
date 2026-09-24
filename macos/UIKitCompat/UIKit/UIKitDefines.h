@@ -32,6 +32,13 @@ NS_ASSUME_NONNULL_BEGIN
 @compatibility_alias UIFont NSFont;
 @compatibility_alias UIFontDescriptor NSFontDescriptor;
 @compatibility_alias UIBezierPath NSBezierPath;
+
+@interface NSBezierPath (UIKitCompat)
+// UIBezierPath's rounded-rect factory takes one radius; NSBezierPath takes two.
++ (NSBezierPath *)bezierPathWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)cornerRadius;
+// UIKit spells -appendBezierPath: as -appendPath:.
+- (void)appendPath:(NSBezierPath *)path;
+@end
 @compatibility_alias UIViewController NSViewController;
 @compatibility_alias UIWindow NSWindow;
 @compatibility_alias UIScreen NSScreen;
@@ -44,6 +51,18 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSFontSymbolicTraits UIFontDescriptorSymbolicTraits;
 typedef NSFontWeight UIFontWeight;
 typedef NSEventModifierFlags UIKeyModifierFlags;
+typedef NSLayoutPriority UILayoutPriority;
+
+static const UILayoutPriority UILayoutPriorityRequired = NSLayoutPriorityRequired;
+static const UILayoutPriority UILayoutPriorityDefaultHigh = NSLayoutPriorityDefaultHigh;
+static const UILayoutPriority UILayoutPriorityDefaultLow = NSLayoutPriorityDefaultLow;
+static const UILayoutPriority UILayoutPriorityFittingSizeLevel = NSLayoutPriorityFittingSizeCompression;
+
+// Motion events are an iOS-only concept (shake to undo).
+typedef NS_ENUM(NSInteger, UIEventSubtype) {
+  UIEventSubtypeNone = 0,
+  UIEventSubtypeMotionShake = 1,
+};
 // AppKit's NSEventButtonMask only covers pen buttons -- there is no Primary or
 // Secondary constant to alias, so these carry UIKit's own bit values and are
 // matched against NSEvent.buttonNumber at the point of use.
@@ -56,7 +75,16 @@ typedef NSInteger UIViewAnimationCurve;
 
 // macOS has no scenes. Declared as classes rather than typedefs because
 // upstream uses them as object pointers; they are never instantiated.
+typedef NS_ENUM(NSInteger, UISceneActivationState) {
+  UISceneActivationStateUnattached = -1,
+  UISceneActivationStateForegroundActive = 0,
+  UISceneActivationStateForegroundInactive = 1,
+  UISceneActivationStateBackground = 2,
+};
+
 @interface UIScene : NSObject
+// A Mac window is either key or it is not; there is no scene lifecycle.
+@property (nonatomic, readonly) UISceneActivationState activationState;
 @end
 @interface UIWindowScene : UIScene
 @end
@@ -196,15 +224,18 @@ NS_INLINE CGFloat UIFontLineHeight(UIFont *font)
 
 #pragma mark - Tier 2: enums
 
-enum {
-  UIGestureRecognizerStatePossible = NSGestureRecognizerStatePossible,
-  UIGestureRecognizerStateBegan = NSGestureRecognizerStateBegan,
-  UIGestureRecognizerStateChanged = NSGestureRecognizerStateChanged,
-  UIGestureRecognizerStateEnded = NSGestureRecognizerStateEnded,
-  UIGestureRecognizerStateCancelled = NSGestureRecognizerStateCancelled,
-  UIGestureRecognizerStateFailed = NSGestureRecognizerStateFailed,
-  UIGestureRecognizerStateRecognized = NSGestureRecognizerStateRecognized,
-};
+// NSGestureRecognizer.state is an NSGestureRecognizerState, and a category
+// cannot retype it. So these are that type with UIKit's spellings, which makes
+// assignment type-check without touching the AppKit property.
+typedef NSGestureRecognizerState UIGestureRecognizerState;
+
+static const UIGestureRecognizerState UIGestureRecognizerStatePossible = NSGestureRecognizerStatePossible;
+static const UIGestureRecognizerState UIGestureRecognizerStateBegan = NSGestureRecognizerStateBegan;
+static const UIGestureRecognizerState UIGestureRecognizerStateChanged = NSGestureRecognizerStateChanged;
+static const UIGestureRecognizerState UIGestureRecognizerStateEnded = NSGestureRecognizerStateEnded;
+static const UIGestureRecognizerState UIGestureRecognizerStateCancelled = NSGestureRecognizerStateCancelled;
+static const UIGestureRecognizerState UIGestureRecognizerStateFailed = NSGestureRecognizerStateFailed;
+static const UIGestureRecognizerState UIGestureRecognizerStateRecognized = NSGestureRecognizerStateRecognized;
 
 enum : NSUInteger {
   UIViewAutoresizingNone = NSViewNotSizable,
@@ -362,6 +393,11 @@ typedef NS_OPTIONS(NSUInteger, UIControlEvents) {
   UIControlEventTouchDown = 1 << 0,
   UIControlEventTouchUpInside = 1 << 6,
   UIControlEventValueChanged = 1 << 12,
+  UIControlEventEditingDidBegin = 1 << 16,
+  UIControlEventEditingChanged = 1 << 17,
+  UIControlEventEditingDidEnd = 1 << 18,
+  UIControlEventEditingDidEndOnExit = 1 << 19,
+  UIControlEventAllEditingEvents = 0x000F0000,
 };
 
 typedef NS_ENUM(NSInteger, UIModalPresentationStyle) {
@@ -369,6 +405,7 @@ typedef NS_ENUM(NSInteger, UIModalPresentationStyle) {
   UIModalPresentationPageSheet = 1,
   UIModalPresentationFormSheet = 2,
   UIModalPresentationOverFullScreen = 5,
+  UIModalPresentationPopover = 7,
 };
 
 #define UIKeyModifierCommand NSEventModifierFlagCommand

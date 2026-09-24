@@ -18,12 +18,26 @@
 
 #import <AppKit/AppKit.h>
 
+#import "UIKeyCommand.h"
 #import "UIKitDefines.h"
 #import "UIView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class UITextSelectionRect;
+
+/**
+ * The active keyboard's input mode.
+ *
+ * macOS has no software keyboard, but it does have a current input source, and
+ * -primaryLanguage is the only thing React Native reads -- it uses it to decide
+ * whether the user is composing in a language that needs IME handling. So this
+ * answers the real current input source rather than nil.
+ */
+@interface UITextInputMode : NSObject
+@property (nonatomic, readonly, nullable) NSString *primaryLanguage;
+@property (class, nonatomic, readonly, nullable) UITextInputMode *currentInputMode;
+@end
 
 typedef NS_ENUM(NSInteger, UITextAutocapitalizationType) {
   UITextAutocapitalizationTypeNone = 0,
@@ -105,6 +119,12 @@ typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
 - (CGRect)caretRectForPosition:(UITextPosition *)position;
 - (CGRect)firstRectForRange:(UITextRange *)range;
 - (NSArray<UITextSelectionRect *> *)selectionRectsForRange:(UITextRange *)range;
+// Marked text is the in-progress IME composition. AppKit tracks it on the text
+// view itself, so this is nil unless a concrete class overrides it.
+@property (nonatomic, readonly, nullable) UITextRange *markedTextRange;
+// The active input source. There is no software keyboard on macOS, but the
+// current input source still tells you the composition language.
+@property (nonatomic, readonly, nullable) UITextInputMode *textInputMode;
 @end
 
 @protocol UITextFieldDelegate <NSTextFieldDelegate>
@@ -147,6 +167,22 @@ typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
 // UIKit's dictation hooks. No AppKit counterpart; accepted and dropped.
 - (void)removeDictationResultPlaceholder:(id)placeholder willInsertResult:(BOOL)willInsertResult;
 - (id)insertDictationResultPlaceholder;
+// UITextField lets a subclass inset the text and the placeholder. NSTextField
+// draws through a cell, so these report the cell's drawing rect.
+- (CGRect)textRectForBounds:(CGRect)bounds;
+- (CGRect)editingRectForBounds:(CGRect)bounds;
+- (CGRect)placeholderRectForBounds:(CGRect)bounds;
+// UIResponderStandardEditActions. NSTextField routes these through the field
+// editor, so they are forwarded to it.
+- (void)paste:(nullable id)sender;
+- (void)copy:(nullable id)sender;
+- (void)cut:(nullable id)sender;
+- (void)selectAll:(nullable id)sender;
+// NSControl carries one target/action pair; UIKit registers per control event.
+// The pairs are stored per event and dispatched from the AppKit action.
+- (void)addTarget:(nullable id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
+- (void)removeTarget:(nullable id)target action:(nullable SEL)action forControlEvents:(UIControlEvents)controlEvents;
+@property (nonatomic, weak, nullable) id<UITextDropDelegate> textDropDelegate;
 @end
 
 // UIKit's per-rect selection geometry. NSTextView exposes selection as ranges,
@@ -171,10 +207,18 @@ typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
 @property (nonatomic, assign) NSTextAlignment textAlignment;
 // NSTextView holds its content in a text storage rather than a property.
 @property (nonatomic, copy, nullable) NSAttributedString *attributedText;
+// UIScrollView-ish geometry that UITextView inherits; NSTextView is the
+// document inside an NSScrollView, so this is the laid-out text size.
+@property (nonatomic, assign) CGSize contentSize;
+@property (nonatomic, assign) UIEdgeInsets contentInset;
+- (BOOL)canPerformAction:(SEL)action withSender:(nullable id)sender;
+- (void)removeDictationResultPlaceholder:(id)placeholder willInsertResult:(BOOL)willInsertResult;
+- (id)insertDictationResultPlaceholder;
 - (void)buildMenuWithBuilder:(id<UIMenuBuilder>)builder;
 @property (nonatomic, assign) UIKeyboardType keyboardType;
 @property (nonatomic, assign) UIReturnKeyType returnKeyType;
 @property (nonatomic, copy, nullable) NSString *text;
+@property (nonatomic, weak, nullable) id<UITextDropDelegate> textDropDelegate;
 @end
 
 // UIKit's editing notifications. AppKit posts NSControlTextDidChange and

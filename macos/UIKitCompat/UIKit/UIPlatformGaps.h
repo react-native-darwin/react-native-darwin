@@ -16,6 +16,7 @@
 
 #import "UIEvent.h"
 #import "UIKitDefines.h"
+#import "UIViewAnimation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - UIWindow
 
+@class UIWindowScene;
+
 @interface NSWindow (UIKitCompat)
 // UIWindow is initialised from a frame. An NSWindow needs a style mask and a
 // backing store as well; this picks sensible defaults for a React Native
@@ -40,8 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
 // UIKit spells NSWindow's -level as -windowLevel.
 @property (nonatomic, assign) CGFloat windowLevel;
 // UIWindow.windowScene. macOS has no scenes; always nil.
-// Writable: upstream clears it when tearing an alert window down.
-@property (nonatomic, strong, nullable) id windowScene;
+// Writable: upstream clears it when tearing an alert window down. Typed
+// concretely so -statusBarManager and -windows resolve through it.
+@property (nonatomic, strong, nullable) UIWindowScene *windowScene;
 @property (nonatomic, assign) UIUserInterfaceStyle overrideUserInterfaceStyle;
 @end
 
@@ -133,6 +137,37 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 @property (nonatomic, readonly, nullable) NSScreen *coordinateSpace;
 @property (nonatomic, readonly, nullable) NSScreen *screen;
 @property (nonatomic, readonly) NSArray<NSWindow *> *windows;
+@property (nonatomic, readonly, nullable) NSWindow *keyWindow;
+@property (nonatomic, readonly, nullable) id statusBarManager;
+@end
+
+/**
+ * UIWindow is a UIView; NSWindow is not an NSView.
+ *
+ * That mismatch cannot be fixed by inheritance -- NSWindow is not in NSView's
+ * hierarchy and never will be. But almost every view message upstream sends to
+ * a window has an obvious meaning: it belongs to the window's content view. So
+ * rather than edit each call site, the view surface is forwarded here.
+ *
+ * This is what lets the profiler's floating controls palette, which is a
+ * UIWindow used as a plain container view, compile unchanged.
+ */
+@interface NSWindow (UIKitCompatBounds)
+@property (nonatomic, readonly) CGRect bounds;
+@property (nonatomic, readonly) UIEdgeInsets safeAreaInsets;
+// NSWindow already has -center, an action that centres the window on screen.
+// It cannot be redefined as a geometry property, so there is no UIKit -center
+// here; the one call site that wanted it is guarded instead.
+@property (nonatomic, assign) CGFloat alpha;
+@property (nonatomic, strong, nullable) NSColor *backgroundColorForUIKitCompat;
+@property (nonatomic, readonly, nullable) CALayer *layer;
+- (void)addSubview:(NSView *)view;
+- (nullable NSView *)hitTest:(CGPoint)point withEvent:(nullable UIEvent *)event;
+@end
+
+@interface NSViewController (UIKitCompatDismissal)
+@property (nonatomic, readonly, getter=isBeingDismissed) BOOL beingDismissed;
+@property (nonatomic, readonly, getter=isBeingPresented) BOOL beingPresented;
 @end
 
 @interface NSWindow (UIKitCompatRootViewController)
@@ -191,6 +226,19 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 // keeps the layer in step.
 @property (nonatomic, assign, getter=isOpaqueForUIKitCompat) BOOL opaque;
 - (NSArray *)focusItemsInRect:(CGRect)rect;
+// UIKit resigns first responder anywhere in the subtree; AppKit asks the window.
+- (BOOL)endEditing:(BOOL)force;
+// UIResponder tells UIKit to rebuild the keyboard and its accessory views.
+// There is nothing to rebuild on macOS.
+- (void)reloadInputViews;
+// UIKit calls it an axis, AppKit an orientation; the values coincide.
+- (void)setContentHuggingPriority:(UILayoutPriority)priority forAxis:(NSInteger)axis;
+- (void)setContentCompressionResistancePriority:(UILayoutPriority)priority forAxis:(NSInteger)axis;
+// UIKit's snapshot primitive, used by the perf/inspector tooling. AppKit's
+// equivalent is a bitmap cache of the view's own rect.
+- (BOOL)drawViewHierarchyInRect:(CGRect)rect afterScreenUpdates:(BOOL)afterUpdates;
+// UIKit's cheap snapshot view. Backed by a layer-contents copy on AppKit.
+- (nullable NSView *)snapshotViewAfterScreenUpdates:(BOOL)afterUpdates;
 // Large Content Viewer is an iOS accessibility affordance with no Mac analogue.
 @property (nonatomic, assign) BOOL showsLargeContentViewer;
 @property (nonatomic, copy, nullable) NSString *largeContentTitle;
@@ -208,6 +256,13 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 @interface NSViewController (UIKitCompatAppearance)
 @property (nonatomic, assign) UIUserInterfaceStyle overrideUserInterfaceStyle;
 @property (nonatomic, assign) NSInteger modalTransitionStyle;
+// UIKit's adaptive presentation hook. AppKit has no presentation controller,
+// so this vends an inert one rather than nil -- upstream sets .delegate on it
+// unconditionally, and a message to nil would silently drop the assignment.
+@property (nonatomic, readonly) UIPresentationController *presentationController;
+// Same object; UIKit exposes it twice for popover-specific configuration.
+@property (nonatomic, readonly) UIPresentationController *popoverPresentationController;
+@property (nonatomic, weak, nullable) id delegate;
 @property (nonatomic, assign) BOOL modalInPresentation;
 - (void)viewWillLayoutSubviews;
 @end
@@ -266,6 +321,11 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 // NSFontManager.
 + (NSArray<NSString *> *)fontNamesForFamilyName:(NSString *)familyName;
 + (NSArray<NSString *> *)familyNames;
+// Dynamic Type entry point. macOS has no scaling, so every text style maps to
+// the system font at its AppKit-standard size.
++ (NSFont *)preferredFontForTextStyle:(NSString *)textStyle;
+// UIFont.lineHeight. NSFont exposes the metrics but not the sum.
+@property (nonatomic, readonly) CGFloat lineHeight;
 @end
 
 @interface NSView (UIKitCompatSemanticContent)

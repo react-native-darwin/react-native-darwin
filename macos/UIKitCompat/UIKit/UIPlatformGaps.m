@@ -8,6 +8,7 @@
 #import "UIPlatformGaps.h"
 
 #import "UIColor.h"
+#import "UIStatusBar.h"
 #import "UIView.h"
 
 #import <objc/runtime.h>
@@ -15,6 +16,22 @@
 const CGFloat UIWindowLevelNormal = 0;
 const CGFloat UIWindowLevelAlert = 2000;
 const CGFloat UIWindowLevelStatusBar = 1000;
+
+@implementation NSBezierPath (UIKitCompat)
+
++ (NSBezierPath *)bezierPathWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)cornerRadius
+{
+  return [NSBezierPath bezierPathWithRoundedRect:NSRectFromCGRect(rect)
+                                         xRadius:cornerRadius
+                                         yRadius:cornerRadius];
+}
+
+- (void)appendPath:(NSBezierPath *)path
+{
+  [self appendBezierPath:path];
+}
+
+@end
 
 @implementation NSScreen (UIKitCompat)
 
@@ -57,12 +74,12 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
   self.level = (NSWindowLevel)level;
 }
 
-- (id)windowScene
+- (UIWindowScene *)windowScene
 {
   return objc_getAssociatedObject(self, @selector(windowScene));
 }
 
-- (void)setWindowScene:(id)windowScene
+- (void)setWindowScene:(UIWindowScene *)windowScene
 {
   objc_setAssociatedObject(self, @selector(windowScene), windowScene, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
@@ -233,10 +250,7 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 // UIScene and UIWindowScene are declared in UIKitDefines.h so upstream scene
 // pointers resolve. They are never instantiated, but a category needs the class
-// to exist at link time, so the (empty) implementations live here.
-@implementation UIScene
-@end
-
+// to exist at link time, so the implementations live here.
 @implementation UIWindowScene
 @end
 
@@ -255,6 +269,95 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 - (NSArray<NSWindow *> *)windows
 {
   return NSApp.windows ?: @[];
+}
+
+- (NSWindow *)keyWindow
+{
+  return NSApp.keyWindow ?: NSApp.mainWindow;
+}
+
+- (id)statusBarManager
+{
+  return [UIStatusBarManager new];
+}
+
+@end
+
+@implementation UIScene
+
+- (UISceneActivationState)activationState
+{
+  return NSApp.isActive ? UISceneActivationStateForegroundActive : UISceneActivationStateForegroundInactive;
+}
+
+@end
+
+@implementation NSWindow (UIKitCompatBounds)
+
+- (CGRect)bounds
+{
+  NSRect frame = self.frame;
+  return CGRectMake(0, 0, frame.size.width, frame.size.height);
+}
+
+- (UIEdgeInsets)safeAreaInsets
+{
+  // No notch, no home indicator.
+  return UIEdgeInsetsZero;
+}
+
+- (CGFloat)alpha
+{
+  return self.alphaValue;
+}
+
+- (void)setAlpha:(CGFloat)alpha
+{
+  self.alphaValue = alpha;
+}
+
+- (NSColor *)backgroundColorForUIKitCompat
+{
+  return self.backgroundColor;
+}
+
+- (void)setBackgroundColorForUIKitCompat:(NSColor *)color
+{
+  self.backgroundColor = color;
+}
+
+- (CALayer *)layer
+{
+  // Windows draw through their content view's layer.
+  self.contentView.wantsLayer = YES;
+  return self.contentView.layer;
+}
+
+- (void)addSubview:(NSView *)view
+{
+  if (self.contentView == nil) {
+    self.contentView = [[NSView alloc] initWithFrame:NSRectFromCGRect(self.bounds)];
+  }
+  [self.contentView addSubview:view];
+}
+
+- (NSView *)hitTest:(CGPoint)point withEvent:(__unused UIEvent *)event
+{
+  return [self.contentView hitTest:NSPointFromCGPoint(point)];
+}
+
+@end
+
+@implementation NSViewController (UIKitCompatDismissal)
+
+- (BOOL)isBeingDismissed
+{
+  return NO;
+}
+
+- (BOOL)isBeingPresented
+{
+  return self.presentingViewController != nil;
 }
 
 @end
@@ -484,6 +587,51 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
   return @[];
 }
 
+- (BOOL)endEditing:(__unused BOOL)force
+{
+  return [self.window makeFirstResponder:nil];
+}
+
+- (void)reloadInputViews
+{
+}
+
+- (void)setContentHuggingPriority:(UILayoutPriority)priority forAxis:(NSInteger)axis
+{
+  [self setContentHuggingPriority:priority forOrientation:(NSLayoutConstraintOrientation)axis];
+}
+
+- (void)setContentCompressionResistancePriority:(UILayoutPriority)priority forAxis:(NSInteger)axis
+{
+  [self setContentCompressionResistancePriority:priority
+                                 forOrientation:(NSLayoutConstraintOrientation)axis];
+}
+
+- (NSView *)snapshotViewAfterScreenUpdates:(__unused BOOL)afterUpdates
+{
+  NSBitmapImageRep *rep = [self bitmapImageRepForCachingDisplayInRect:self.bounds];
+  if (rep == nil) {
+    return nil;
+  }
+  [self cacheDisplayInRect:self.bounds toBitmapImageRep:rep];
+  NSImageView *snapshot = [[NSImageView alloc] initWithFrame:self.bounds];
+  NSImage *image = [[NSImage alloc] initWithSize:self.bounds.size];
+  [image addRepresentation:rep];
+  snapshot.image = image;
+  return snapshot;
+}
+
+- (BOOL)drawViewHierarchyInRect:(CGRect)rect afterScreenUpdates:(__unused BOOL)afterUpdates
+{
+  NSBitmapImageRep *rep = [self bitmapImageRepForCachingDisplayInRect:NSRectFromCGRect(rect)];
+  if (rep == nil) {
+    return NO;
+  }
+  [self cacheDisplayInRect:NSRectFromCGRect(rect) toBitmapImageRep:rep];
+  [rep drawInRect:NSRectFromCGRect(rect)];
+  return YES;
+}
+
 UIKIT_COMPAT_BOOL_PROP(showsLargeContentViewer, setShowsLargeContentViewer)
 UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
 
@@ -573,6 +721,32 @@ UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
 - (void)setModalInPresentation:(BOOL)value
 {
   objc_setAssociatedObject(self, @selector(modalInPresentation), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (UIPresentationController *)presentationController
+{
+  UIPresentationController *controller = objc_getAssociatedObject(self, @selector(presentationController));
+  if (controller == nil) {
+    controller = [UIPresentationController new];
+    objc_setAssociatedObject(
+        self, @selector(presentationController), controller, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  }
+  return controller;
+}
+
+- (UIPresentationController *)popoverPresentationController
+{
+  return self.presentationController;
+}
+
+- (id)delegate
+{
+  return objc_getAssociatedObject(self, @selector(delegate));
+}
+
+- (void)setDelegate:(id)delegate
+{
+  objc_setAssociatedObject(self, @selector(delegate), delegate, OBJC_ASSOCIATION_ASSIGN);
 }
 
 - (void)viewWillLayoutSubviews
@@ -711,6 +885,32 @@ UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
 + (NSArray<NSString *> *)familyNames
 {
   return NSFontManager.sharedFontManager.availableFontFamilies;
+}
+
+- (CGFloat)lineHeight
+{
+  return ceil(self.ascender + ABS(self.descender) + self.leading);
+}
+
++ (NSFont *)preferredFontForTextStyle:(NSString *)textStyle
+{
+  // Sizes follow AppKit's own conventions rather than iOS's Dynamic Type ramp.
+  CGFloat size = NSFont.systemFontSize;
+  if ([textStyle containsString:@"LargeTitle"]) {
+    size = 26;
+  } else if ([textStyle containsString:@"Title1"]) {
+    size = 22;
+  } else if ([textStyle containsString:@"Title2"]) {
+    size = 17;
+  } else if ([textStyle containsString:@"Title3"]) {
+    size = 15;
+  } else if ([textStyle containsString:@"Headline"]) {
+    size = NSFont.systemFontSize;
+  } else if ([textStyle containsString:@"Caption"] || [textStyle containsString:@"Footnote"]) {
+    size = NSFont.smallSystemFontSize;
+  }
+  BOOL bold = [textStyle containsString:@"Headline"] || [textStyle containsString:@"Title"];
+  return bold ? [NSFont boldSystemFontOfSize:size] : [NSFont systemFontOfSize:size];
 }
 
 @end

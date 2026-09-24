@@ -117,6 +117,15 @@ static const void *kUIKitCompatCGImageKey = &kUIKitCompatCGImageKey;
   return [[NSImage alloc] initWithContentsOfFile:path];
 }
 
++ (NSImage *)imageNamed:(NSString *)name
+               inBundle:(NSBundle *)bundle
+    compatibleWithTraitCollection:(__unused id)traitCollection
+{
+  // NSImage has no trait-aware lookup; appearance is resolved at draw time.
+  NSBundle *target = bundle ?: NSBundle.mainBundle;
+  return [target imageForResource:name] ?: [NSImage imageNamed:name];
+}
+
 + (NSImage *)imageWithCGImage:(CGImageRef)cgImage
 {
   if (cgImage == NULL) {

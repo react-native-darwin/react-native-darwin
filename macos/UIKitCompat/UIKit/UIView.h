@@ -114,6 +114,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 // NSView already provides -clipsToBounds (10.9+), so it is not redeclared here.
 
+// UIKit subclasses override -canBecomeFirstResponder and expect the framework
+// to honour it. RCTPlatformView bridges that to AppKit's
+// -acceptsFirstResponder, and terminates the chain at NSView's own
+// implementation rather than bouncing back through the category.
+@property (nonatomic, readonly) BOOL canBecomeFirstResponder;
+
 // Draw the focus ring when this view is first responder.
 @property (nonatomic, assign) BOOL enableFocusRing;
 

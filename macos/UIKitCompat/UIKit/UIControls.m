@@ -8,6 +8,10 @@
 
 #import "UIControls.h"
 
+#import <objc/runtime.h>
+
+#import "UIView.h"
+
 #pragma mark - UILabel
 
 @implementation UILabel
@@ -33,6 +37,16 @@
 - (void)setText:(NSString *)text
 {
   self.stringValue = text ?: @"";
+}
+
+- (NSAttributedString *)attributedText
+{
+  return self.attributedStringValue;
+}
+
+- (void)setAttributedText:(NSAttributedString *)attributedText
+{
+  self.attributedStringValue = attributedText ?: [NSAttributedString new];
 }
 
 - (NSInteger)numberOfLines
@@ -197,7 +211,10 @@
 @implementation UIButton {
   NSMutableDictionary<NSNumber *, NSString *> *_titles;
   NSMutableDictionary<NSNumber *, UIColor *> *_titleColors;
+  UILabel *_titleLabel;
 }
+
+@synthesize configuration = _configuration;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -210,6 +227,44 @@
 
 // AppKit has one title. UIKit has one per control state. Only the normal state
 // is ever rendered here; the rest are stored so reads round-trip.
+- (void)setConfiguration:(UIButtonConfiguration *)configuration
+{
+  _configuration = configuration;
+  // Map the parts AppKit can honour; the rest is carried for round-tripping.
+  if (configuration.attributedTitle != nil) {
+    self.attributedTitle = configuration.attributedTitle;
+  } else if (configuration.title != nil) {
+    self.title = configuration.title;
+  }
+  if (configuration.baseBackgroundColor != nil) {
+    self.bezelColor = configuration.baseBackgroundColor;
+  }
+  if (configuration.baseForegroundColor != nil) {
+    self.contentTintColor = configuration.baseForegroundColor;
+  }
+}
+
+- (UILabel *)titleLabel
+{
+  if (_titleLabel == nil) {
+    _titleLabel = [[UILabel alloc] initWithFrame:NSZeroRect];
+    _titleLabel.font = self.font;
+  }
+  return _titleLabel;
+}
+
++ (instancetype)buttonWithConfiguration:(UIButtonConfiguration *)configuration
+                          primaryAction:(UIAction *)primaryAction
+{
+  UIButton *button = [[self alloc] initWithFrame:NSZeroRect];
+  button.bezelStyle = NSBezelStyleRounded;
+  button.configuration = configuration;
+  if (primaryAction != nil) {
+    [button addAction:primaryAction forControlEvents:UIControlEventTouchUpInside];
+  }
+  return button;
+}
+
 + (instancetype)buttonWithType:(__unused UIButtonType)buttonType
 {
   // AppKit picks a button style from bezel and bordered flags rather than a
@@ -246,9 +301,89 @@
   self.action = action;
 }
 
+- (void)addAction:(UIAction *)action forControlEvents:(__unused UIControlEvents)controlEvents
+{
+  // The action object holds the block; the control fires it through the
+  // single AppKit target/action pair.
+  objc_setAssociatedObject(self, @selector(addAction:forControlEvents:), action, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  self.target = action;
+  self.action = @selector(UIKitCompatInvoke);
+}
+
 - (void)setTitleColor:(UIColor *)color forState:(UIControlState)state
 {
   _titleColors[@(state)] = color;
+}
+
+@end
+
+#pragma mark - Button configuration
+
+@implementation UIBackgroundConfiguration
+
++ (instancetype)clearConfiguration
+{
+  return [UIBackgroundConfiguration new];
+}
+
+@end
+
+@implementation UIButtonConfiguration
+
++ (instancetype)plainButtonConfiguration
+{
+  return [UIButtonConfiguration new];
+}
+
++ (instancetype)filledButtonConfiguration
+{
+  return [UIButtonConfiguration new];
+}
+
++ (instancetype)tintedButtonConfiguration
+{
+  return [UIButtonConfiguration new];
+}
+
++ (instancetype)grayButtonConfiguration
+{
+  return [UIButtonConfiguration new];
+}
+
+@end
+
+#pragma mark - Input accessory
+
+@implementation UIBarButtonItem
+
+- (instancetype)initWithTitle:(NSString *)title style:(NSInteger)style target:(id)target action:(SEL)action
+{
+  if ((self = [super init])) {
+    _title = [title copy];
+    _style = style;
+    _target = target;
+    _action = action;
+  }
+  return self;
+}
+
+- (instancetype)initWithBarButtonSystemItem:(__unused NSInteger)systemItem target:(id)target action:(SEL)action
+{
+  return [self initWithTitle:nil style:0 target:target action:action];
+}
+
+@end
+
+@implementation UIToolbar
+
+- (void)setItems:(NSArray<UIBarButtonItem *> *)items animated:(__unused BOOL)animated
+{
+  self.items = items;
+}
+
+- (void)sizeToFit
+{
+  // Nothing presents an accessory bar on macOS, so there is no intrinsic size.
 }
 
 @end
@@ -276,8 +411,59 @@
 
 #pragma mark - UITableView
 
+@implementation UIAction {
+  void (^_handler)(UIAction *);
+}
+
++ (instancetype)actionWithTitle:(NSString *)title
+                          image:(__unused NSImage *)image
+                     identifier:(__unused NSString *)identifier
+                        handler:(void (^)(UIAction *))handler
+{
+  UIAction *action = [UIAction new];
+  action.title = title;
+  action->_handler = [handler copy];
+  return action;
+}
+
++ (instancetype)actionWithHandler:(void (^)(UIAction *))handler
+{
+  return [self actionWithTitle:@"" image:nil identifier:nil handler:handler];
+}
+
+- (void)UIKitCompatInvoke
+{
+  if (_handler != nil) {
+    _handler(self);
+  }
+}
+
+@end
+
+@implementation NSIndexPath (UIKitCompat)
+
+- (NSInteger)row
+{
+  return self.length > 1 ? [self indexAtPosition:1] : 0;
+}
+
+- (NSInteger)section
+{
+  return self.length > 0 ? [self indexAtPosition:0] : 0;
+}
+
++ (NSIndexPath *)indexPathForRow:(NSInteger)row inSection:(NSInteger)section
+{
+  NSUInteger indexes[] = {(NSUInteger)section, (NSUInteger)row};
+  return [NSIndexPath indexPathWithIndexes:indexes length:2];
+}
+
+@end
+
 @implementation UITableViewCell {
   UILabel *_textLabel;
+  UILabel *_detailTextLabel;
+  NSView *_contentView;
 }
 
 - (instancetype)initWithStyle:(__unused UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
@@ -288,13 +474,32 @@
   return self;
 }
 
+- (NSView *)contentView
+{
+  if (_contentView == nil) {
+    _contentView = [[RCTPlatformView alloc] initWithFrame:self.bounds];
+    _contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    [self addSubview:_contentView];
+  }
+  return _contentView;
+}
+
 - (UILabel *)textLabel
 {
   if (_textLabel == nil) {
-    _textLabel = [[UILabel alloc] initWithFrame:self.bounds];
-    [self addSubview:_textLabel];
+    _textLabel = [[UILabel alloc] initWithFrame:NSZeroRect];
+    [self.contentView addSubview:_textLabel];
   }
   return _textLabel;
+}
+
+- (UILabel *)detailTextLabel
+{
+  if (_detailTextLabel == nil) {
+    _detailTextLabel = [[UILabel alloc] initWithFrame:NSZeroRect];
+    [self.contentView addSubview:_detailTextLabel];
+  }
+  return _detailTextLabel;
 }
 
 @end
@@ -309,12 +514,14 @@
   if ((self = [super initWithFrame:frameRect])) {
     _cellClasses = [NSMutableDictionary new];
     _cells = [NSMutableDictionary new];
+    _rowHeight = 44;
   }
   return self;
 }
 
-- (void)reloadData
+- (instancetype)initWithFrame:(CGRect)frame style:(__unused UITableViewStyle)style
 {
+  return [self initWithFrame:NSRectFromCGRect(frame)];
 }
 
 - (void)registerClass:(Class)cellClass forCellReuseIdentifier:(NSString *)identifier
@@ -329,11 +536,46 @@
   UITableViewCell *cell = _cells[identifier];
   if (cell == nil) {
     Class cellClass = _cellClasses[identifier] ?: [UITableViewCell class];
-    cell = [[cellClass alloc] initWithFrame:NSZeroRect];
-    cell.reuseIdentifier = identifier;
+    cell = [[cellClass alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     _cells[identifier] = cell;
   }
   return cell;
+}
+
+- (UITableViewCell *)dequeueReusableCellWithIdentifier:(NSString *)identifier
+                                          forIndexPath:(__unused NSIndexPath *)indexPath
+{
+  return [self dequeueReusableCellWithIdentifier:identifier];
+}
+
+- (void)reloadData
+{
+}
+
+- (void)scrollToRowAtIndexPath:(__unused NSIndexPath *)indexPath
+              atScrollPosition:(__unused UITableViewScrollPosition)scrollPosition
+                      animated:(__unused BOOL)animated
+{
+}
+
+- (void)selectRowAtIndexPath:(__unused NSIndexPath *)indexPath
+                    animated:(__unused BOOL)animated
+              scrollPosition:(__unused UITableViewScrollPosition)scrollPosition
+{
+}
+
+- (void)deselectRowAtIndexPath:(__unused NSIndexPath *)indexPath animated:(__unused BOOL)animated
+{
+}
+
+- (UITableViewCell *)cellForRowAtIndexPath:(__unused NSIndexPath *)indexPath
+{
+  return nil;
+}
+
+- (NSIndexPath *)indexPathForSelectedRow
+{
+  return nil;
 }
 
 @end

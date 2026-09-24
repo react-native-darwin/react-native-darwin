@@ -82,20 +82,40 @@ extern UITextContentType const UITextContentTypeCreditCardSecurityCode;
 extern UITextContentType const UITextContentTypeCellularEID;
 extern UITextContentType const UITextContentTypeCellularIMEI;
 
-typedef NS_ENUM(NSInteger, UIStackViewDistribution) {
-  UIStackViewDistributionFill = 0,
-  UIStackViewDistributionFillEqually,
-  UIStackViewDistributionFillProportionally,
-  UIStackViewDistributionEqualSpacing,
-  UIStackViewDistributionEqualCentering,
-};
+// NSStackView already declares -distribution and -alignment with its own types,
+// and a category cannot narrow a property's type. So rather than invent parallel
+// enums, these are the AppKit types with UIKit's spellings -- assignment then
+// type-checks without touching NSStackView at all.
+typedef NSStackViewDistribution UIStackViewDistribution;
 
-typedef NS_ENUM(NSInteger, UIStackViewAlignment) {
-  UIStackViewAlignmentFill = 0,
-  UIStackViewAlignmentLeading,
-  UIStackViewAlignmentCenter,
-  UIStackViewAlignmentTrailing,
-};
+static const UIStackViewDistribution UIStackViewDistributionFill = NSStackViewDistributionFill;
+static const UIStackViewDistribution UIStackViewDistributionFillEqually = NSStackViewDistributionFillEqually;
+static const UIStackViewDistribution UIStackViewDistributionFillProportionally = NSStackViewDistributionFillProportionally;
+static const UIStackViewDistribution UIStackViewDistributionEqualSpacing = NSStackViewDistributionEqualSpacing;
+static const UIStackViewDistribution UIStackViewDistributionEqualCentering = NSStackViewDistributionEqualCentering;
+
+typedef NSLayoutAttribute UIStackViewAlignment;
+
+// UIKit's Fill means "no cross-axis alignment constraint", which AppKit spells
+// as no attribute at all.
+static const UIStackViewAlignment UIStackViewAlignmentFill = NSLayoutAttributeNotAnAttribute;
+static const UIStackViewAlignment UIStackViewAlignmentLeading = NSLayoutAttributeLeading;
+static const UIStackViewAlignment UIStackViewAlignmentCenter = NSLayoutAttributeCenterX;
+static const UIStackViewAlignment UIStackViewAlignmentTrailing = NSLayoutAttributeTrailing;
+static const UIStackViewAlignment UIStackViewAlignmentTop = NSLayoutAttributeTop;
+static const UIStackViewAlignment UIStackViewAlignmentBottom = NSLayoutAttributeBottom;
+static const UIStackViewAlignment UIStackViewAlignmentFirstBaseline = NSLayoutAttributeFirstBaseline;
+static const UIStackViewAlignment UIStackViewAlignmentLastBaseline = NSLayoutAttributeLastBaseline;
+
+// UIKit names its layout guide type; AppKit's is NSLayoutGuide.
+@compatibility_alias UILayoutGuide NSLayoutGuide;
+
+// Hardware key strings UIKit exposes for key commands.
+extern NSString *const UIKeyInputEscape;
+extern NSString *const UIKeyInputUpArrow;
+extern NSString *const UIKeyInputDownArrow;
+extern NSString *const UIKeyInputLeftArrow;
+extern NSString *const UIKeyInputRightArrow;
 
 typedef NS_ENUM(NSInteger, UIScrollViewIndicatorStyle) {
   UIScrollViewIndicatorStyleDefault = 0,
@@ -109,13 +129,46 @@ typedef NS_ENUM(NSInteger, UIScrollViewKeyboardDismissMode) {
   UIScrollViewKeyboardDismissModeInteractive,
 };
 
-// iOS 16 edit menus. AppKit builds menus from NSMenu.
-@interface UIEditMenuInteraction : NSObject
-- (instancetype)initWithDelegate:(nullable id)delegate;
+/**
+ * The text selection edit menu.
+ *
+ * iOS 16 models this as an interaction plus a configuration; earlier iOS used
+ * the UIMenuController singleton. AppKit has neither -- a text view shows its
+ * own contextual NSMenu. Both shapes are declared so the paragraph component
+ * compiles; presenting is a no-op because AppKit already does it.
+ */
+@interface UIEditMenuConfiguration : NSObject
+@property (nonatomic, readonly) CGPoint sourcePoint;
+@property (nonatomic, strong, nullable) id background;
+@property (nonatomic, assign) UIEdgeInsets contentInsets;
+@property (nonatomic, strong, nullable) NSColor *baseForegroundColor;
++ (instancetype)configurationWithIdentifier:(nullable id)identifier sourcePoint:(CGPoint)sourcePoint;
 @end
 
-@interface NSStackView (UIKitCompatDistribution)
-@property (nonatomic, assign) UIStackViewDistribution distributionForUIKitCompat;
+@interface UIEditMenuInteraction : NSObject
+- (instancetype)initWithDelegate:(nullable id)delegate;
+- (void)presentEditMenuWithConfiguration:(UIEditMenuConfiguration *)configuration;
+- (void)dismissMenu;
+@end
+
+@interface UIMenuController : NSObject
+@property (class, nonatomic, readonly) UIMenuController *sharedMenuController;
+@property (nonatomic, readonly, getter=isMenuVisible) BOOL menuVisible;
+- (void)showMenuFromView:(NSView *)view rect:(CGRect)rect;
+- (void)hideMenu;
+@end
+
+@interface NSResponder (UIKitCompatEditActions)
+// UIResponder's gate for the edit menu. NSResponder uses
+// -validateUserInterfaceItem:, so this answers from the selector alone.
+- (BOOL)canPerformAction:(SEL)action withSender:(nullable id)sender;
+@end
+
+@interface NSPasteboard (UIKitCompatItems)
+// UIPasteboard.items is a read-write array of type->value dictionaries.
+// Writing it replaces the pasteboard contents, which is what -clearContents
+// plus a write does on AppKit.
+@property (nonatomic, copy) NSArray<NSDictionary<NSString *, id> *> *items;
 @end
 
 typedef NS_ENUM(NSInteger, UILayoutConstraintAxis) {
@@ -125,8 +178,30 @@ typedef NS_ENUM(NSInteger, UILayoutConstraintAxis) {
 
 // Presentation controllers have no AppKit counterpart; sheets and popovers are
 // managed by the presenting controller itself.
+typedef NS_OPTIONS(NSUInteger, UIPopoverArrowDirection) {
+  UIPopoverArrowDirectionUp = 1 << 0,
+  UIPopoverArrowDirectionDown = 1 << 1,
+  UIPopoverArrowDirectionLeft = 1 << 2,
+  UIPopoverArrowDirectionRight = 1 << 3,
+  UIPopoverArrowDirectionAny = 0x0f,
+  UIPopoverArrowDirectionUnknown = NSUIntegerMax,
+};
+
+/**
+ * UIKit's presentation controller, with the popover fields upstream anchors
+ * action sheets and share sheets to.
+ *
+ * AppKit anchors an NSPopover or an NSSharingServicePicker to a view and a
+ * rect directly, so these are recorded and read back by the presenting code
+ * rather than driving a controller of their own.
+ */
 @interface UIPresentationController : NSObject
 @property (nonatomic, readonly, nullable) NSViewController *presentedViewController;
+@property (nonatomic, weak, nullable) id delegate;
+@property (nonatomic, weak, nullable) NSView *sourceView;
+@property (nonatomic, assign) CGRect sourceRect;
+@property (nonatomic, assign) UIPopoverArrowDirection permittedArrowDirections;
+@property (nonatomic, strong, nullable) id barButtonItem;
 @end
 
 @interface NSView (UIKitCompatInteraction)
@@ -169,6 +244,17 @@ extern UIContentSizeCategory const UIContentSizeCategoryAccessibilityExtraExtraE
 @interface NSView (UIKitCompatContentSize)
 @property (nonatomic, readonly, copy) UIContentSizeCategory preferredContentSizeCategory;
 @end
+
+// VoiceOver announcement attributes. AppKit expresses priority as an
+// NSAccessibilityPriorityLevel in the notification's user info.
+typedef NSString *UIAccessibilitySpeechAttribute NS_TYPED_ENUM;
+extern UIAccessibilitySpeechAttribute const UIAccessibilitySpeechAttributeQueueAnnouncement;
+extern UIAccessibilitySpeechAttribute const UIAccessibilitySpeechAttributeAnnouncementPriority;
+
+typedef NSString *UIAccessibilityPriority NS_TYPED_ENUM;
+extern UIAccessibilityPriority const UIAccessibilityPriorityLow;
+extern UIAccessibilityPriority const UIAccessibilityPriorityDefault;
+extern UIAccessibilityPriority const UIAccessibilityPriorityHigh;
 
 extern NSNotificationName const UIDeviceProximityStateDidChangeNotification;
 extern NSNotificationName const UIDeviceBatteryLevelDidChangeNotification;
@@ -235,6 +321,23 @@ BOOL UIAccessibilityIsInvertColorsEnabled(void);
 BOOL UIAccessibilityIsBoldTextEnabled(void);
 BOOL UIAccessibilityIsGrayscaleEnabled(void);
 BOOL UIAccessibilityDarkerSystemColorsEnabled(void);
+BOOL UIAccessibilityIsSwitchControlRunning(void);
+// The rest of UIKit's accessibility queries. Only the handful AppKit actually
+// tracks return anything but NO -- see the implementation for which.
+BOOL UIAccessibilityPrefersCrossFadeTransitions(void);
+BOOL UIAccessibilityIsVideoAutoplayEnabled(void);
+BOOL UIAccessibilityShouldDifferentiateWithoutColor(void);
+BOOL UIAccessibilityIsOnOffSwitchLabelsEnabled(void);
+BOOL UIAccessibilityIsClosedCaptioningEnabled(void);
+BOOL UIAccessibilityIsMonoAudioEnabled(void);
+BOOL UIAccessibilityIsShakeToUndoEnabled(void);
+BOOL UIAccessibilityIsGuidedAccessEnabled(void);
+BOOL UIAccessibilityIsAssistiveTouchRunning(void);
+BOOL UIAccessibilityButtonShapesEnabled(void);
+// The element VoiceOver is on. AppKit tracks this per application.
+id _Nullable UIAccessibilityFocusedElement(id _Nullable assistiveTechnologyIdentifier);
+BOOL UIAccessibilityIsSpeakScreenEnabled(void);
+BOOL UIAccessibilityIsSpeakSelectionEnabled(void);
 
 #ifdef __cplusplus
 }

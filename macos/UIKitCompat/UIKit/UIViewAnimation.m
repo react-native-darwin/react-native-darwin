@@ -56,7 +56,25 @@ UITextContentType const UITextContentTypeCreditCardSecurityCode = @"UITextConten
 UITextContentType const UITextContentTypeCellularEID = @"UITextContentTypeCellularEID";
 UITextContentType const UITextContentTypeCellularIMEI = @"UITextContentTypeCellularIMEI";
 
+// The literal characters AppKit delivers in -charactersIgnoringModifiers.
+NSString *const UIKeyInputEscape = @"\x1b";
+NSString *const UIKeyInputUpArrow = @"\uF700";
+NSString *const UIKeyInputDownArrow = @"\uF701";
+NSString *const UIKeyInputLeftArrow = @"\uF702";
+NSString *const UIKeyInputRightArrow = @"\uF703";
+
 @implementation UIPresentationController
+@end
+
+@implementation UIEditMenuConfiguration
+
++ (instancetype)configurationWithIdentifier:(__unused id)identifier sourcePoint:(CGPoint)sourcePoint
+{
+  UIEditMenuConfiguration *configuration = [UIEditMenuConfiguration new];
+  configuration->_sourcePoint = sourcePoint;
+  return configuration;
+}
+
 @end
 
 @implementation UIEditMenuInteraction
@@ -66,18 +84,87 @@ UITextContentType const UITextContentTypeCellularIMEI = @"UITextContentTypeCellu
   return [super init];
 }
 
-@end
-
-@implementation NSStackView (UIKitCompatDistribution)
-
-- (UIStackViewDistribution)distributionForUIKitCompat
+- (void)presentEditMenuWithConfiguration:(__unused UIEditMenuConfiguration *)configuration
 {
-  return (UIStackViewDistribution)self.distribution;
+  // AppKit text views already present their own contextual menu on right-click.
 }
 
-- (void)setDistributionForUIKitCompat:(UIStackViewDistribution)distribution
+- (void)dismissMenu
 {
-  self.distribution = (NSStackViewDistribution)distribution;
+}
+
+@end
+
+@implementation UIMenuController
+
++ (UIMenuController *)sharedMenuController
+{
+  static UIMenuController *controller;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    controller = [UIMenuController new];
+  });
+  return controller;
+}
+
+- (BOOL)isMenuVisible
+{
+  return NO;
+}
+
+- (void)showMenuFromView:(__unused NSView *)view rect:(__unused CGRect)rect
+{
+}
+
+- (void)hideMenu
+{
+}
+
+@end
+
+@implementation NSResponder (UIKitCompatEditActions)
+
+- (BOOL)canPerformAction:(SEL)action withSender:(__unused id)sender
+{
+  return [self respondsToSelector:action];
+}
+
+@end
+
+@implementation NSPasteboard (UIKitCompatItems)
+
+- (NSArray<NSDictionary<NSString *, id> *> *)items
+{
+  NSMutableArray<NSDictionary<NSString *, id> *> *items = [NSMutableArray new];
+  for (NSPasteboardItem *item in self.pasteboardItems) {
+    NSMutableDictionary<NSString *, id> *entry = [NSMutableDictionary new];
+    for (NSPasteboardType type in item.types) {
+      id value = [item stringForType:type] ?: [item dataForType:type];
+      if (value != nil) {
+        entry[type] = value;
+      }
+    }
+    [items addObject:entry];
+  }
+  return items;
+}
+
+- (void)setItems:(NSArray<NSDictionary<NSString *, id> *> *)items
+{
+  [self clearContents];
+  NSMutableArray<NSPasteboardItem *> *pasteboardItems = [NSMutableArray new];
+  for (NSDictionary<NSString *, id> *entry in items) {
+    NSPasteboardItem *item = [NSPasteboardItem new];
+    [entry enumerateKeysAndObjectsUsingBlock:^(NSString *type, id value, __unused BOOL *stop) {
+      if ([value isKindOfClass:[NSString class]]) {
+        [item setString:value forType:type];
+      } else if ([value isKindOfClass:[NSData class]]) {
+        [item setData:value forType:type];
+      }
+    }];
+    [pasteboardItems addObject:item];
+  }
+  [self writeObjects:pasteboardItems];
 }
 
 @end
@@ -146,6 +233,13 @@ UIContentSizeCategory const UIContentSizeCategoryAccessibilityExtraExtraExtraLar
   return UIContentSizeCategoryLarge;
 }
 @end
+
+UIAccessibilitySpeechAttribute const UIAccessibilitySpeechAttributeQueueAnnouncement = @"UIAccessibilitySpeechAttributeQueueAnnouncement";
+UIAccessibilitySpeechAttribute const UIAccessibilitySpeechAttributeAnnouncementPriority = @"UIAccessibilitySpeechAttributeAnnouncementPriority";
+
+UIAccessibilityPriority const UIAccessibilityPriorityLow = @"UIAccessibilityPriorityLow";
+UIAccessibilityPriority const UIAccessibilityPriorityDefault = @"UIAccessibilityPriorityDefault";
+UIAccessibilityPriority const UIAccessibilityPriorityHigh = @"UIAccessibilityPriorityHigh";
 
 NSNotificationName const UIDeviceProximityStateDidChangeNotification = @"UIDeviceProximityStateDidChangeNotification";
 NSNotificationName const UIDeviceBatteryLevelDidChangeNotification = @"UIDeviceBatteryLevelDidChangeNotification";
@@ -311,4 +405,77 @@ BOOL UIAccessibilityIsGrayscaleEnabled(void)
 BOOL UIAccessibilityDarkerSystemColorsEnabled(void)
 {
   return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
+}
+
+id UIAccessibilityFocusedElement(__unused id assistiveTechnologyIdentifier)
+{
+  return NSApp.keyWindow.firstResponder;
+}
+
+BOOL UIAccessibilityIsSwitchControlRunning(void)
+{
+  // Switch Control exists on macOS but is not exposed through NSWorkspace.
+  return NO;
+}
+
+BOOL UIAccessibilityPrefersCrossFadeTransitions(void)
+{
+  // "Reduce motion" is the setting that turns slides into cross-fades.
+  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+}
+
+BOOL UIAccessibilityShouldDifferentiateWithoutColor(void)
+{
+  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldDifferentiateWithoutColor;
+}
+
+BOOL UIAccessibilityIsVideoAutoplayEnabled(void)
+{
+  // macOS has no global autoplay switch; UIKit's default is YES.
+  return YES;
+}
+
+BOOL UIAccessibilityIsOnOffSwitchLabelsEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsClosedCaptioningEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsMonoAudioEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsShakeToUndoEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsGuidedAccessEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsAssistiveTouchRunning(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityButtonShapesEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsSpeakScreenEnabled(void)
+{
+  return NO;
+}
+
+BOOL UIAccessibilityIsSpeakSelectionEnabled(void)
+{
+  return NO;
 }

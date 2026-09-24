@@ -30,16 +30,14 @@ React/CoreModules/RCTActionSheetManager
 
 # --- deferred -----------------------------------------------------------------
 #
-# Dev-surface UI. Each is a window-and-chrome port rather than framework work,
-# and none of it is needed to render an app. Together these are ~900 lines in
-# react-native-macos.
+# Dev-surface UI. A window-and-chrome port rather than framework work, and not
+# needed to render an app.
+#
+# RedBox is deliberately NOT here. It was excluded at first, but excluding half
+# of it broke the other half: RCTRedBox.mm imports the extra-data view
+# controller's header, which lived in a different pod and so a different
+# exclusion. Completing the UITableView shim was less work than splitting the
+# exclusion correctly, and it keeps the error overlay -- which is worth having.
 
-React/CoreModules/RCTRedBox
-React/CoreModules/RCTRedBox2
-React/Modules/RCTRedBox
 React/CoreModules/RCTDevMenu
 React/CoreModules/RCTPerfMonitor
-
-# Dev overlay drawn with UIStackView distribution constants that do not map onto
-# NSStackView's. Chrome, not framework.
-React/DevSupport/RCTPausedInDebuggerOverlayController

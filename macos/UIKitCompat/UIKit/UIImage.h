@@ -60,6 +60,9 @@ typedef NS_ENUM(NSInteger, UIImageRenderingMode) {
 
 + (nullable NSImage *)imageWithData:(NSData *)data;
 + (nullable NSImage *)imageWithContentsOfFile:(NSString *)path;
++ (nullable NSImage *)imageNamed:(NSString *)name
+                        inBundle:(nullable NSBundle *)bundle
+   compatibleWithTraitCollection:(nullable id)traitCollection;
 + (nullable NSImage *)imageWithCGImage:(CGImageRef)cgImage;
 + (nullable NSImage *)imageWithCGImage:(CGImageRef)cgImage
                                  scale:(CGFloat)scale

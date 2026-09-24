@@ -62,7 +62,29 @@ typedef NS_ENUM(NSInteger, UITextDropEditability) {
 @protocol UITextDroppable <NSObject>
 @end
 
+typedef NS_ENUM(NSInteger, UIDropOperation) {
+  UIDropOperationCancel = 0,
+  UIDropOperationForbidden,
+  UIDropOperationCopy,
+  UIDropOperationMove,
+};
+
+// UIKit's text drop machinery. AppKit uses NSDraggingDestination, a different
+// model entirely, so these are declared to satisfy the delegate signatures and
+// never fire.
+@interface UITextDropProposal : NSObject
+@property (nonatomic, assign) UIDropOperation operation;
+- (instancetype)initWithDropOperation:(UIDropOperation)operation;
+@end
+
+// The drag session UIKit hands to a drop delegate.
+@protocol UIDropSession <NSObject>
+- (BOOL)hasItemsConformingToTypeIdentifiers:(NSArray<NSString *> *)typeIdentifiers;
+@end
+
 @protocol UITextDropRequest <NSObject>
+@property (nonatomic, readonly, nullable) UITextDropProposal *suggestedProposal;
+@property (nonatomic, readonly, nullable) id<UIDropSession> dropSession;
 @end
 
 @protocol UIAdaptivePresentationControllerDelegate <NSObject>

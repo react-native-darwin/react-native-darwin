@@ -7,6 +7,8 @@
 
 #import "UIText.h"
 
+#import <objc/runtime.h>
+
 // Shared UITextInput geometry. Both concrete classes answer the same way:
 // positions are plain character offsets, and the rects come from whichever
 // layout machinery the class has.
@@ -31,6 +33,22 @@
     return toPosition.offset - from.offset;                                                \
   }
 
+
+@implementation UITextInputMode
+
++ (UITextInputMode *)currentInputMode
+{
+  return [UITextInputMode new];
+}
+
+- (NSString *)primaryLanguage
+{
+  // NSTextInputContext knows the current input source's languages.
+  return NSTextInputContext.currentInputContext.selectedKeyboardInputSource
+      ?: NSLocale.currentLocale.languageCode;
+}
+
+@end
 
 @implementation UITextPosition
 
@@ -131,6 +149,63 @@ UIKIT_COMPAT_TEXT_INPUT_GEOMETRY
   return [self respondsToSelector:action];
 }
 
+- (void)addTarget:(id)target action:(SEL)action forControlEvents:(__unused UIControlEvents)controlEvents
+{
+  self.target = target;
+  self.action = action;
+}
+
+- (void)removeTarget:(__unused id)target action:(__unused SEL)action forControlEvents:(__unused UIControlEvents)events
+{
+  self.target = nil;
+  self.action = NULL;
+}
+
+- (id<UITextDropDelegate>)textDropDelegate
+{
+  return objc_getAssociatedObject(self, @selector(textDropDelegate));
+}
+
+- (void)setTextDropDelegate:(id<UITextDropDelegate>)textDropDelegate
+{
+  objc_setAssociatedObject(self, @selector(textDropDelegate), textDropDelegate, OBJC_ASSOCIATION_ASSIGN);
+}
+
+- (CGRect)textRectForBounds:(CGRect)bounds
+{
+  return NSRectToCGRect([self.cell drawingRectForBounds:NSRectFromCGRect(bounds)]);
+}
+
+- (CGRect)editingRectForBounds:(CGRect)bounds
+{
+  return [self textRectForBounds:bounds];
+}
+
+- (CGRect)placeholderRectForBounds:(CGRect)bounds
+{
+  return [self textRectForBounds:bounds];
+}
+
+- (void)paste:(id)sender
+{
+  [[self.window fieldEditor:YES forObject:self] paste:sender];
+}
+
+- (void)copy:(id)sender
+{
+  [[self.window fieldEditor:YES forObject:self] copy:sender];
+}
+
+- (void)cut:(id)sender
+{
+  [[self.window fieldEditor:YES forObject:self] cut:sender];
+}
+
+- (void)selectAll:(id)sender
+{
+  [[self.window fieldEditor:YES forObject:self] selectAll:sender];
+}
+
 - (NSAttributedString *)attributedPlaceholder
 {
   return self.placeholderAttributedString;
@@ -191,6 +266,53 @@ UIKIT_COMPAT_TEXT_INPUT_GEOMETRY
 - (void)setTextAlignment:(NSTextAlignment)textAlignment
 {
   self.alignment = textAlignment;
+}
+
+- (id<UITextDropDelegate>)textDropDelegate
+{
+  return objc_getAssociatedObject(self, @selector(textDropDelegate));
+}
+
+- (void)setTextDropDelegate:(id<UITextDropDelegate>)textDropDelegate
+{
+  objc_setAssociatedObject(self, @selector(textDropDelegate), textDropDelegate, OBJC_ASSOCIATION_ASSIGN);
+}
+
+- (CGSize)contentSize
+{
+  // The size the text actually occupies, which is what UITextView reports.
+  [self.layoutManager ensureLayoutForTextContainer:self.textContainer];
+  return NSSizeToCGSize([self.layoutManager usedRectForTextContainer:self.textContainer].size);
+}
+
+- (void)setContentSize:(__unused CGSize)contentSize
+{
+  // Driven by the text, not settable. Accepted so upstream assignments compile.
+}
+
+- (UIEdgeInsets)contentInset
+{
+  NSSize inset = self.textContainerInset;
+  return UIEdgeInsetsMake(inset.height, inset.width, inset.height, inset.width);
+}
+
+- (void)setContentInset:(UIEdgeInsets)contentInset
+{
+  self.textContainerInset = NSMakeSize(contentInset.left, contentInset.top);
+}
+
+- (BOOL)canPerformAction:(SEL)action withSender:(__unused id)sender
+{
+  return [self respondsToSelector:action];
+}
+
+- (void)removeDictationResultPlaceholder:(__unused id)placeholder willInsertResult:(__unused BOOL)willInsertResult
+{
+}
+
+- (id)insertDictationResultPlaceholder
+{
+  return nil;
 }
 
 - (void)buildMenuWithBuilder:(__unused id<UIMenuBuilder>)builder

@@ -51,6 +51,24 @@ extern UIApplicationLaunchOptionsKey const UIApplicationLaunchOptionsUserActivit
 - (void)applicationWillTerminate:(UIApplication *)application;
 @end
 
+typedef NS_ENUM(NSInteger, UIDeviceOrientation) {
+  UIDeviceOrientationUnknown = 0,
+  UIDeviceOrientationPortrait,
+  UIDeviceOrientationPortraitUpsideDown,
+  UIDeviceOrientationLandscapeLeft,
+  UIDeviceOrientationLandscapeRight,
+  UIDeviceOrientationFaceUp,
+  UIDeviceOrientationFaceDown,
+};
+
+typedef NS_ENUM(NSInteger, UIInterfaceOrientation) {
+  UIInterfaceOrientationUnknown = 0,
+  UIInterfaceOrientationPortrait,
+  UIInterfaceOrientationPortraitUpsideDown,
+  UIInterfaceOrientationLandscapeLeft,
+  UIInterfaceOrientationLandscapeRight,
+};
+
 typedef NS_ENUM(NSInteger, UIUserInterfaceIdiom) {
   UIUserInterfaceIdiomUnspecified = -1,
   UIUserInterfaceIdiomPhone = 0,
@@ -79,30 +97,31 @@ typedef NS_ENUM(NSInteger, UIUserInterfaceIdiom) {
 @property (nonatomic, readonly) BOOL proximityState;
 @property (nonatomic, readonly) NSInteger batteryState;
 @property (nonatomic, readonly) float batteryLevel;
+// A Mac display does not rotate.
+@property (nonatomic, readonly) UIDeviceOrientation orientation;
 @end
+
+NS_INLINE BOOL UIDeviceOrientationIsLandscape(UIDeviceOrientation orientation)
+{
+  return orientation == UIDeviceOrientationLandscapeLeft || orientation == UIDeviceOrientationLandscapeRight;
+}
+
+NS_INLINE BOOL UIDeviceOrientationIsPortrait(UIDeviceOrientation orientation)
+{
+  return orientation == UIDeviceOrientationPortrait || orientation == UIDeviceOrientationPortraitUpsideDown;
+}
+
+typedef NS_ENUM(NSInteger, UIForceTouchCapability) {
+  UIForceTouchCapabilityUnknown = 0,
+  UIForceTouchCapabilityUnavailable = 1,
+  UIForceTouchCapabilityAvailable = 2,
+};
 
 // Dynamic Type and keyboard notifications have no macOS counterpart. Declared
 // so upstream observers register successfully; they never fire.
 extern NSString *const UIApplicationOpenSettingsURLString;
 extern NSString *const UIContentSizeCategoryNewValueKey;
 
-typedef NS_ENUM(NSInteger, UIDeviceOrientation) {
-  UIDeviceOrientationUnknown = 0,
-  UIDeviceOrientationPortrait,
-  UIDeviceOrientationPortraitUpsideDown,
-  UIDeviceOrientationLandscapeLeft,
-  UIDeviceOrientationLandscapeRight,
-  UIDeviceOrientationFaceUp,
-  UIDeviceOrientationFaceDown,
-};
-
-typedef NS_ENUM(NSInteger, UIInterfaceOrientation) {
-  UIInterfaceOrientationUnknown = 0,
-  UIInterfaceOrientationPortrait,
-  UIInterfaceOrientationPortraitUpsideDown,
-  UIInterfaceOrientationLandscapeLeft,
-  UIInterfaceOrientationLandscapeRight,
-};
 
 extern NSNotificationName const UIContentSizeCategoryDidChangeNotification;
 extern NSNotificationName const UIKeyboardWillShowNotification;

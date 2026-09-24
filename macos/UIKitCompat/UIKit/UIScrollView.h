@@ -61,6 +61,23 @@ NS_ASSUME_NONNULL_BEGIN
 // No software keyboard to dismiss on macOS; stored only.
 @property (nonatomic, assign) NSInteger keyboardDismissMode;
 @property (nonatomic, assign) NSInteger indicatorStyle;
+// UIScrollView state and behaviour flags with no NSScrollView counterpart.
+// Stored so the ScrollView component's prop plumbing round-trips; the ones that
+// describe an in-flight gesture (isTracking, isDragging, isDecelerating) are
+// derived from AppKit's scroll notifications where it is possible to know.
+@property (nonatomic, assign) BOOL scrollsToTop;
+@property (nonatomic, assign, getter=isPagingEnabled) BOOL pagingEnabled;
+@property (nonatomic, assign, getter=isDirectionalLockEnabled) BOOL directionalLockEnabled;
+@property (nonatomic, assign) BOOL delaysContentTouches;
+@property (nonatomic, assign) BOOL canCancelContentTouches;
+@property (nonatomic, assign) CGFloat decelerationRate;
+@property (nonatomic, readonly, getter=isTracking) BOOL tracking;
+@property (nonatomic, readonly, getter=isDragging) BOOL dragging;
+@property (nonatomic, readonly, getter=isDecelerating) BOOL decelerating;
+@property (nonatomic, readonly, getter=isZooming) BOOL zooming;
+@property (nonatomic, assign) BOOL bouncesZoom;
+@property (nonatomic, assign) BOOL showsScrollIndicator;
+@property (nonatomic, assign) BOOL automaticallyAdjustsScrollIndicatorInsets;
 @property (nonatomic, assign) BOOL enableFocusRing;
 @property (nonatomic, weak, nullable) id<UIScrollViewDelegate> delegate;
 
@@ -69,6 +86,10 @@ NS_ASSUME_NONNULL_BEGIN
 // UIKit asks this before stealing a touch from a subview. There is no drag-to-
 // scroll gesture on macOS, so nothing is ever cancelled.
 - (BOOL)touchesShouldCancelInContentView:(NSView *)view;
+// AppKit shows scrollers on its own schedule and magnifies rather than zooms;
+// both are accepted so the ScrollView component's imperative API compiles.
+- (void)flashScrollIndicators;
+- (void)zoomToRect:(CGRect)rect animated:(BOOL)animated;
 
 @end
 

@@ -39,6 +39,18 @@
 
 @end
 
+@implementation UITextDropProposal
+
+- (instancetype)initWithDropOperation:(UIDropOperation)operation
+{
+  if ((self = [super init])) {
+    _operation = operation;
+  }
+  return self;
+}
+
+@end
+
 @implementation UIBarButtonItemGroup
 @end
 

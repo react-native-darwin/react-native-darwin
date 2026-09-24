@@ -67,6 +67,26 @@ typedef NS_ENUM(NSInteger, UITouchType) {
 
 @end
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * The UITouch set for an event.
+ *
+ * -[UIEvent allTouches] cannot be provided as a property: NSEvent already
+ * declares -allTouches returning NSSet<NSTouch *>, and a category cannot retype
+ * it. This is the one place the UIKit name is genuinely unavailable, so call
+ * sites use this function instead.
+ *
+ * A mouse is a single pointer, so the set holds at most one synthesised UITouch.
+ */
+NSSet<UITouch *> *RCTPlatformTouchesForEvent(UIEvent *_Nullable event);
+
+#ifdef __cplusplus
+}
+#endif
+
 @protocol UIGestureRecognizerDelegate <NSGestureRecognizerDelegate>
 @optional
 - (BOOL)gestureRecognizerShouldBegin:(id)gestureRecognizer;
