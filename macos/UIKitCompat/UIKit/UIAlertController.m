@@ -36,6 +36,36 @@
 - (void)UIKitCompatInvoke;
 @end
 
+@implementation UIActivityViewController {
+  NSArray *_activityItems;
+}
+
+- (instancetype)initWithActivityItems:(NSArray *)activityItems
+                applicationActivities:(__unused NSArray *)applicationActivities
+{
+  if ((self = [super initWithNibName:nil bundle:nil])) {
+    _activityItems = [activityItems copy];
+  }
+  return self;
+}
+
+- (void)loadView
+{
+  self.view = [[NSView alloc] initWithFrame:NSZeroRect];
+}
+
+- (void)presentFromView:(NSView *)view
+{
+  NSSharingServicePicker *picker = [[NSSharingServicePicker alloc] initWithItems:_activityItems];
+  [picker showRelativeToRect:view.bounds ofView:view preferredEdge:NSRectEdgeMinY];
+  if (self.completionWithItemsHandler) {
+    // AppKit reports completion through a delegate; nothing to report yet.
+    self.completionWithItemsHandler(nil, NO, _activityItems, nil);
+  }
+}
+
+@end
+
 @implementation UIAlertController {
   NSMutableArray<UIAlertAction *> *_actions;
   NSMutableArray<UITextField *> *_textFields;

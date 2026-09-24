@@ -66,4 +66,27 @@ typedef NS_ENUM(NSInteger, UIAlertControllerStyle) {
 
 @end
 
+typedef NSString *UIActivityType NS_TYPED_ENUM;
+
+/**
+ * The share sheet, over NSSharingServicePicker.
+ *
+ * UIKit presents it as a view controller; AppKit shows a picker anchored to a
+ * view. The UIKit shape is kept so upstream's presentation code compiles, and
+ * -presentFromView: does the AppKit thing.
+ */
+@interface UIActivityViewController : NSViewController
+
+@property (nonatomic, copy, nullable) void (^completionWithItemsHandler)
+    (UIActivityType _Nullable activityType, BOOL completed, NSArray *_Nullable items, NSError *_Nullable error);
+
+@property (nonatomic, copy, nullable) NSArray<UIActivityType> *excludedActivityTypes;
+
+- (instancetype)initWithActivityItems:(NSArray *)activityItems
+                applicationActivities:(nullable NSArray *)applicationActivities;
+
+- (void)presentFromView:(NSView *)view;
+
+@end
+
 NS_ASSUME_NONNULL_END

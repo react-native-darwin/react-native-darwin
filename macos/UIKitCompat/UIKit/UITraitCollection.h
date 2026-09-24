@@ -30,10 +30,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CGFloat displayScale;
 // Dynamic Type does not exist on macOS; always Large.
 @property (nonatomic, readonly, copy) NSString *preferredContentSizeCategory;
+// Force Touch trackpads exist, but AppKit exposes pressure per event rather
+// than as a capability, and React Native only reads this to gate 3D Touch.
+@property (nonatomic, readonly) NSInteger forceTouchCapability;
 
 + (UITraitCollection *)currentTraitCollection;
 - (BOOL)hasDifferentColorAppearanceComparedToTraitCollection:(nullable UITraitCollection *)other;
 + (UITraitCollection *)traitCollectionWithAppearance:(NSAppearance *)appearance;
+
+// UIKit builds trait collections compositionally. Only the two traits macOS can
+// express are carried; everything else stays Unspecified.
++ (UITraitCollection *)traitCollectionWithUserInterfaceStyle:(UIUserInterfaceStyle)style;
++ (UITraitCollection *)traitCollectionWithAccessibilityContrast:(UIAccessibilityContrast)contrast;
++ (UITraitCollection *)traitCollectionWithTraitsFromCollections:(NSArray<UITraitCollection *> *)collections;
 
 @end
 

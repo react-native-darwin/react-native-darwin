@@ -37,6 +37,17 @@ NSString *const UIAccessibilityAnnouncementKeyWasSuccessful = @"UIAccessibilityA
   objc_setAssociatedObject(self, @selector(accessibilityViewIsModal), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+- (BOOL)accessibilityRespondsToUserInteraction
+{
+  return [objc_getAssociatedObject(self, @selector(accessibilityRespondsToUserInteraction)) boolValue];
+}
+
+- (void)setAccessibilityRespondsToUserInteraction:(BOOL)value
+{
+  objc_setAssociatedObject(
+      self, @selector(accessibilityRespondsToUserInteraction), @(value), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
 - (BOOL)accessibilityElementsHidden
 {
   return [objc_getAssociatedObject(self, @selector(accessibilityElementsHidden)) boolValue];

@@ -24,7 +24,7 @@ if [ -d "$SDK/System/Library/Frameworks/UIKit.framework" ]; then
 fi
 echo "    ok: no UIKit.framework in $SDK"
 
-echo "==> Checking for self-recursive category methods"
+echo "==> Checking for recursive category methods"
 python3 macos/tests/check-no-self-recursion.py
 
 echo "==> Building"

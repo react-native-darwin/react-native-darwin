@@ -64,3 +64,43 @@
 }
 
 @end
+
+NSSet<UITouch *> *RCTPlatformTouchesForEvent(UIEvent *event)
+{
+  if (event == nil) {
+    return [NSSet set];
+  }
+
+  UITouchPhase phase;
+  switch (event.type) {
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeOtherMouseDown:
+      phase = UITouchPhaseBegan;
+      break;
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDragged:
+    case NSEventTypeMouseMoved:
+      phase = UITouchPhaseMoved;
+      break;
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeOtherMouseUp:
+      phase = UITouchPhaseEnded;
+      break;
+    default:
+      phase = UITouchPhaseStationary;
+      break;
+  }
+
+  NSView *view = event.window.contentView;
+  if (view != nil) {
+    NSView *hit = [view hitTest:event.locationInWindow];
+    if (hit != nil) {
+      view = hit;
+    }
+  }
+
+  return [NSSet setWithObject:[[UITouch alloc] initWithEvent:event phase:phase view:view]];
+}

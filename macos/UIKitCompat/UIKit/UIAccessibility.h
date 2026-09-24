@@ -66,6 +66,7 @@ typedef NS_ENUM(NSInteger, UIAccessibilityContrast) {
 @property (nonatomic, copy, nullable) NSArray *accessibilityCustomActions;
 @property (nonatomic, assign) BOOL accessibilityViewIsModal;
 @property (nonatomic, assign) BOOL accessibilityElementsHidden;
+@property (nonatomic, assign) BOOL accessibilityRespondsToUserInteraction;
 @end
 
 NS_ASSUME_NONNULL_END

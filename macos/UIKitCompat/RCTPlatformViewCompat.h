@@ -17,8 +17,9 @@
  *
  *   2. On every platform, define the RCTPlatform* concrete types:
  *
- *        RCTPlatformView         iOS: UIView          macOS: flipped, layer-backed NSView
- *        RCTPlatformDisplayLink  iOS: CADisplayLink   macOS: CADisplayLink on 14+, NSTimer below
+ *        RCTPlatformView            iOS: UIView          macOS: flipped, layer-backed NSView
+ *        RCTPlatformDisplayLink     iOS: CADisplayLink   macOS: CADisplayLink on 14+, NSTimer below
+ *        RCTPlatformTouchesForEvent iOS: -allTouches     macOS: synthesised from NSEvent
  *
  *      Both are aliases on iOS, so those builds gain two names and change in no
  *      other way. Upstream already uses the RCTPlatformDisplayLink name itself:
@@ -48,6 +49,14 @@
 // On iOS, tvOS and visionOS the concrete classes are simply the UIKit ones.
 @compatibility_alias RCTPlatformView UIView;
 @compatibility_alias RCTPlatformDisplayLink CADisplayLink;
+
+// -[UIEvent allTouches] is unavailable under its own name on macOS, because
+// NSEvent already declares -allTouches with a different element type. Call
+// sites use this function on every platform; here it is exactly the property.
+NS_INLINE NSSet<UITouch *> *_Nullable RCTPlatformTouchesForEvent(UIEvent *_Nullable event)
+{
+  return event.allTouches;
+}
 
 #endif // TARGET_OS_OSX
 

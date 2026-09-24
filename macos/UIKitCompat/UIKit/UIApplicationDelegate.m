@@ -98,6 +98,11 @@ NSString *const UIKeyboardIsLocalUserInfoKey = @"UIKeyboardIsLocalUserInfoKey";
   return NO;
 }
 
+- (UIDeviceOrientation)orientation
+{
+  return UIDeviceOrientationPortrait;
+}
+
 - (NSInteger)batteryState
 {
   return 0;

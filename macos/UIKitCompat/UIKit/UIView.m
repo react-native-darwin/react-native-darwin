@@ -344,6 +344,35 @@ static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
   return YES;
 }
 
+// UIKit and AppKit disagree about what `bounds` means, and React Native relies
+// on the UIKit reading.
+//
+// UIKit: `bounds.size` *is* the view's size. Assigning it resizes the frame
+// around the current centre. `-[UIView(ComponentViewProtocol)
+// updateLayoutMetrics:]` is written against exactly that -- it sets `center`
+// and then `bounds`, on purpose, because assigning `frame` is undefined when a
+// layer transform is applied.
+//
+// AppKit: `bounds` is the view's own coordinate system. Assigning a different
+// size rescales the contents and leaves the frame untouched. Left alone, every
+// React Native view therefore ends up positioned correctly and sized 0x0.
+//
+// So: resize the frame around the current centre first, then hand AppKit a
+// bounds rect of the same size, which keeps the scale at 1:1 and preserves
+// `bounds.origin` -- the one part both frameworks agree on.
+- (void)setBounds:(NSRect)bounds
+{
+  NSRect frame = self.frame;
+  if (!NSEqualSizes(frame.size, bounds.size)) {
+    CGPoint center = CGPointMake(NSMidX(frame), NSMidY(frame));
+    frame.size = bounds.size;
+    frame.origin.x = center.x - bounds.size.width / 2;
+    frame.origin.y = center.y - bounds.size.height / 2;
+    [super setFrame:frame];
+  }
+  [super setBounds:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height)];
+}
+
 - (BOOL)acceptsFirstMouse:(NSEvent *)event
 {
   if (_acceptsFirstMouse || [super acceptsFirstMouse:event]) {
@@ -456,14 +485,26 @@ static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
 
 - (NSView *)hitTest:(NSPoint)point
 {
-  // AppKit calls this with a point in the superview's space. Convert through
-  // CALayer rather than -convertPoint:fromView:, which ignores layer.transform
-  // and so mis-hits any transformed view.
-  CGPoint localPoint = point;
-  if (self.layer.superlayer != nil) {
-    localPoint = [self.layer convertPoint:point fromLayer:self.layer.superlayer];
+  // AppKit's contract: `point` is in the superview's space, and the answer
+  // comes from super.
+  //
+  // This deliberately does NOT call -hitTest:withEvent:. That method converts
+  // local -> superview and then calls -hitTest:, so calling it from here is a
+  // cycle: AppKit hit-tests on the first mouse event and the stack dies.
+  // Callers that need the layer-transform-aware conversion use
+  // UIViewHitTestWithEvent().
+  if (!self.isUserInteractionEnabled) {
+    return nil;
   }
-  return [self hitTest:localPoint withEvent:nil];
+  return [super hitTest:point];
+}
+
+- (BOOL)canBecomeFirstResponder
+{
+  // [super acceptsFirstResponder] is NSView's real implementation. Calling
+  // self.acceptsFirstResponder here would bounce straight back into the
+  // override below and recurse until the stack dies.
+  return [super acceptsFirstResponder];
 }
 
 - (BOOL)acceptsFirstResponder

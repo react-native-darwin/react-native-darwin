@@ -27,6 +27,7 @@
 
 @implementation UIScrollView {
   UIView *_documentView;
+  BOOL _liveScrolling;
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect
@@ -56,6 +57,16 @@
                                                name:NSViewBoundsDidChangeNotification
                                              object:clipView];
     clipView.postsBoundsChangedNotifications = YES;
+
+    _decelerationRate = 0.998;  // UIScrollViewDecelerationRateNormal
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(UIKitCompatWillStartLiveScroll:)
+                                               name:NSScrollViewWillStartLiveScrollNotification
+                                             object:self];
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(UIKitCompatDidEndLiveScroll:)
+                                               name:NSScrollViewDidEndLiveScrollNotification
+                                             object:self];
   }
   return self;
 }
@@ -63,6 +74,22 @@
 - (void)dealloc
 {
   [NSNotificationCenter.defaultCenter removeObserver:self];
+}
+
+- (void)UIKitCompatWillStartLiveScroll:(__unused NSNotification *)notification
+{
+  _liveScrolling = YES;
+  if ([_delegate respondsToSelector:@selector(scrollViewWillBeginDragging:)]) {
+    [_delegate scrollViewWillBeginDragging:self];
+  }
+}
+
+- (void)UIKitCompatDidEndLiveScroll:(__unused NSNotification *)notification
+{
+  _liveScrolling = NO;
+  if ([_delegate respondsToSelector:@selector(scrollViewDidEndDragging:willDecelerate:)]) {
+    [_delegate scrollViewDidEndDragging:self willDecelerate:NO];
+  }
 }
 
 - (void)UIKitCompatBoundsDidChange:(__unused NSNotification *)notification
@@ -159,6 +186,42 @@
     return;
   }
   [super scrollWheel:event];
+}
+
+- (void)flashScrollIndicators
+{
+  [self flashScrollers];
+}
+
+- (void)zoomToRect:(CGRect)rect animated:(BOOL)animated
+{
+  [self magnifyToFitRect:NSRectFromCGRect(rect)];
+  if (animated) {
+    [self reflectScrolledClipView:self.contentView];
+  }
+}
+
+- (BOOL)isTracking
+{
+  // AppKit reports a scroll gesture through NSScrollViewWillStartLiveScroll /
+  // DidEndLiveScroll rather than a flag; _liveScrolling tracks that pair.
+  return _liveScrolling;
+}
+
+- (BOOL)isDragging
+{
+  return _liveScrolling;
+}
+
+- (BOOL)isDecelerating
+{
+  // Momentum phase is not distinguishable from a drag through the public API.
+  return NO;
+}
+
+- (BOOL)isZooming
+{
+  return NO;
 }
 
 - (BOOL)touchesShouldCancelInContentView:(__unused NSView *)view

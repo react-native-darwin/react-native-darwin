@@ -208,6 +208,29 @@ int main(void)
     plainForTint.tintColor = [UIColor blueColor];
     CHECK(plainForTint.tintColor != nil, "NSView.tintColor round-trips");
 
+    // Fabric lays every view out by assigning `center` and then `bounds`, never
+    // `frame` -- assigning `frame` is undefined once a layer transform is set.
+    // That only works if `bounds.size` resizes the view the way UIKit does.
+    // AppKit's own `setBounds:` would leave the frame at its old size, which
+    // renders the whole tree correctly positioned and 0x0.
+    UIView *laidOut = [[RCTPlatformView alloc] initWithFrame:CGRectZero];
+    laidOut.center = CGPointMake(150, 100);
+    laidOut.bounds = CGRectMake(0, 0, 200, 80);
+    CHECK(CGRectEqualToRect(laidOut.frame, CGRectMake(50, 60, 200, 80)),
+          "bounds.size resizes the frame around the centre");
+    CHECK(CGPointEqualToPoint(laidOut.center, CGPointMake(150, 100)),
+          "centre survives the resize");
+    CHECK(CGSizeEqualToSize(laidOut.bounds.size, CGSizeMake(200, 80)),
+          "bounds reads back the assigned size");
+
+    // A bounds origin is a content offset in both frameworks, and must not move
+    // the frame.
+    laidOut.bounds = CGRectMake(10, 5, 200, 80);
+    CHECK(CGRectEqualToRect(laidOut.frame, CGRectMake(50, 60, 200, 80)),
+          "bounds.origin leaves the frame alone");
+    CHECK(CGPointEqualToPoint(laidOut.bounds.origin, CGPointMake(10, 5)),
+          "bounds.origin round-trips");
+
     printf("\n%s (%d failure%s)\n", gFailures == 0 ? "PASS" : "FAIL", gFailures, gFailures == 1 ? "" : "s");
   }
   return gFailures == 0 ? 0 : 1;

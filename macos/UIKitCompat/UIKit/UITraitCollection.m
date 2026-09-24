@@ -39,6 +39,11 @@
   return @"UICTContentSizeCategoryL";
 }
 
+- (NSInteger)forceTouchCapability
+{
+  return 1;  // UIForceTouchCapabilityUnavailable
+}
+
 - (BOOL)hasDifferentColorAppearanceComparedToTraitCollection:(UITraitCollection *)other
 {
   if (other == nil) {
@@ -46,6 +51,41 @@
   }
   return _userInterfaceStyle != other.userInterfaceStyle ||
       _accessibilityContrast != other.accessibilityContrast;
+}
+
++ (UITraitCollection *)traitCollectionWithUserInterfaceStyle:(UIUserInterfaceStyle)style
+{
+  UITraitCollection *traits = [UITraitCollection new];
+  traits->_userInterfaceStyle = style;
+  traits->_displayScale = NSScreen.mainScreen.backingScaleFactor ?: 1.0;
+  return traits;
+}
+
++ (UITraitCollection *)traitCollectionWithAccessibilityContrast:(UIAccessibilityContrast)contrast
+{
+  UITraitCollection *traits = [UITraitCollection new];
+  traits->_accessibilityContrast = contrast;
+  traits->_displayScale = NSScreen.mainScreen.backingScaleFactor ?: 1.0;
+  return traits;
+}
+
++ (UITraitCollection *)traitCollectionWithTraitsFromCollections:(NSArray<UITraitCollection *> *)collections
+{
+  // UIKit's rule: later collections win, and Unspecified does not override.
+  UITraitCollection *merged = [UITraitCollection new];
+  merged->_displayScale = NSScreen.mainScreen.backingScaleFactor ?: 1.0;
+  for (UITraitCollection *collection in collections) {
+    if (collection.userInterfaceStyle != UIUserInterfaceStyleUnspecified) {
+      merged->_userInterfaceStyle = collection.userInterfaceStyle;
+    }
+    if (collection.accessibilityContrast != UIAccessibilityContrastUnspecified) {
+      merged->_accessibilityContrast = collection.accessibilityContrast;
+    }
+    if (collection.displayScale > 0) {
+      merged->_displayScale = collection.displayScale;
+    }
+  }
+  return merged;
 }
 
 + (UITraitCollection *)currentTraitCollection
