@@ -308,9 +308,9 @@ static BOOL RCTAnyTouchesChanged(NSSet<UITouch *> *touches)
 
   [self _updateAndDispatchTouches:touches eventName:@"touchEnd"];
 
-  if (RCTAllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (RCTAllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateEnded;
-  } else if (RCTAnyTouchesChanged(event.allTouches)) {
+  } else if (RCTAnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 
@@ -323,9 +323,9 @@ static BOOL RCTAnyTouchesChanged(NSSet<UITouch *> *touches)
 
   [self _updateAndDispatchTouches:touches eventName:@"touchCancel"];
 
-  if (RCTAllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (RCTAllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateCancelled;
-  } else if (RCTAnyTouchesChanged(event.allTouches)) {
+  } else if (RCTAnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 

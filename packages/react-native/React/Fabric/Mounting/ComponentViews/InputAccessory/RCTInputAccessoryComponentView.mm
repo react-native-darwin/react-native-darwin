@@ -69,7 +69,13 @@ static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNat
 
   if (self.window && !_textInput) {
     if (self.nativeId) {
+#if TARGET_OS_OSX // [macOS
+      // UIWindow is a UIView; NSWindow is not an NSView, so the search starts
+      // at the window's content view instead.
+      _textInput = RCTFindTextInputWithNativeId(self.window.contentView, self.nativeId);
+#else // macOS]
       _textInput = RCTFindTextInputWithNativeId(self.window, self.nativeId);
+#endif // [macOS]
       _textInput.inputAccessoryView = _contentView;
     } else {
       _textInput = RCTFindTextInputWithNativeId(_contentView, nil);

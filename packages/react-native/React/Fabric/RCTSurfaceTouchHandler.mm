@@ -336,9 +336,9 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
   [self _dispatchActiveTouches:[self _activeTouchesFromTouches:touches] eventType:RCTTouchEventTypeTouchEnd];
   [self _unregisterTouches:touches];
 
-  if (AllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (AllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateEnded;
-  } else if (AnyTouchesChanged(event.allTouches)) {
+  } else if (AnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 }
@@ -351,9 +351,9 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
   [self _dispatchActiveTouches:[self _activeTouchesFromTouches:touches] eventType:RCTTouchEventTypeTouchCancel];
   [self _unregisterTouches:touches];
 
-  if (AllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (AllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateCancelled;
-  } else if (AnyTouchesChanged(event.allTouches)) {
+  } else if (AnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 }

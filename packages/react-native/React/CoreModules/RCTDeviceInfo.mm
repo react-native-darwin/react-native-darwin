@@ -192,8 +192,16 @@ static BOOL RCTIsIPhoneNotched()
 static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
 {
   RCTAssertMainQueue();
+#if TARGET_OS_OSX // [macOS
+  // UIWindow is a UIView; NSWindow is not an NSView. The content view is the
+  // part whose bounds this code actually wants.
+  UIWindow *keyWindow = RCTKeyWindow();
+  UIView *mainWindow = keyWindow.contentView;
+  UIScreen *screen = keyWindow.screen;
+#else // macOS]
   UIWindow *mainWindow = RCTKeyWindow();
   UIScreen *screen = mainWindow.screen;
+#endif // [macOS]
   if (screen == nil) {
     screen = UIScreen.screens.firstObject;
   }

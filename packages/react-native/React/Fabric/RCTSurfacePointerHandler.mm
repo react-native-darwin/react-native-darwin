@@ -488,11 +488,22 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
   _rootComponentView = view;
 
   _mouseHoverRecognizer = [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(mouseHovering:)];
+#if TARGET_OS_OSX // [macOS
+  // NSGestureRecognizer.allowedTouchTypes is a bitmask, not an array of
+  // numbers, and a category cannot retype an AppKit property. A mouse is
+  // AppKit's "indirect" touch type.
+  _mouseHoverRecognizer.allowedTouchTypes = NSTouchTypeMaskIndirect;
+#else // macOS]
   _mouseHoverRecognizer.allowedTouchTypes = @[ @(UITouchTypeIndirectPointer) ];
+#endif // [macOS]
   [view addGestureRecognizer:_mouseHoverRecognizer];
 
   _penHoverRecognizer = [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(penHovering:)];
+#if TARGET_OS_OSX // [macOS
+  _penHoverRecognizer.allowedTouchTypes = NSTouchTypeMaskDirect;
+#else // macOS]
   _penHoverRecognizer.allowedTouchTypes = @[ @(UITouchTypePencil) ];
+#endif // [macOS]
   [view addGestureRecognizer:_penHoverRecognizer];
 }
 
@@ -686,9 +697,9 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
   [self _dispatchActivePointers:[self _activePointersFromTouches:touches] eventType:RCTPointerEventTypeEnd];
   [self _unregisterTouches:touches];
 
-  if (AllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (AllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateEnded;
-  } else if (AnyTouchesChanged(event.allTouches)) {
+  } else if (AnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 }
@@ -701,9 +712,9 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithTarget : (id)target action : (SEL)act
   [self _dispatchActivePointers:[self _activePointersFromTouches:touches] eventType:RCTPointerEventTypeCancel];
   [self _unregisterTouches:touches];
 
-  if (AllTouchesAreCancelledOrEnded(event.allTouches)) {
+  if (AllTouchesAreCancelledOrEnded(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateCancelled;
-  } else if (AnyTouchesChanged(event.allTouches)) {
+  } else if (AnyTouchesChanged(RCTPlatformTouchesForEvent(event))) {  // [macOS] NSEvent.allTouches is NSSet<NSTouch *>; see UIEvent.h
     self.state = UIGestureRecognizerStateChanged;
   }
 }

@@ -11,6 +11,13 @@
 #import <React/RCTVersion.h>
 #import <UIKit/UIKit.h>
 
+#if !TARGET_OS_IPHONE // [macOS
+// The macOS branch below already calls SCDynamicStoreCopyComputerName, but the
+// framework it comes from was never imported -- upstream never compiles this
+// branch.
+#import <SystemConfiguration/SystemConfiguration.h>
+#endif // macOS]
+
 @implementation CommonHostMetadata
 @end
 

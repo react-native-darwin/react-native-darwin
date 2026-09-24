@@ -90,6 +90,23 @@ module Helpers
         def self.min_macos_version_supported
             return '11.0'
         end
+
+        # Path prefixes the macOS build does not ship, read from the single
+        # list in macos/UIKitCompat/macos-excludes.txt so the podspecs and
+        # macos/scripts/syntax-check.sh can never disagree.
+        #
+        # Returns glob patterns relative to packages/react-native, suitable for
+        # a podspec's `osx.exclude_files`.
+        def self.macos_excluded_files
+            list = File.join(__dir__, '..', '..', '..', '..', 'macos', 'UIKitCompat', 'macos-excludes.txt')
+            return [] unless File.exist?(list)
+            # No filter_map: CocoaPods still runs on Ruby 2.6 on stock macOS.
+            File.readlines(list).map do |line|
+                prefix = line.strip
+                next nil if prefix.empty? || prefix.start_with?('#')
+                prefix.end_with?('/') ? "#{prefix}**/*" : "#{prefix}*"
+            end.compact
+        end
         # macOS]
 
         def self.min_xcode_version_supported

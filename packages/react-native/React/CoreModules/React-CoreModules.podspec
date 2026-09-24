@@ -34,6 +34,12 @@ Pod::Spec.new do |s|
 
   s.source_files           = podspec_sources("**/*.{c,m,mm,cpp}", "**/*.h")
 
+  # [macOS] The macOS build does not ship these; see
+
+  # macos/UIKitCompat/macos-excludes.txt, which this reads.
+
+  s.osx.exclude_files = macos_excluded_files.map { |p| p.sub('React/CoreModules/', '') }
+
   s.ios.exclude_files      = "PlatformStubs/**/*"
   exclude_files            = ["RCTStatusBarManager.mm"]
   s.macos.exclude_files    = exclude_files

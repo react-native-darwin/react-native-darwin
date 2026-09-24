@@ -34,7 +34,10 @@ if [ ! -d "$DEPS/node_modules/@react-native/codegen/lib" ]; then
   printf '{"name":"rn-macos-codegen-deps","private":true}\n' > "$DEPS/package.json"
   ( cd "$DEPS" && npm install --no-audit --no-fund --loglevel=error \
       "@react-native/codegen@$RN_VERSION" \
-      @babel/core @babel/parser hermes-parser invariant nullthrows tinyglobby yargs glob chalk )
+      @babel/core @babel/parser hermes-parser invariant nullthrows tinyglobby glob chalk \
+      'yargs@^17' )
+  # yargs 18 dropped the CommonJS singleton that React Native's codegen CLI
+  # calls (`yargs.option(...)`), so the major version is pinned.
 fi
 
 # buildCodegenIfNeeded() is satisfied by the presence of lib/, so point the

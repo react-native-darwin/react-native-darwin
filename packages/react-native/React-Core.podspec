@@ -65,7 +65,10 @@ Pod::Spec.new do |s|
   s.default_subspec        = "Default"
 
   s.subspec "Default" do |ss|
+    s# [macOS] SCDynamicStoreCopyComputerName, used by RCTInspectorUtils on macOS.
+    ss.osx.frameworks        = "SystemConfiguration"
     ss.source_files = podspec_sources("React/**/*.{c,h,m,mm,S,cpp}", "React/**/*.h")
+    ss.osx.exclude_files = macos_excluded_files # [macOS]
     exclude_files = [
       "React/CoreModules/**/*",
       "React/DevSupport/**/*",
@@ -85,6 +88,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec "DevSupport" do |ss|
+    ss.osx.exclude_files = macos_excluded_files # [macOS]
     ss.source_files = podspec_sources(["React/DevSupport/*.{h,mm,m}",
                         "React/Inspector/*.{h,mm,m}"],
                         ["React/DevSupport/*.h",
