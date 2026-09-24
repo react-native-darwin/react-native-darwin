@@ -234,9 +234,22 @@ type TextBaseProps = Readonly<{
  *
  * @build-types emit-as-interface Uniwind compatibility
  */
+// [macOS] Text carries the same three view props react-native-macos gives it.
+// They work because ParagraphProps derives from ViewProps, which on macOS is
+// HostPlatformViewProps.
+export type TextPropsMacOS = Readonly<{
+  /** @platform macos */
+  tooltip?: ?string,
+  /** @platform macos */
+  focusable?: ?boolean,
+  /** @platform macos */
+  enableFocusRing?: ?boolean,
+}>;
+
 export type TextProps = Readonly<{
   ...TextPointerEventProps,
   ...TextPropsIOS,
+  ...TextPropsMacOS, // [macOS]
   ...TextPropsAndroid,
   ...TextBaseProps,
   ...AccessibilityProps,

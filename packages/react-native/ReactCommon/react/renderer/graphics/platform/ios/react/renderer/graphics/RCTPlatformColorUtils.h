@@ -7,7 +7,11 @@
 
 #pragma once
 
-#import <UIKit/UIKit.h>
+// [macOS] An installed header must not name a UIKit type: the aliases would
+// leak into every dependent's translation unit and collide with whatever else
+// declares them. RCTPlatformTypes.h is the half of the compatibility layer
+// that names none. See macos/PLAN-drop-uikit-aliases.md.
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <vector>
 
 namespace facebook::react {
@@ -16,5 +20,7 @@ struct Color;
 } // namespace facebook::react
 
 facebook::react::ColorComponents RCTPlatformColorComponentsFromSemanticItems(std::vector<std::string> &semanticItems);
-UIColor *RCTPlatformColorFromSemanticItems(std::vector<std::string> &semanticItems);
-UIColor *RCTPlatformColorFromColor(const facebook::react::Color &color);
+// [macOS] RCTUIColor, not UIColor: an installed header must not name a UIKit
+// type. Same type either way -- NSColor here, UIColor on iOS.
+RCTUIColor *RCTPlatformColorFromSemanticItems(std::vector<std::string> &semanticItems);
+RCTUIColor *RCTPlatformColorFromColor(const facebook::react::Color &color);

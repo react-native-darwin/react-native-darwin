@@ -35,7 +35,12 @@ class CodegenUtils
       folly_version: Helpers::Constants.folly_config[:version],
       codegen_utils: CodegenUtils.new(),
       file_manager: File,
-      logger: CodegenUtils::UI
+      logger: CodegenUtils::UI,
+      # [macOS] The generated providers are platform-specific: they map names to
+      # classes that only exist if the owning library was built for this
+      # platform. Upstream hardcodes "ios" because every library supports iOS.
+      # macOS]
+      target_platform: "ios"
       )
       return if codegen_disabled
 
@@ -58,7 +63,7 @@ class CodegenUtils
           "#{relative_installation_root}/#{react_native_path}/scripts/generate-codegen-artifacts.js",
           "-p", "#{app_path}",
           "-o", Pod::Config.instance.installation_root,
-          "-t", "ios",
+          "-t", target_platform, # [macOS] was hardcoded "ios"
         ])
       Pod::UI.puts out;
 

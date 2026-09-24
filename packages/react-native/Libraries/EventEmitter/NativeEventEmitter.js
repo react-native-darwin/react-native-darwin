@@ -71,7 +71,12 @@ export default class NativeEventEmitter<
    *      an invariant error if undefined.
    */
   constructor(nativeModule?: ?NativeModule) {
-    if (Platform.OS === 'ios') {
+    // [macOS] Same requirement on macOS: the module backing the emitter is an
+    // RCTEventEmitter subclass here too, so a null one is a bug rather than a
+    // platform difference. This only holds because the callers that used to
+    // pass `Platform.OS !== 'ios' ? null : NativeX` now pass the module on
+    // macOS as well -- widening this without those is an import-time crash.
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       invariant(
         nativeModule != null,
         '`new NativeEventEmitter()` requires a non-null argument.',

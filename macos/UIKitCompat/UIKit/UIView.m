@@ -289,9 +289,9 @@ static const void *kContentModeKey = &kContentModeKey;
 
 @end
 
-#pragma mark - RCTPlatformView
+#pragma mark - RCTUIView
 
-@implementation RCTPlatformView {
+@implementation RCTUIView {
   UIColor *_backgroundColor;
   BOOL _respondsToDisplayLayer;
   BOOL _hasCustomTransform3D;
@@ -316,7 +316,7 @@ static const void *kContentModeKey = &kContentModeKey;
   return keyPaths;
 }
 
-static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
+static RCTUIView *RCTUIViewCommonInit(RCTUIView *self)
 {
   if (self != nil) {
     self.wantsLayer = YES;
@@ -330,12 +330,12 @@ static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
-  return RCTPlatformViewCommonInit([super initWithFrame:frameRect]);
+  return RCTUIViewCommonInit([super initWithFrame:frameRect]);
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
-  return RCTPlatformViewCommonInit([super initWithCoder:coder]);
+  return RCTUIViewCommonInit([super initWithCoder:coder]);
 }
 
 // UIKit's origin is top-left. Everything React Native computes assumes it.
@@ -369,8 +369,26 @@ static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
     frame.origin.x = center.x - bounds.size.width / 2;
     frame.origin.y = center.y - bounds.size.height / 2;
     [super setFrame:frame];
+
+    // UIKit calls -layoutSubviews whenever a view's bounds change. AppKit calls
+    // -layout only when the view is marked as needing it, so a size change
+    // alone never reaches -layoutSubviews. Components that recompute on resize
+    // silently stop: react-native-safe-area-context measures its insets there,
+    // and until it reports them SafeAreaProvider renders no children at all.
+    self.needsLayout = YES;
   }
   [super setBounds:NSMakeRect(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height)];
+}
+
+- (void)setFrameSize:(NSSize)newSize
+{
+  BOOL changed = !NSEqualSizes(self.frame.size, newSize);
+  [super setFrameSize:newSize];
+  if (changed) {
+    // Same reason as -setBounds:. Fabric assigns frames directly in places, so
+    // both paths have to mark the view.
+    self.needsLayout = YES;
+  }
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event
@@ -381,7 +399,7 @@ static RCTPlatformView *RCTPlatformViewCommonInit(RCTPlatformView *self)
   // Honour the flag if any ancestor set it, so a whole subtree can opt in.
   NSView *view = self;
   while ((view = view.superview)) {
-    if ([view isKindOfClass:[RCTPlatformView class]] && ((RCTPlatformView *)view).acceptsFirstMouse) {
+    if ([view isKindOfClass:[RCTUIView class]] && ((RCTUIView *)view).acceptsFirstMouse) {
       return YES;
     }
   }

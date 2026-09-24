@@ -21,14 +21,55 @@
 #import "UIKitDefines.h"
 #import "UIView.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatLabel;
+@class RCTUIKitCompatImageView;
+@class RCTUIKitCompatActivityIndicatorView;
+@class RCTUIKitCompatSwitch;
+@class RCTUIKitCompatSlider;
+@class RCTUIKitCompatButton;
+@class RCTUIKitCompatRefreshControl;
+@class RCTUIKitCompatBarButtonItem;
+@class RCTUIKitCompatBackgroundConfiguration;
+@class RCTUIKitCompatButtonConfiguration;
+@class RCTUIKitCompatToolbar;
+@class RCTUIKitCompatAction;
+@class RCTUIKitCompatTableViewCell;
+@class RCTUIKitCompatTableView;
+@class RCTUIKitCompatAccessibilityElement;
+@compatibility_alias UILabel RCTUIKitCompatLabel;
+@compatibility_alias UIImageView RCTUIKitCompatImageView;
+@compatibility_alias UIActivityIndicatorView RCTUIKitCompatActivityIndicatorView;
+@compatibility_alias UISwitch RCTUIKitCompatSwitch;
+@compatibility_alias UISlider RCTUIKitCompatSlider;
+@compatibility_alias UIButton RCTUIKitCompatButton;
+@compatibility_alias UIRefreshControl RCTUIKitCompatRefreshControl;
+@compatibility_alias UIBarButtonItem RCTUIKitCompatBarButtonItem;
+@compatibility_alias UIBackgroundConfiguration RCTUIKitCompatBackgroundConfiguration;
+@compatibility_alias UIButtonConfiguration RCTUIKitCompatButtonConfiguration;
+@compatibility_alias UIToolbar RCTUIKitCompatToolbar;
+@compatibility_alias UIAction RCTUIKitCompatAction;
+@compatibility_alias UITableViewCell RCTUIKitCompatTableViewCell;
+@compatibility_alias UITableView RCTUIKitCompatTableView;
+@compatibility_alias UIAccessibilityElement RCTUIKitCompatAccessibilityElement;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
-@class UIAction;
-@class UIButtonConfiguration;
+@class RCTUIKitCompatAction;
+@class RCTUIKitCompatButtonConfiguration;
 
 #pragma mark - UILabel
 
-@interface UILabel : NSTextField
+@interface RCTUIKitCompatLabel : NSTextField
 
 @property (nonatomic, copy, nullable) NSString *text;
 // NSTextField spells it attributedStringValue.
@@ -46,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - UIImageView
 
-@interface UIImageView : NSImageView
+@interface RCTUIKitCompatImageView : NSImageView
 
 - (instancetype)initWithImage:(nullable NSImage *)image;
 
@@ -59,7 +100,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
   UIActivityIndicatorViewStyleLarge = 1,
 };
 
-@interface UIActivityIndicatorView : NSProgressIndicator
+@interface RCTUIKitCompatActivityIndicatorView : NSProgressIndicator
 
 @property (nonatomic, assign) UIActivityIndicatorViewStyle activityIndicatorViewStyle;
 @property (nonatomic, assign) BOOL hidesWhenStopped;
@@ -73,7 +114,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
 
 #pragma mark - UISwitch
 
-@interface UISwitch : NSSwitch
+@interface RCTUIKitCompatSwitch : NSSwitch
 - (void)addTarget:(nullable id)target action:(SEL)action forControlEvents:(UIControlEvents)controlEvents;
 @property (nonatomic, assign, getter=isOn) BOOL on;
 @property (nonatomic, strong, nullable) UIColor *onTintColor;
@@ -85,7 +126,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
 
 #pragma mark - UISlider
 
-@interface UISlider : NSSlider
+@interface RCTUIKitCompatSlider : NSSlider
 @property (nonatomic, assign) float value;
 @property (nonatomic, assign) float minimumValue;
 @property (nonatomic, assign) float maximumValue;
@@ -94,7 +135,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
 
 #pragma mark - UIButton
 
-@interface UIButton : NSButton
+@interface RCTUIKitCompatButton : NSButton
 + (instancetype)buttonWithType:(UIButtonType)buttonType;
 // NSButton draws its title through a cell rather than a subview; this vends a
 // label wrapper so upstream's font and colour tweaks land somewhere.
@@ -114,7 +155,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
 // AppKit has no pull-to-refresh control; a Mac scrolls with a wheel or a
 // trackpad and refreshes from a toolbar button. Declared so the component
 // parses.
-@interface UIRefreshControl : NSView
+@interface RCTUIKitCompatRefreshControl : NSView
 @property (nonatomic, readonly, getter=isRefreshing) BOOL refreshing;
 @property (nonatomic, strong, nullable) UIColor *tintColor;
 @property (nonatomic, copy, nullable) NSAttributedString *attributedTitle;
@@ -134,7 +175,7 @@ typedef NS_ENUM(NSInteger, UIActivityIndicatorViewStyle) {
  * toolbar is a different thing with a different API and pretending otherwise
  * would be worse than an honest empty view.
  */
-@interface UIBarButtonItem : NSObject
+@interface RCTUIKitCompatBarButtonItem : NSObject
 @property (nonatomic, copy, nullable) NSString *title;
 @property (nonatomic, weak, nullable) id target;
 @property (nonatomic, assign, nullable) SEL action;
@@ -166,13 +207,13 @@ typedef NS_ENUM(NSInteger, UIBarButtonSystemItem) {
  * object. This carries the fields React Native's RedBox sets so the code
  * compiles; -applyToButton: maps the ones AppKit can honour.
  */
-@interface UIBackgroundConfiguration : NSObject
+@interface RCTUIKitCompatBackgroundConfiguration : NSObject
 @property (nonatomic, strong, nullable) UIColor *backgroundColor;
 @property (nonatomic, assign) CGFloat cornerRadius;
 + (instancetype)clearConfiguration;
 @end
 
-@interface UIButtonConfiguration : NSObject
+@interface RCTUIKitCompatButtonConfiguration : NSObject
 @property (nonatomic, copy, nullable) NSString *title;
 @property (nonatomic, strong, nullable) UIColor *baseForegroundColor;
 @property (nonatomic, strong, nullable) UIColor *baseBackgroundColor;
@@ -187,7 +228,7 @@ typedef NS_ENUM(NSInteger, UIBarButtonSystemItem) {
 + (instancetype)grayButtonConfiguration;
 @end
 
-@interface UIToolbar : NSView
+@interface RCTUIKitCompatToolbar : NSView
 @property (nonatomic, copy, nullable) NSArray<UIBarButtonItem *> *items;
 - (void)setItems:(nullable NSArray<UIBarButtonItem *> *)items animated:(BOOL)animated;
 - (void)sizeToFit;
@@ -202,7 +243,7 @@ typedef NS_ENUM(NSInteger, UIBarButtonSystemItem) {
 
 // Used only by the RedBox extra-data view, which is excluded from the macOS
 // build. Declared so the file parses rather than needing an upstream guard.
-@class UITableView;
+@class RCTUIKitCompatTableView;
 
 @protocol UITableViewDataSource <NSObject>
 @optional
@@ -245,7 +286,7 @@ typedef NS_ENUM(NSInteger, UITableViewCellSelectionStyle) {
 static const CGFloat UITableViewAutomaticDimension = -1.0;
 
 // iOS 13 menu actions. AppKit uses NSMenuItem; declared so the type resolves.
-@interface UIAction : NSObject
+@interface RCTUIKitCompatAction : NSObject
 @property (nonatomic, copy, nullable) NSString *title;
 + (instancetype)actionWithTitle:(NSString *)title
                           image:(nullable NSImage *)image
@@ -269,7 +310,7 @@ typedef NS_ENUM(NSInteger, UITableViewScrollPosition) {
 + (NSIndexPath *)indexPathForRow:(NSInteger)row inSection:(NSInteger)section;
 @end
 
-@interface UITableViewCell : NSView
+@interface RCTUIKitCompatTableViewCell : NSView
 @property (nonatomic, readonly, nullable) UILabel *textLabel;
 @property (nonatomic, readonly, nullable) UILabel *detailTextLabel;
 @property (nonatomic, readonly, nullable) NSView *contentView;
@@ -288,7 +329,7 @@ typedef NS_ENUM(NSInteger, UITableViewScrollPosition) {
  * the RedBox extra-data view, which is a debugging surface; a real macOS table
  * should wrap an NSTableView rather than subclass one.
  */
-@interface UITableView : NSView
+@interface RCTUIKitCompatTableView : NSView
 @property (nonatomic, weak, nullable) id<UITableViewDataSource> dataSource;
 @property (nonatomic, weak, nullable) id<UITableViewDelegate> delegate;
 @property (nonatomic, assign) UITableViewCellSeparatorStyle separatorStyle;
@@ -326,7 +367,7 @@ typedef NS_ENUM(NSInteger, UITableViewScrollPosition) {
 // NSAccessibilityElement exists but is not an NSView and does not carry UIKit's
 // frame/label/traits triple, so React Native's accessibility elements need a
 // concrete class of their own.
-@interface UIAccessibilityElement : NSAccessibilityElement
+@interface RCTUIKitCompatAccessibilityElement : NSAccessibilityElement
 
 @property (nonatomic, weak, nullable) id accessibilityContainer;
 @property (nonatomic, assign) CGRect accessibilityFrame;

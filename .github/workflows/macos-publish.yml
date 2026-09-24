@@ -1,0 +1,103 @@
+# [macOS] Publish this fork to npm with trusted publishing (OIDC).
+#
+# No NPM_TOKEN. Authentication is a short-lived OIDC token GitHub mints for this
+# specific workflow, which npm exchanges for publish rights. That means the
+# trusted publisher registered on npmjs.com must name this exact file --
+# `macos-publish.yml` -- and renaming it breaks publishing until the setting is
+# updated to match.
+#
+# Provenance attestations are generated automatically. Nothing here asks for
+# them.
+#
+# macos/scripts/publish.sh does the actual work: it renames the package, vendors
+# macos/UIKitCompat and macos/metro-config.js into it, packs, verifies the
+# tarball, and restores the tree. See MACOS-FORK.md section 2.6.
+
+name: '[macOS] Publish to npm'
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: 'npm package name to publish under'
+        required: true
+        default: 'react-native-darwin'
+      package_version:
+        description: 'Version to publish as. Empty = the version in package.json.'
+        required: false
+        default: ''
+      dist_tag:
+        description: 'npm dist-tag. Use `next` for a prerelease.'
+        required: true
+        default: 'latest'
+      dry_run:
+        description: 'Pack and verify only. Nothing is published.'
+        type: boolean
+        required: true
+        default: true
+
+# The default for any job that does not say otherwise.
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    name: Budget and shim tests
+    # The shim is compiled against the real macOS SDK, and the tests assert that
+    # UIKit.framework is absent from it. Neither is checkable on Linux.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # check-budget.sh diffs against the upstream tag named in
+          # MACOS-FORK.md, so the tag and the full history both have to be here.
+          fetch-depth: 0
+
+      - name: Budget
+        run: ./macos/ci/check-budget.sh
+
+      - name: Shim tests
+        run: ./macos/tests/run.sh
+
+  publish:
+    name: Publish
+    needs: gates
+    runs-on: ubuntu-latest
+    permissions:
+      # Mints the OIDC token. Publishing fails without it, and it must not be
+      # granted at the top level -- only this job needs to prove its identity.
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Trusted publishing needs Node >= 22.14.0.
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Use an npm that supports trusted publishing
+        # Trusted publishing needs npm >= 11.5.1, which is newer than the npm
+        # bundled with Node 22.
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      - name: Pack and verify
+        if: ${{ inputs.dry_run }}
+        run: |
+          ./macos/scripts/publish.sh \
+            --name "${{ inputs.package_name }}" \
+            --tag "${{ inputs.dist_tag }}" \
+            ${{ inputs.package_version && format('--version {0}', inputs.package_version) || '' }}
+
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        # No NODE_AUTH_TOKEN. If one were set, npm would use it instead of OIDC
+        # and the publish would silently lose its provenance attestation.
+        run: |
+          ./macos/scripts/publish.sh --publish \
+            --name "${{ inputs.package_name }}" \
+            --tag "${{ inputs.dist_tag }}" \
+            ${{ inputs.package_version && format('--version {0}', inputs.package_version) || '' }}

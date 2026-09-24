@@ -23,7 +23,12 @@ type LinkingEventDefinitions = {
 
 class LinkingImpl extends NativeEventEmitter<LinkingEventDefinitions> {
   constructor() {
-    super(Platform.OS === 'ios' ? nullthrows(NativeLinkingManager) : undefined);
+    // [macOS] RCTLinkingManager is built for macOS too.
+    super(
+      Platform.OS === 'ios' || Platform.OS === 'macos'
+        ? nullthrows(NativeLinkingManager)
+        : undefined,
+    );
   }
 
   /**

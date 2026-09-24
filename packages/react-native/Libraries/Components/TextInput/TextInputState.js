@@ -87,7 +87,9 @@ function focusTextInput(textField: ?HostInstance) {
 
   if (textField != null) {
     const fieldCanBeFocused =
-      currentlyFocusedInputRef !== textField &&
+      // [macOS] On a desktop any view can hold focus, so the currently focused
+      // *input* is not a reliable answer to whether this field already has it.
+      (Platform.OS === 'macos' || currentlyFocusedInputRef !== textField) &&
       // $FlowFixMe[prop-missing] - `currentProps` is missing in `NativeMethods`
       textField.currentProps?.editable !== false;
 
@@ -95,7 +97,9 @@ function focusTextInput(textField: ?HostInstance) {
       return;
     }
     focusInput(textField);
-    if (Platform.OS === 'ios') {
+    // [macOS] The commands are declared by the Apple-platform native
+    // components, which macOS shares.
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       // This isn't necessarily a single line text input
       // But commands don't actually care as long as the thing being passed in
       // actually has a command with that name. So this should work with single
@@ -126,7 +130,9 @@ function blurTextInput(textField: ?HostInstance) {
 
   if (currentlyFocusedInputRef === textField && textField != null) {
     blurInput(textField);
-    if (Platform.OS === 'ios') {
+    // [macOS] The commands are declared by the Apple-platform native
+    // components, which macOS shares.
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       // This isn't necessarily a single line text input
       // But commands don't actually care as long as the thing being passed in
       // actually has a command with that name. So this should work with single

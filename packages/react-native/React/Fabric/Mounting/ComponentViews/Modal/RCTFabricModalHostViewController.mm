@@ -40,7 +40,7 @@
 
 - (void)loadView
 {
-  self.view = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
+  self.view = [RCTUIView new];  // [macOS] needs a flipped, layer-backed view
 #if !TARGET_OS_TV
   [_touchHandler attachToView:self.view];
 #endif

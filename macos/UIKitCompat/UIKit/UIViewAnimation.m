@@ -63,10 +63,10 @@ NSString *const UIKeyInputDownArrow = @"\uF701";
 NSString *const UIKeyInputLeftArrow = @"\uF702";
 NSString *const UIKeyInputRightArrow = @"\uF703";
 
-@implementation UIPresentationController
+@implementation RCTUIKitCompatPresentationController
 @end
 
-@implementation UIEditMenuConfiguration
+@implementation RCTUIKitCompatEditMenuConfiguration
 
 + (instancetype)configurationWithIdentifier:(__unused id)identifier sourcePoint:(CGPoint)sourcePoint
 {
@@ -77,7 +77,7 @@ NSString *const UIKeyInputRightArrow = @"\uF703";
 
 @end
 
-@implementation UIEditMenuInteraction
+@implementation RCTUIKitCompatEditMenuInteraction
 
 - (instancetype)initWithDelegate:(__unused id)delegate
 {
@@ -95,7 +95,7 @@ NSString *const UIKeyInputRightArrow = @"\uF703";
 
 @end
 
-@implementation UIMenuController
+@implementation RCTUIKitCompatMenuController
 
 + (UIMenuController *)sharedMenuController
 {

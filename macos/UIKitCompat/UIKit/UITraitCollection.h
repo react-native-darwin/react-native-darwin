@@ -12,6 +12,19 @@
 #import "UIAccessibility.h"
 #import "UIKitDefines.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatTraitCollection;
+@compatibility_alias UITraitCollection RCTUIKitCompatTraitCollection;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -21,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  * (light or dark) and accessibility contrast. Size classes are always
  * Unspecified -- a resizable window has no compact or regular notion.
  */
-@interface UITraitCollection : NSObject
+@interface RCTUIKitCompatTraitCollection : NSObject
 
 @property (nonatomic, readonly) UIUserInterfaceStyle userInterfaceStyle;
 @property (nonatomic, readonly) UIAccessibilityContrast accessibilityContrast;

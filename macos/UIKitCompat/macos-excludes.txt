@@ -1,43 +1,22 @@
-# Sources excluded from the macOS build.
+# Files macos/scripts/syntax-check.sh does not attempt to parse.
 #
-# One list, read by both macos/scripts/syntax-check.sh and the macOS podspec, so
-# the thing we measure and the thing we build can never drift apart.
+# This is the syntax checker's list of known-hard files, and nothing else. It
+# used to be wired into React-Core.podspec and React-CoreModules.podspec as
+# `osx.exclude_files` too, which was wrong twice over:
 #
-# Everything here is rung 2 in MACOS-FORK.md section 4.1: rather than port a
-# module, leave it out. Each line is a path prefix, relative to
-# packages/react-native/. Blank lines and # comments are ignored.
+#   - It never took effect. `s.macos` and `s.osx` are the same platform proxy,
+#     and React-CoreModules assigns `s.macos.exclude_files` further down, which
+#     silently replaced it. Every file listed here was being compiled anyway.
+#   - Making it take effect breaks the link. RCTDevMenu, RCTActionSheetManager
+#     and RCTPerfMonitor are all referenced from CoreModulesPlugins.mm and from
+#     RCTRootViewFactory, so dropping them leaves undefined symbols.
 #
-# Two reasons appear below, and they are different:
-#
-#   no macOS concept   the feature does not exist on the platform
-#   deferred           it exists and we intend to port it, just not yet
+# They compile on macOS regardless, which is the useful discovery. So the list
+# stays advisory: it marks what the checker skips, not what the build omits.
 
-# --- no macOS concept ---------------------------------------------------------
-
-# Remote/local notifications route through UserNotifications and an app
-# delegate shape macOS does not share.
 Libraries/PushNotificationIOS/
-
-# No haptics.
 Libraries/Vibration/
-
-# No status bar. The menu bar is not a per-app, per-window equivalent.
 React/CoreModules/RCTStatusBarManager
-
-# UIActivityViewController has no AppKit counterpart; a Mac would use NSMenu or
-# NSSharingServicePicker, which is a different API, not a port.
 React/CoreModules/RCTActionSheetManager
-
-# --- deferred -----------------------------------------------------------------
-#
-# Dev-surface UI. A window-and-chrome port rather than framework work, and not
-# needed to render an app.
-#
-# RedBox is deliberately NOT here. It was excluded at first, but excluding half
-# of it broke the other half: RCTRedBox.mm imports the extra-data view
-# controller's header, which lived in a different pod and so a different
-# exclusion. Completing the UITableView shim was less work than splitting the
-# exclusion correctly, and it keeps the error overlay -- which is worth having.
-
 React/CoreModules/RCTDevMenu
 React/CoreModules/RCTPerfMonitor

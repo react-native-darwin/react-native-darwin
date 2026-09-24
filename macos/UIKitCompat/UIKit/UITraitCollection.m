@@ -7,7 +7,7 @@
 
 #import "UITraitCollection.h"
 
-@implementation UITraitCollection
+@implementation RCTUIKitCompatTraitCollection
 
 + (UITraitCollection *)traitCollectionWithAppearance:(NSAppearance *)appearance
 {

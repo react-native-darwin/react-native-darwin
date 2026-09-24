@@ -48,6 +48,13 @@ const textViewConfig = {
     dataDetectorType: true,
     android_hyphenationFrequency: true,
     lineBreakStrategyIOS: true,
+    // [macOS] Text is a view too: ParagraphProps derives from ViewProps, which
+    // on macOS already carries these. Only the view config stood in the way --
+    // a prop missing from validAttributes never reaches C++ at all.
+    tooltip: true,
+    focusable: true,
+    enableFocusRing: true,
+    // macOS]
   },
   directEventTypes: {
     topTextLayout: {

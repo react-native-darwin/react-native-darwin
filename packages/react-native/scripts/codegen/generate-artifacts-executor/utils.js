@@ -167,8 +167,55 @@ function findCodegenEnabledLibraries(
     libraries.push(
       ...findLibrariesFromReactNativeConfig(projectRoot, reactNativeConfig),
     );
-    return libraries;
+    // [macOS] Filtered here rather than per source: a superseded React Native
+    // arrives through whichever of the three found it first.
+    return supersededReactNativeRemoved(libraries);
   }
+}
+
+/**
+ * Drops upstream React Native when a fork of it is driving the build. [macOS]
+ *
+ * A macOS app keeps `react-native` for iOS and Android and adds a Darwin build
+ * of React Native for macOS, so both are dependencies and both declare the core
+ * TurboModules -- AppState, Appearance, DeviceInfo and the rest. Codegen sees
+ * one module declared by two libraries and refuses to continue, which is the
+ * right response to two unrelated libraries colliding and the wrong one here:
+ * the second is the same library, and the one actually being built against.
+ *
+ * "Being built against" is this file's own package, since the build runs the
+ * codegen scripts that ship with it. So upstream React Native is dropped only
+ * when it is *not* us -- an ordinary iOS app, where it is the only React
+ * Native present, resolves to this package root and nothing is excluded.
+ */
+function supersededReactNativeRemoved(libraries /*: Array<$FlowFixMe> */) /*: Array<$FlowFixMe> */ {
+  // <package>/scripts/codegen/generate-artifacts-executor/utils.js
+  const ownPackageRoot = path.resolve(__dirname, '..', '..', '..');
+  return libraries.filter(library => {
+    // By the package the library came from, not by the library's own name:
+    // core React Native contributes several, under names of their own.
+    const libraryPath = library?.libraryPath;
+    if (libraryPath == null || path.resolve(libraryPath) === ownPackageRoot) {
+      return true;
+    }
+    let packageName;
+    try {
+      packageName = JSON.parse(
+        fs.readFileSync(path.join(libraryPath, 'package.json'), 'utf8'),
+      ).name;
+    } catch {
+      return true;
+    }
+    const isUpstreamReactNative = packageName === 'react-native';
+    if (isUpstreamReactNative) {
+      codegenLog(
+        `Skipping ${library.libraryPath}: this build uses the React Native at ${ownPackageRoot}, which supersedes it.`,
+        true,
+      );
+      return false;
+    }
+    return true;
+  });
 }
 
 function findProjectRootLibraries(

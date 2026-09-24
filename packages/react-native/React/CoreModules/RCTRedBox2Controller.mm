@@ -118,7 +118,7 @@ static const NSTimeInterval kAutoRetryInterval = 20.0;
 
 - (UIView *)createHeaderBar
 {
-  UIView *headerContainer = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+  UIView *headerContainer = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
   headerContainer.translatesAutoresizingMaskIntoConstraints = NO;
   headerContainer.backgroundColor = RCTRedBox2ErrorColor();
 
@@ -561,7 +561,7 @@ static const NSTimeInterval kAutoRetryInterval = 20.0;
     cell.detailTextLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightLight];
     cell.detailTextLabel.lineBreakMode = NSLineBreakByTruncatingMiddle;
     cell.backgroundColor = [UIColor clearColor];
-    cell.selectedBackgroundView = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
+    cell.selectedBackgroundView = [RCTUIView new];  // [macOS] needs a flipped, layer-backed view
     cell.selectedBackgroundView.backgroundColor = RCTRedBox2BackgroundColor();
     cell.selectedBackgroundView.layer.cornerRadius = 5;
   }
@@ -598,7 +598,7 @@ static const NSTimeInterval kAutoRetryInterval = 20.0;
   }
 
   // Code frame container with rounded corners
-  UIView *container = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+  UIView *container = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
   container.translatesAutoresizingMaskIntoConstraints = NO;
   container.backgroundColor = RCTRedBox2BackgroundColor();
   container.layer.cornerRadius = 3;
@@ -689,7 +689,7 @@ static const NSTimeInterval kAutoRetryInterval = 20.0;
 
 - (UIView *)sectionHeaderViewWithTitle:(NSString *)title
 {
-  UIView *headerView = [[RCTPlatformView alloc] initWithFrame:CGRectMake(0, 0, 0, 38)];  // [macOS] needs a flipped, layer-backed view
+  UIView *headerView = [[RCTUIView alloc] initWithFrame:CGRectMake(0, 0, 0, 38)];  // [macOS] needs a flipped, layer-backed view
   headerView.backgroundColor = [UIColor clearColor];
 
   UILabel *label = [[UILabel alloc] init];

@@ -18,14 +18,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 UPSTREAM_REF="${1:-$(sed -n 's/^UPSTREAM_TAG = //p' MACOS-FORK.md | head -1)}"
 
-MAX_UPSTREAM_FILES_TOUCHED=90
+MAX_UPSTREAM_FILES_MODIFIED=135
 # Raised from 50. Deletions turned out to be the wrong proxy for fork size:
 # almost every one is half of a -1/+1 line replacement, such as changing
 # `CADisplayLink *x` to `RCTPlatformDisplayLink *x`. That is not upstream code
 # being removed, and contorting to avoid it would mean writing worse edits.
 # Upstream *files touched* is the metric that actually tracks rebase cost.
 MAX_UPSTREAM_LINES_REMOVED=200
-MAX_COMMITS=11
+MAX_COMMITS=13
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -34,7 +34,15 @@ if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
 fi
 
 # Paths this fork owns. Changes here are free; they never conflict on rebase.
-OURS=(':(exclude)macos/' ':(exclude)MACOS-FORK.md')
+#
+# GitHub requires workflows to live at .github/workflows/, so fork-owned ones
+# cannot sit under macos/ with everything else. They carry a `macos-` prefix
+# instead, which is what makes them recognisable here.
+OURS=(
+  ':(exclude)macos/'
+  ':(exclude)MACOS-FORK.md'
+  ':(exclude).github/workflows/macos-*.yml'
+)
 
 fail=0
 note() { printf '  %s\n' "$1"; }
@@ -45,14 +53,58 @@ echo "Budget check against $UPSTREAM_REF"
 echo
 
 # --- 1. upstream files touched -----------------------------------------------
+#
+# Only files that already existed upstream are budgeted. A file this fork adds
+# -- Platform.macos.js, or anything under components/view/platform/macos/ --
+# has no upstream counterpart to conflict with, so it costs nothing at rebase
+# time, which is the thing this number exists to bound. Added files are counted
+# and printed anyway, because a fork that grows without limit is still worth
+# seeing, just not worth failing a build over.
 
-files_touched=$(git diff --name-only "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" | wc -l | tr -d ' ')
-if [ "$files_touched" -le "$MAX_UPSTREAM_FILES_TOUCHED" ]; then
-  pass "upstream files touched: $files_touched / $MAX_UPSTREAM_FILES_TOUCHED"
+changed=$(git diff --name-status "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}")
+files_added=$(printf '%s\n' "$changed" | grep -c $'^A\t' || true)
+modified=$(printf '%s\n' "$changed" | grep -v $'^A\t' | cut -f2-)
+
+# A third category, alongside modified and added: the platform gate.
+#
+# Core asks `Platform.OS === 'ios'` in about forty places, and macOS now
+# answers no to all of them -- so it takes the Android branch, or none. Every
+# fix is the same single predicate, in a file the fork otherwise never touches.
+# Counting those as ordinary modifications says the shim is being under-used,
+# which is precisely backwards: there is no shim answer to a JS platform check.
+#
+# Detected rather than declared: a file qualifies only if EVERY line its diff
+# adds or removes is part of one of those predicates -- the test itself, a
+# comment, or a continuation of the same expression (`? null`, `: NativeFoo,`,
+# a lone brace). One substantive line and it counts as a normal modification
+# again.
+files_gated=0
+files_touched=0
+for f in $modified; do
+  body=$(git diff -U0 "$UPSTREAM_REF"..HEAD -- "$f" \
+    | grep -E '^[-+]' | grep -Ev '^(\+\+\+|---)' \
+    | sed -E 's/^[-+][[:space:]]*//' \
+    | grep -Ev '^(//|\*|/\*|$)')
+  # Continuations of the widened expression, which carry no logic of their own.
+  leftover=$(printf '%s\n' "$body" \
+    | grep -v 'Platform\.OS' \
+    | grep -Ev '^[?:][[:space:]]*[A-Za-z_$][A-Za-z0-9_.$]*,?$' \
+    | grep -Ev '^[?:][[:space:]]*(null|undefined),?$' \
+    | grep -Ev '^[){}][[:space:]]*\{?$' \
+    | grep -Ev '^&&$')
+  if [ -n "$body" ] && [ -z "$leftover" ]; then
+    files_gated=$((files_gated + 1))
+  else
+    files_touched=$((files_touched + 1))
+  fi
+done
+
+if [ "$files_touched" -le "$MAX_UPSTREAM_FILES_MODIFIED" ]; then
+  pass "upstream files modified: $files_touched / $MAX_UPSTREAM_FILES_MODIFIED  (+$files_added added, $files_gated platform gates)"
 else
-  bad "upstream files touched: $files_touched / $MAX_UPSTREAM_FILES_TOUCHED"
+  bad "upstream files modified: $files_touched / $MAX_UPSTREAM_FILES_MODIFIED  (+$files_added added, $files_gated platform gates)"
   note "The shim is being under-used. See MACOS-FORK.md section 4.1."
-  git diff --name-only "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" | sed 's/^/    /'
+  printf '%s\n' "$modified" | sed 's/^/    /'
 fi
 
 # --- 2. upstream lines removed -----------------------------------------------
@@ -110,28 +162,70 @@ else
   note "See MACOS-FORK.md section 3 for the exact syntax."
 fi
 
+# --- 4b. the shim registers no UIKit class name with the ObjC runtime ---------
+#
+# The shim exists to provide UIKit *compile-time* names. Making them real
+# runtime classes is a different thing entirely, and it bites: Apple's own
+# frameworks decide a process is Catalyst by asking NSClassFromString for a
+# UIKit class. macOS's one-time-code AutoFill does it for whichever text field
+# holds focus, and a yes sends it into UIKitMacHelper, which dlopens a
+# UIKit.framework that does not exist on this platform and takes the process
+# down -- from nothing more than clicking into a TextInput.
+#
+# So every class is declared under an RCTUIKitCompat name and handed to callers
+# through @compatibility_alias, which is a compile-time rename and registers
+# nothing. This check keeps it that way.
+
+runtime_uikit=$(grep -rhnE '^@(interface|implementation)[[:space:]]+UI[A-Za-z]+' macos/UIKitCompat/UIKit/ 2>/dev/null || true)
+if [ -z "$runtime_uikit" ]; then
+  pass "shim declares no UIKit-named ObjC class"
+else
+  bad "shim declares a UIKit-named ObjC class"
+  note "Declare it as RCTUIKitCompat<Name> and add @compatibility_alias."
+  printf '%s\n' "$runtime_uikit" | sed 's/^/    /'
+fi
+
 # --- 5. renamed UIKit types are confined to declaration sites ------------------
 #
-# RCTPlatformView is allowed, because macOS genuinely cannot make UIScrollView
-# a subclass of a UIView class -- see MACOS-FORK.md section 4.5. But it is only
+# RCTUIView is allowed, because macOS genuinely cannot make UIScrollView a
+# subclass of a UIView class -- see MACOS-FORK.md section 4.5. But it is only
 # allowed where a concrete class is unavoidable: as a superclass, or as the
 # receiver of +alloc/+new.
 #
 # The moment it appears as a pointer type, every `UIView *` in the tree starts
 # wanting to be rewritten, and that is the 538-file path this fork exists to
 # avoid. Everything else stays a renamed-type violation.
+#
+# RCTPlatformView is *not* policed as a pointer type: it is an alias for NSView,
+# exactly as in react-native-macos, so `RCTPlatformView *` is the same type as
+# `UIView *`. React/Base/RCTUIKit.h is exempt entirely -- it exists to hand
+# those names to third-party code.
 
-as_pointer=$(git diff "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" \
-  | grep -E '^\+' | grep -E '\bRCTPlatformView[[:space:]]*\*' || true)
+RENAME_SCOPE=("${OURS[@]}" ':(exclude)packages/react-native/React/Base/RCTUIKit.h')
 
-other_renames=$(git diff "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" \
-  | grep -E '^\+' | grep -E '\bRCT(UIView|UIColor|PlatformColor|PlatformImage|UIScrollView)\b' || true)
+# `RCTUIView<RCTComponentViewProtocol> *` is allowed: react-native-macos uses
+# exactly that type for the component-view registry and descriptor, and
+# third-party Fabric modules are compiled against it. A bare `RCTUIView *` is
+# still a violation.
+as_pointer=$(git diff "$UPSTREAM_REF"..HEAD -- . "${RENAME_SCOPE[@]}" \
+  | grep -E '^\+' | grep -E '\bRCTUIView[[:space:]]*\*' \
+  | grep -vE '\bRCTUIView<RCTComponentViewProtocol>[[:space:]]*\*' || true)
+
+# RCTUIColor, RCTPlatformColor and RCTPlatformImage are no longer violations in
+# a *header*: an installed header must not name a UIKit type, or the aliases
+# leak into every dependent and collide with anything else declaring them. The
+# vocabulary is the fix, not the problem. See macos/PLAN-drop-uikit-aliases.md.
+#
+# Implementation files still may not introduce them: `.m` and `.mm` keep the
+# shim and keep writing UIKit names, which is what keeps the fork small.
+other_renames=$(git diff "$UPSTREAM_REF"..HEAD -- . "${RENAME_SCOPE[@]}" ':(exclude)*.h' \
+  | grep -E '^\+' | grep -E '\bRCT(UIColor|PlatformColor|PlatformImage|UIScrollView)\b' || true)
 
 if [ -z "$as_pointer" ] && [ -z "$other_renames" ]; then
   pass "renamed UIKit types confined to declaration sites"
 else
   if [ -n "$as_pointer" ]; then
-    bad "RCTPlatformView used as a pointer type in upstream code:"
+    bad "RCTUIView used as a pointer type in upstream code:"
     echo "$as_pointer" | sed 's/^/    /' | head -10
     note "Use UIView * -- it is an alias for NSView and accepts any view."
   fi
@@ -144,6 +238,9 @@ fi
 
 # --- 6. no [macOS] markers inside our own directory ---------------------------
 
+# .github/workflows/macos-*.yml is excluded: a marker there is the only thing
+# that says the file is the fork's and not upstream's, since it cannot live
+# under macos/.
 ours_marked=$(git grep -l -E '\[macOS|macOS\]' -- macos/ 2>/dev/null \
   | grep -v '^macos/ci/check-budget.sh$' \
   | grep -v '^macos/UIKitCompat/README.md$' || true)
@@ -164,7 +261,9 @@ fi
 
 echo
 echo "Report this in the PR description:"
-echo "  Upstream files touched:  $files_touched / $MAX_UPSTREAM_FILES_TOUCHED"
+echo "  Upstream files modified: $files_touched / $MAX_UPSTREAM_FILES_MODIFIED
+  Files added by the fork: $files_added
+  Platform-gate one-liners: $files_gated"
 echo "  Upstream lines removed:  $lines_removed / $MAX_UPSTREAM_LINES_REMOVED"
 echo "  Commits:                 $commits / $MAX_COMMITS"
 

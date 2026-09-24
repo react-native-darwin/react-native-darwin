@@ -18,6 +18,23 @@
 #import "UIKitDefines.h"
 #import "UIViewAnimation.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatHoverGestureRecognizer;
+@class RCTUIKitCompatLargeContentViewerInteraction;
+@class RCTUIKitCompatFontMetrics;
+@compatibility_alias UIHoverGestureRecognizer RCTUIKitCompatHoverGestureRecognizer;
+@compatibility_alias UILargeContentViewerInteraction RCTUIKitCompatLargeContentViewerInteraction;
+@compatibility_alias UIFontMetrics RCTUIKitCompatFontMetrics;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - UIScreen
@@ -33,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - UIWindow
 
-@class UIWindowScene;
+@class RCTUIKitCompatWindowScene;
 
 @interface NSWindow (UIKitCompat)
 // UIWindow is initialised from a frame. An NSWindow needs a style mask and a
@@ -85,7 +102,7 @@ typedef NS_ENUM(NSInteger, UISemanticContentAttribute) {
 
 // AppKit's hover tracking is NSTrackingArea, not a recogniser. This exists so
 // the pointer-event plumbing parses; it never fires.
-@interface UIHoverGestureRecognizer : NSGestureRecognizer
+@interface RCTUIKitCompatHoverGestureRecognizer : NSGestureRecognizer
 @end
 
 @interface NSGestureRecognizer (UIKitCompat)
@@ -133,7 +150,7 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 - (CGPoint)convertPoint:(CGPoint)point fromView:(nullable NSView *)view;
 @end
 
-@interface UIWindowScene (UIKitCompatCoordinateSpace)
+@interface RCTUIKitCompatWindowScene (UIKitCompatCoordinateSpace)
 @property (nonatomic, readonly, nullable) NSScreen *coordinateSpace;
 @property (nonatomic, readonly, nullable) NSScreen *screen;
 @property (nonatomic, readonly) NSArray<NSWindow *> *windows;
@@ -218,7 +235,7 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 
 @interface NSView (UIKitCompatCallbacks)
 // UIKit lifecycle hooks with no AppKit counterpart. Declared so any view can be
-// sent them; RCTPlatformView drives the trait one from -viewDidChangeEffectiveAppearance.
+// sent them; RCTUIView drives the trait one from -viewDidChangeEffectiveAppearance.
 - (void)safeAreaInsetsDidChange;
 - (void)traitCollectionDidChange:(nullable id)previousTraitCollection;
 - (CGSize)sizeThatFits:(CGSize)size;
@@ -294,7 +311,7 @@ typedef NS_ENUM(NSInteger, UIImageResizingMode) {
 @end
 
 // iOS-only accessibility affordance, declared so the property type resolves.
-@interface UILargeContentViewerInteraction : NSObject
+@interface RCTUIKitCompatLargeContentViewerInteraction : NSObject
 @end
 
 @interface NSColor (UIKitCompatTraitResolution)
@@ -359,7 +376,7 @@ extern const CGFloat UIWindowLevelStatusBar;
  * Dynamic Type; the system text size is fixed per control. Sizes pass through
  * unchanged so Dynamic Type call sites compile and behave as "no scaling".
  */
-@interface UIFontMetrics : NSObject
+@interface RCTUIKitCompatFontMetrics : NSObject
 @property (class, nonatomic, readonly) UIFontMetrics *defaultMetrics;
 + (instancetype)metricsForTextStyle:(NSString *)textStyle;
 - (NSFont *)scaledFontForFont:(NSFont *)font;

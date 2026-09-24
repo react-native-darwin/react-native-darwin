@@ -53,6 +53,11 @@ if (Platform.OS === 'web') {
     document.addEventListener('touchstart', disableHover, true);
     document.addEventListener('touchmove', disableHover, true);
     document.addEventListener('mousemove', enableHover, true);
+    // [macOS] A Mac always has a pointer, and unlike the web there is no touch
+    // input to disable hover for. Without this `onHoverIn` / `onHoverOut` never
+    // fire on Pressable, because Pressability checks this flag first.
+  } else if (Platform.OS === 'macos') {
+    isEnabled = true;
   }
 }
 

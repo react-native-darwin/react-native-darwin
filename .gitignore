@@ -185,3 +185,11 @@ __pycache__/
 /packages/react-native/**/api/codegen
 /packages/react-native/**/.doxygen.config.*.generated
 /scripts/cxx-api/codegen
+
+# [macOS] HelloWorld build artefacts and installed dependencies.
+/macos/HelloWorld/node_modules/
+/macos/HelloWorld/Pods/
+/macos/HelloWorld/build/
+/macos/HelloWorld/HelloWorld.xcodeproj/
+/macos/HelloWorld/HelloWorld.xcworkspace/
+/macos/HelloWorld/package-lock.json

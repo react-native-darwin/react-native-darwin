@@ -7,7 +7,7 @@
 
 #import "UIStatusBar.h"
 
-@implementation UIStatusBarManager
+@implementation RCTUIKitCompatStatusBarManager
 
 - (CGRect)statusBarFrame
 {

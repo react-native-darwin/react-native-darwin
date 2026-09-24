@@ -11,6 +11,25 @@
 
 #import "UIKitDefines.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatKeyCommand;
+@class RCTUIKitCompatBarButtonItemGroup;
+@class RCTUIKitCompatTextInputPasswordRules;
+@class RCTUIKitCompatTextDropProposal;
+@compatibility_alias UIKeyCommand RCTUIKitCompatKeyCommand;
+@compatibility_alias UIBarButtonItemGroup RCTUIKitCompatBarButtonItemGroup;
+@compatibility_alias UITextInputPasswordRules RCTUIKitCompatTextInputPasswordRules;
+@compatibility_alias UITextDropProposal RCTUIKitCompatTextDropProposal;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -21,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
  * This is a value object that records the binding so React Native's key
  * command registry compiles and can be replayed against NSEvent.
  */
-@interface UIKeyCommand : NSObject
+@interface RCTUIKitCompatKeyCommand : NSObject
 
 @property (nonatomic, readonly, copy, nullable) NSString *input;
 @property (nonatomic, readonly) UIKeyModifierFlags modifierFlags;
@@ -40,10 +59,10 @@ NS_ASSUME_NONNULL_BEGIN
 // UIKit hands these to -[UIResponder keyCommands] holders on iPad hardware
 // keyboards. There is no macOS analogue; declared so the property type
 // resolves.
-@interface UIBarButtonItemGroup : NSObject
+@interface RCTUIKitCompatBarButtonItemGroup : NSObject
 @end
 
-@interface UITextInputPasswordRules : NSObject
+@interface RCTUIKitCompatTextInputPasswordRules : NSObject
 @property (nonatomic, readonly, copy) NSString *passwordRulesDescriptor;
 + (instancetype)passwordRulesWithDescriptor:(NSString *)descriptor;
 @end
@@ -72,7 +91,7 @@ typedef NS_ENUM(NSInteger, UIDropOperation) {
 // UIKit's text drop machinery. AppKit uses NSDraggingDestination, a different
 // model entirely, so these are declared to satisfy the delegate signatures and
 // never fire.
-@interface UITextDropProposal : NSObject
+@interface RCTUIKitCompatTextDropProposal : NSObject
 @property (nonatomic, assign) UIDropOperation operation;
 - (instancetype)initWithDropOperation:(UIDropOperation)operation;
 @end

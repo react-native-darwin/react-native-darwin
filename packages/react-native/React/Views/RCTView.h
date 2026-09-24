@@ -17,7 +17,7 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 
 @protocol RCTAutoInsetsProtocol;
 
-@interface RCTView : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
+@interface RCTView : RCTUIView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 /**
  * Accessibility event handlers

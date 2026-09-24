@@ -95,6 +95,13 @@ int32_t ColorFromColorComponents(const facebook::react::ColorComponents &compone
 int32_t ColorFromUIColor(UIColor *color)
 {
   CGFloat rgba[4];
+#if TARGET_OS_OSX // [macOS] catalog colours need converting first; see Color::getChannel
+  NSColor *rgbColor = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+  if (rgbColor == nil) {
+    return 0;
+  }
+  color = rgbColor;
+#endif // macOS]
   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
   return ColorFromColorComponents(
       {.red = (float)rgba[0], .green = (float)rgba[1], .blue = (float)rgba[2], .alpha = (float)rgba[3]});
@@ -226,6 +233,23 @@ float Color::getChannel(int channelId) const
 {
   CGFloat rgba[4];
   UIColor *color = (__bridge UIColor *)getUIColor().get();
+#if TARGET_OS_OSX // [macOS
+  // AppKit's named colours -- everything PlatformColor() resolves to, plus the
+  // system palette -- live in the Catalog colour space, and asking one for its
+  // RGBA components without converting first raises:
+  //
+  //   -getRed:green:blue:alpha: not valid for the NSColor Catalog color
+  //
+  // sRGB is the right target: it is what the components are interpreted as
+  // everywhere else in the renderer.
+  NSColor *rgbColor = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+  if (rgbColor == nil) {
+    // A pattern or otherwise unconvertible colour. Treat it as transparent
+    // rather than raising, which would take the whole app down.
+    return 0;
+  }
+  color = rgbColor;
+#endif // macOS]
   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
   return static_cast<float>(rgba[channelId]);
 }
@@ -234,6 +258,13 @@ std::size_t Color::getUIColorHash() const
 {
   return uiColorHashValue_;
 }
+
+#if TARGET_OS_OSX // [macOS
+Color Color::createFromHostPlatformColor(std::shared_ptr<void> hostPlatformColor)
+{
+  return Color(std::move(hostPlatformColor));
+}
+#endif // macOS]
 
 Color Color::createSemanticColor(std::vector<std::string> &semanticItems)
 {

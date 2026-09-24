@@ -22,6 +22,7 @@ import type {
   LayoutChangeEvent,
   LayoutRectangle,
   MouseEvent,
+  NativeSyntheticEvent, // [macOS] DragEvent below is built on it
   PointerEvent,
 } from '../../Types/CoreEventTypes';
 import type {
@@ -126,6 +127,162 @@ type FocusEventProps = Readonly<{
    */
   onFocus?: ?(event: FocusEvent) => void,
   onFocusCapture?: ?(event: FocusEvent) => void,
+}>;
+
+// [macOS] Props that only exist on macOS. They are declared here rather than in
+// a .macos file because ViewPropTypes is shared, and a prop that is simply
+// absent on other platforms costs them nothing. The native side is
+// HostPlatformViewProps under components/view/platform/macos. macOS]
+/**
+ * A key the view means to act on itself. A modifier left out is a wildcard:
+ * `{key: 'c'}` matches Cmd-C and a bare c alike.
+ *
+ * @platform macos
+ */
+export type HandledKeyEvent = Readonly<{
+  key: string,
+  altKey?: ?boolean,
+  ctrlKey?: ?boolean,
+  metaKey?: ?boolean,
+  shiftKey?: ?boolean,
+}>;
+
+/**
+ * A dragged file, or dragged image data with no file behind it -- in which case
+ * `uri` is a data: URL rather than a path.
+ *
+ * @platform macos
+ */
+export type DataTransferFile = Readonly<{
+  name: string,
+  type: string,
+  uri: string,
+  size?: number,
+  width?: number,
+  height?: number,
+}>;
+
+/**
+ * The pasteboard contents of a drag, shaped like the DOM DataTransfer.
+ *
+ * @platform macos
+ */
+export type DataTransfer = Readonly<{
+  files: $ReadOnlyArray<DataTransferFile>,
+  items: $ReadOnlyArray<Readonly<{kind: string, type: string}>>,
+  types: $ReadOnlyArray<string>,
+}>;
+
+export type DragEvent = NativeSyntheticEvent<
+  Readonly<{
+    clientX: number,
+    clientY: number,
+    pageX: number,
+    pageY: number,
+    screenX: number,
+    screenY: number,
+    altKey: boolean,
+    ctrlKey: boolean,
+    metaKey: boolean,
+    shiftKey: boolean,
+    button: number,
+    dataTransfer: DataTransfer,
+  }>,
+>;
+
+type MacOSViewProps = Readonly<{
+  /**
+   * What kinds of dragged content the view accepts: 'fileUrl', 'image',
+   * 'string'. Required for the drag handlers to fire at all -- AppKit routes a
+   * drag only to views that registered for one of the pasteboard types it
+   * carries.
+   *
+   * @platform macos
+   */
+  draggedTypes?: ?$ReadOnlyArray<'fileUrl' | 'image' | 'string'>,
+
+  /**
+   * Called as a drag enters, leaves, or is released over the view.
+   *
+   * @platform macos
+   */
+  onDragEnter?: ?(event: DragEvent) => void,
+
+  /** @platform macos */
+  onDragLeave?: ?(event: DragEvent) => void,
+
+  /** @platform macos */
+  onDrop?: ?(event: DragEvent) => void,
+
+  /**
+   * Keys this view handles itself, suppressing AppKit's own interpretation of
+   * them -- Tab moving focus, Escape cancelling, an unclaimed key beeping.
+   *
+   * Separate from `onKeyDown`, deliberately: listening to a key does not change
+   * what it does, so a view that observes Tab still lets Tab move focus. Only
+   * listing a key here claims it.
+   *
+   * @platform macos
+   */
+  keyDownEvents?: ?$ReadOnlyArray<HandledKeyEvent>,
+
+  /**
+   * As `keyDownEvents`, for key release.
+   *
+   * @platform macos
+   */
+  keyUpEvents?: ?$ReadOnlyArray<HandledKeyEvent>,
+
+  /**
+   * The view's help tag, shown when the pointer rests over it.
+   *
+   * @platform macos
+   */
+  tooltip?: ?string,
+
+  /**
+   * Receive the click that activates a background window, rather than letting
+   * it be swallowed to bring the window forward.
+   *
+   * @platform macos
+   */
+  acceptsFirstMouse?: ?boolean,
+
+  /**
+   * Let the view blend with what is behind it when inside a vibrancy effect.
+   *
+   * @platform macos
+   */
+  allowsVibrancy?: ?boolean,
+
+  /**
+   * Draw the focus ring while the view is first responder. Defaults to true.
+   *
+   * @platform macos
+   */
+  enableFocusRing?: ?boolean,
+
+  /**
+   * Whether dragging the view moves the window. AppKit defaults this to true;
+   * set it false for a view that should handle its own drags.
+   *
+   * @platform macos
+   */
+  mouseDownCanMoveWindow?: ?boolean,
+
+  /**
+   * Called on a double click.
+   *
+   * @platform macos
+   */
+  onDoubleClick?: ?(event: MouseEvent) => void,
+
+  /**
+   * Called on a secondary (right) click.
+   *
+   * @platform macos
+   */
+  onAuxClick?: ?(event: MouseEvent) => void,
 }>;
 
 type KeyEventProps = Readonly<{
@@ -566,6 +723,7 @@ export type ViewProps = Readonly<{
   ...DirectEventProps,
   ...GestureResponderHandlers,
   ...MouseEventProps,
+  ...MacOSViewProps, // [macOS]
   ...PointerEventProps,
   ...FocusEventProps,
   ...KeyEventProps,

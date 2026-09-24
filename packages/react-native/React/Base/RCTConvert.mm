@@ -850,6 +850,26 @@ static UIColor *RCTColorFromSemanticColorName(NSString *semanticColorName)
   NSDictionary<NSString *, NSDictionary *> *colorMap = RCTSemanticColorsMap();
   UIColor *color = nil;
   NSDictionary<NSString *, id> *colorInfo = colorMap[semanticColorName];
+
+#if TARGET_OS_OSX // [macOS
+  // The map above is iOS's vocabulary. AppKit has its own -- labelColor,
+  // windowBackgroundColor, controlAccentColor and the rest -- and they are all
+  // class properties on NSColor, so asking NSColor directly covers every one of
+  // them without a second table to keep in sync. Only reached for names iOS
+  // does not define, so iOS names keep their mapping and their fallbacks.
+  if (colorInfo == nil) {
+    SEL appKitSelector = NSSelectorFromString(semanticColorName);
+    if (appKitSelector != nil && [UIColor respondsToSelector:appKitSelector]) {
+      IMP imp = [[UIColor class] methodForSelector:appKitSelector];
+      id (*getColor)(id, SEL) = (id (*)(id, SEL))imp;
+      id candidate = getColor([UIColor class], appKitSelector);
+      if ([candidate isKindOfClass:[UIColor class]]) {
+        return candidate;
+      }
+    }
+  }
+#endif // macOS]
+
   if (colorInfo) {
     NSString *semanticColorSelector = colorInfo[RCTSelector];
     if (semanticColorSelector == nil) {
@@ -1040,6 +1060,35 @@ void RCTSetDefaultColorSpace(RCTColorSpace colorSpace)
         RCTLogConvertError(json, @"a UIColor. Expected an iOS dynamic appearance aware color.");
         return nil;
       }
+#if TARGET_OS_OSX // [macOS
+    } else if ((value = [dictionary objectForKey:@"colorWithSystemEffect"])) {
+      // AppKit's pressed / disabled / rollover variants of a colour. There is
+      // no UIKit equivalent, so this arm exists only on macOS.
+      NSDictionary *spec = value;
+      UIColor *baseColor = [RCTConvert UIColor:[spec objectForKey:@"baseColor"]];
+      NSString *effect = [RCTConvert NSString:[spec objectForKey:@"systemEffect"]];
+      if (baseColor == nil) {
+        RCTLogConvertError(json, @"a UIColor. colorWithSystemEffect needs a baseColor.");
+        return nil;
+      }
+      static NSDictionary<NSString *, NSNumber *> *effects;
+      static dispatch_once_t onceToken;
+      dispatch_once(&onceToken, ^{
+        effects = @{
+          @"none" : @(NSColorSystemEffectNone),
+          @"pressed" : @(NSColorSystemEffectPressed),
+          @"deepPressed" : @(NSColorSystemEffectDeepPressed),
+          @"disabled" : @(NSColorSystemEffectDisabled),
+          @"rollover" : @(NSColorSystemEffectRollover),
+        };
+      });
+      NSNumber *resolved = effects[effect ?: @"none"];
+      if (resolved == nil) {
+        RCTLogConvertError(json, @"a UIColor. Unknown system effect.");
+        return nil;
+      }
+      return [baseColor colorWithSystemEffect:(NSColorSystemEffect)resolved.integerValue];
+#endif // macOS]
     } else {
       RCTLogConvertError(json, @"a UIColor. Expected an iOS semantic color or dynamic appearance aware color.");
       return nil;

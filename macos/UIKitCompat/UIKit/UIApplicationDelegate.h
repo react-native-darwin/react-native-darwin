@@ -12,6 +12,19 @@
 #import "UIApplication.h"
 #import "UIKitDefines.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatDevice;
+@compatibility_alias UIDevice RCTUIKitCompatDevice;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *UIApplicationOpenURLOptionsKey NS_TYPED_ENUM;
@@ -85,7 +98,7 @@ typedef NS_ENUM(NSInteger, UIUserInterfaceIdiom) {
  * Only what React Native reads: a name, a system version, and an idiom. The
  * idiom is always Mac, which is the truthful answer.
  */
-@interface UIDevice : NSObject
+@interface RCTUIKitCompatDevice : NSObject
 @property (class, nonatomic, readonly) UIDevice *currentDevice;
 @property (nonatomic, readonly, copy) NSString *name;
 @property (nonatomic, readonly, copy) NSString *systemName;
@@ -139,5 +152,18 @@ extern NSString *const UIKeyboardFrameBeginUserInfoKey;
 extern NSString *const UIKeyboardAnimationDurationUserInfoKey;
 extern NSString *const UIKeyboardAnimationCurveUserInfoKey;
 extern NSString *const UIKeyboardIsLocalUserInfoKey;
+
+/**
+ * A window delegate, which is the closest AppKit has to a scene delegate. macOS
+ * has no scene lifecycle, so this is the protocol's shape and nothing more.
+ * expo-modules-core declares it in its own macOS header; having it here means
+ * that header can defer to this one wholesale.
+ */
+@protocol UISceneDelegate <NSWindowDelegate>
+@end
+
+// No UIHostingController. NSHostingController is a Swift-only type -- SwiftUI
+// does not vend it to Objective-C -- so there is nothing to alias it to. Code
+// that needs a hosting controller has to reach it from Swift.
 
 NS_ASSUME_NONNULL_END

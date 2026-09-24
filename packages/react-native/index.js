@@ -270,6 +270,16 @@ module.exports = {
     return require('./Libraries/StyleSheet/PlatformColorValueTypesIOS')
       .DynamicColorIOS;
   },
+  // [macOS] AppKit's appearance-aware and system-effect colours.
+  get DynamicColorMacOS() {
+    return require('./Libraries/StyleSheet/PlatformColorValueTypesMacOS')
+      .DynamicColorMacOS;
+  },
+  get ColorWithSystemEffectMacOS() {
+    return require('./Libraries/StyleSheet/PlatformColorValueTypesMacOS')
+      .ColorWithSystemEffectMacOS;
+  },
+  // macOS]
   get Easing() {
     return require('./Libraries/Animated/Easing').default;
   },

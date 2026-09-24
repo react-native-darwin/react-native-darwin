@@ -153,7 +153,7 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 @end
 
-@implementation UIHoverGestureRecognizer
+@implementation RCTUIKitCompatHoverGestureRecognizer
 @end
 
 @implementation NSGestureRecognizer (UIKitCompat)
@@ -251,10 +251,10 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 // UIScene and UIWindowScene are declared in UIKitDefines.h so upstream scene
 // pointers resolve. They are never instantiated, but a category needs the class
 // to exist at link time, so the implementations live here.
-@implementation UIWindowScene
+@implementation RCTUIKitCompatWindowScene
 @end
 
-@implementation UIWindowScene (UIKitCompatCoordinateSpace)
+@implementation RCTUIKitCompatWindowScene (UIKitCompatCoordinateSpace)
 
 - (NSScreen *)coordinateSpace
 {
@@ -283,7 +283,7 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 @end
 
-@implementation UIScene
+@implementation RCTUIKitCompatScene
 
 - (UISceneActivationState)activationState
 {
@@ -402,7 +402,21 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 - (void)setRootViewController:(NSViewController *)rootViewController
 {
+  // Assigning -contentViewController makes NSWindow resize itself to fit that
+  // controller's view. UIWindow does the opposite: the window keeps its frame
+  // and the root view is stretched to fill it.
+  //
+  // React Native's root view has no useful size when it is installed -- Fabric
+  // has not laid anything out yet -- so the AppKit behaviour collapses the
+  // window to a point, and the app runs with nothing on screen. Keep the frame
+  // the caller chose, and let the view follow it.
+  NSRect frame = self.frame;
   self.contentViewController = rootViewController;
+  if (!NSIsEmptyRect(frame)) {
+    [self setFrame:frame display:YES];
+    rootViewController.view.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    rootViewController.view.frame = self.contentLayoutRect;
+  }
 }
 
 - (instancetype)initWithWindowScene:(__unused id)windowScene
@@ -559,7 +573,7 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 - (void)traitCollectionDidChange:(__unused id)previousTraitCollection
 {
-  // Driven by -viewDidChangeEffectiveAppearance on RCTPlatformView.
+  // Driven by -viewDidChangeEffectiveAppearance on RCTUIView.
 }
 
 - (CGSize)sizeThatFits:(CGSize)size
@@ -807,7 +821,7 @@ UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
 
 @end
 
-@implementation UILargeContentViewerInteraction
+@implementation RCTUIKitCompatLargeContentViewerInteraction
 @end
 
 @implementation NSColor (UIKitCompatTraitResolution)
@@ -1010,7 +1024,7 @@ UIFontTextStyle const UIFontTextStyleTitle1 = @"UICTFontTextStyleTitle1";
 UIFontTextStyle const UIFontTextStyleTitle2 = @"UICTFontTextStyleTitle2";
 UIFontTextStyle const UIFontTextStyleTitle3 = @"UICTFontTextStyleTitle3";
 
-@implementation UIFontMetrics
+@implementation RCTUIKitCompatFontMetrics
 
 + (UIFontMetrics *)defaultMetrics
 {

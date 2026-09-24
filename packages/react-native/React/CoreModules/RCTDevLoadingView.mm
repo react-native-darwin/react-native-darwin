@@ -145,7 +145,7 @@ RCT_EXPORT_MODULE()
     self->_label.text = message;
 
     if (self->_container == nullptr) {
-      self->_container = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+      self->_container = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
       self->_container.translatesAutoresizingMaskIntoConstraints = NO;
       UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hide)];
       [self->_container addGestureRecognizer:tapGesture];

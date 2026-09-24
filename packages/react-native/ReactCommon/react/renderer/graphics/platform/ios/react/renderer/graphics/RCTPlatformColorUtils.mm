@@ -183,6 +183,13 @@ static inline NSString *_NSStringFromCString(
 static inline facebook::react::ColorComponents _ColorComponentsFromUIColor(UIColor *color)
 {
   CGFloat rgba[4];
+#if TARGET_OS_OSX // [macOS] catalog colours need converting first
+  NSColor *rgbColor = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+  if (rgbColor == nil) {
+    return {.red = 0, .green = 0, .blue = 0, .alpha = 0};
+  }
+  color = rgbColor;
+#endif // macOS]
   [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
   return {.red = (float)rgba[0], .green = (float)rgba[1], .blue = (float)rgba[2], .alpha = (float)rgba[3]};
 }
@@ -204,6 +211,22 @@ UIColor *RCTPlatformColorFromSemanticItems(std::vector<std::string> &semanticIte
     if (uiColor != nil) {
       return uiColor;
     }
+#if TARGET_OS_OSX // [macOS
+    // _UIColorFromSemanticString only knows UIKit's vocabulary. AppKit's own --
+    // labelColor, controlAccentColor, windowBackgroundColor and the rest -- are
+    // class properties on NSColor, so asking NSColor directly covers all of
+    // them without a second table. Without this a macOS-only name silently
+    // resolves to clearColor and the view just renders transparent.
+    SEL appKitSelector = NSSelectorFromString(semanticNSString);
+    if (appKitSelector != nil && [UIColor respondsToSelector:appKitSelector]) {
+      IMP imp = [[UIColor class] methodForSelector:appKitSelector];
+      id (*getColor)(id, SEL) = (id (*)(id, SEL))imp;
+      id candidate = getColor([UIColor class], appKitSelector);
+      if ([candidate isKindOfClass:[UIColor class]]) {
+        return candidate;
+      }
+    }
+#endif // macOS]
   }
 
   return UIColor.clearColor;

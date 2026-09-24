@@ -234,7 +234,8 @@ const Button: component(
   const buttonStyles: Array<ViewStyleProp> = [styles.button];
   const textStyles: Array<TextStyleProp> = [styles.text];
   if (color) {
-    if (Platform.OS === 'ios') {
+    // [macOS] Apple platforms tint the label; Android tints the background.
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       textStyles.push({color: color});
     } else {
       buttonStyles.push({backgroundColor: color});

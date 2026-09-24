@@ -12,6 +12,59 @@ require_relative "./jsengine.rb"
 
 # Utilities class for React Native Cocoapods
 class ReactNativePodsUtils
+    # [macOS] Wires the UIKit compatibility layer into every pod target.
+    #
+    # Without this, any pod whose sources `#import <UIKit/UIKit.h>` fails with
+    # "'UIKit/UIKit.h' file not found" -- React-graphics is usually the first
+    # to go. It used to be every app's job to do this in its own Podfile, which
+    # meant an app that did not know to (BareExpo, say, whose Podfile is
+    # Expo's) simply could not build. It belongs here, where every app already
+    # calls react_native_post_install.
+    #
+    # Three things, all of them per-target:
+    #
+    #   1. The header search path, so <UIKit/...> resolves to the shim.
+    #   2. A -include prelude, so every Objective-C translation unit sees the
+    #      compatibility layer whether or not it imports UIKit itself.
+    #   3. Stripping two frameworks that do not exist on macOS from the link
+    #      line. UIKit is satisfied at compile time by headers alone -- there
+    #      is nothing to link. MobileCoreServices' declarations live in
+    #      CoreServices here, which is what the linker actually needs.
+    def self.apply_uikit_compat(installer)
+        compat_root = Helpers::Constants.uikit_compat_dir
+        return if compat_root.nil?
+
+        compat_root = File.expand_path(compat_root)
+        prelude = File.join(compat_root, 'RCTPlatformViewCompat.h')
+
+        installer.pods_project.targets.each do |target|
+            target.build_configurations.each do |config|
+                next unless config.build_settings['SDKROOT'].to_s.include?('macosx') ||
+                    config.build_settings['SUPPORTED_PLATFORMS'].to_s.include?('macosx') ||
+                    config.build_settings['MACOSX_DEPLOYMENT_TARGET']
+
+                flags = Array(config.build_settings['OTHER_CFLAGS'] || ['$(inherited)'])
+                include_flag = "-include \"#{prelude}\""
+                flags << include_flag unless flags.include?(include_flag)
+                config.build_settings['OTHER_CFLAGS'] = flags
+
+                paths = Array(config.build_settings['HEADER_SEARCH_PATHS'] || ['$(inherited)'])
+                compat_path = "\"#{compat_root}\""
+                paths << compat_path unless paths.include?(compat_path)
+                config.build_settings['HEADER_SEARCH_PATHS'] = paths
+            end
+        end
+
+        Dir.glob(File.join(Pod::Config.instance.installation_root, 'Pods/Target Support Files/**/*.xcconfig')).each do |xcconfig|
+            contents = File.read(xcconfig)
+            updated = contents
+                .gsub(/-framework\s+"?UIKit"?/, '')
+                .gsub(/-framework\s+"?MobileCoreServices"?/, '-framework "CoreServices"')
+            File.write(xcconfig, updated) if updated != contents
+        end
+    end
+    # macOS]
+
     # URI::File.build validates path components as ASCII, so escape the filesystem path first.
     def self.local_file_uri(path)
         URI::File.build(path: URI::DEFAULT_PARSER.escape(path)).to_s
@@ -368,6 +421,17 @@ class ReactNativePodsUtils
                         config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] :
                         Helpers::Constants.min_ios_version_supported
                     config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = [Helpers::Constants.min_ios_version_supported.to_f, old_iphone_deploy_target.to_f].max.to_s
+
+                    # [macOS] The same for macOS, which upstream has no reason
+                    # to do. A pod that declares no :osx platform inherits
+                    # CocoaPods' ancient default -- 10.6 -- and then fails to
+                    # compile anything using std::filesystem, which is
+                    # unavailable before 10.15. Raise, never lower: a pod that
+                    # asks for more than we do keeps what it asked for.
+                    old_macos_deploy_target = config.build_settings["MACOSX_DEPLOYMENT_TARGET"] ?
+                        config.build_settings["MACOSX_DEPLOYMENT_TARGET"] :
+                        Helpers::Constants.min_macos_version_supported
+                    config.build_settings["MACOSX_DEPLOYMENT_TARGET"] = [Helpers::Constants.min_macos_version_supported.to_f, old_macos_deploy_target.to_f].max.to_s
                 end
             end
     end

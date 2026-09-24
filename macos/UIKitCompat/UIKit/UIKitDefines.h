@@ -20,6 +20,21 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <QuartzCore/QuartzCore.h>
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatScene;
+@class RCTUIKitCompatWindowScene;
+@compatibility_alias UIScene RCTUIKitCompatScene;
+@compatibility_alias UIWindowScene RCTUIKitCompatWindowScene;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Tier 1: type aliases
@@ -82,11 +97,11 @@ typedef NS_ENUM(NSInteger, UISceneActivationState) {
   UISceneActivationStateBackground = 2,
 };
 
-@interface UIScene : NSObject
+@interface RCTUIKitCompatScene : NSObject
 // A Mac window is either key or it is not; there is no scene lifecycle.
 @property (nonatomic, readonly) UISceneActivationState activationState;
 @end
-@interface UIWindowScene : UIScene
+@interface RCTUIKitCompatWindowScene : UIScene
 @end
 
 typedef NS_ENUM(NSInteger, UIButtonType) {

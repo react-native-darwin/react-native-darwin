@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * UIView class for <View> component.
  */
-@interface RCTViewComponentView : RCTPlatformView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
+@interface RCTViewComponentView : RCTUIView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
  @protected
   facebook::react::LayoutMetrics _layoutMetrics;
   facebook::react::SharedViewProps _props;
@@ -90,6 +90,20 @@ NS_ASSUME_NONNULL_BEGIN
  * This is a fragment of temporary workaround that we need only temporary and will get rid of soon.
  */
 - (NSString *)componentViewName_DO_NOT_USE_THIS_IS_BROKEN;
+
+
+#if TARGET_OS_OSX // [macOS
+/**
+ * Reports a key press to JS and says whether the view claimed it.
+ *
+ * Public because a text input's key events never reach this view: AppKit gives
+ * them to the field editor, which is a descendant, and the responder chain
+ * stops there. The backing text classes walk up to the nearest view answering
+ * this and hand the event over, so `onKeyDown` behaves the same on a TextInput
+ * as on a View.
+ */
+- (BOOL)handleKeyboardEvent:(NSEvent *)event;
+#endif // macOS]
 
 @end
 
