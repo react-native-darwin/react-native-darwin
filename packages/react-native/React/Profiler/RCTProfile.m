@@ -48,7 +48,7 @@ static NSDictionary *RCTProfileInfo;
 static NSMutableDictionary *RCTProfileOngoingEvents;
 static NSTimeInterval RCTProfileStartTime;
 static NSUInteger RCTProfileEventID = 0;
-static CADisplayLink *RCTProfileDisplayLink;
+static RCTPlatformDisplayLink *RCTProfileDisplayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 static __weak RCTBridge *_RCTProfilingBridge;
 static UIWindow *RCTProfileControlsWindow;
 
@@ -366,14 +366,14 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
   }
 }
 
-#pragma mark - Private ObjC class only used for the vSYNC CADisplayLink target
+#pragma mark - Private ObjC class only used for the vSYNC RCTPlatformDisplayLink target  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 @interface RCTProfile : NSObject
 @end
 
 @implementation RCTProfile
 
-+ (void)vsync:(CADisplayLink *)displayLink
++ (void)vsync:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   RCTProfileImmediateEvent(RCTProfileTagAlways, @"VSYNC", displayLink.timestamp, 'g');
 }
@@ -486,7 +486,7 @@ void RCTProfileInit(RCTBridge *bridge)
 
   RCTProfileHookModules(bridge);
 
-  RCTProfileDisplayLink = [CADisplayLink displayLinkWithTarget:[RCTProfile class] selector:@selector(vsync:)];
+  RCTProfileDisplayLink = [RCTPlatformDisplayLink displayLinkWithTarget:[RCTProfile class] selector:@selector(vsync:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   [RCTProfileDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 
   [[NSNotificationCenter defaultCenter] postNotificationName:RCTProfileDidStartProfiling object:bridge];

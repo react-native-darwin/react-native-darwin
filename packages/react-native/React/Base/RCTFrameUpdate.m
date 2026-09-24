@@ -15,7 +15,7 @@
 
 RCT_NOT_IMPLEMENTED(-(instancetype)init)
 
-- (instancetype)initWithDisplayLink:(CADisplayLink *)displayLink
+- (instancetype)initWithDisplayLink:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   if ((self = [super init])) {
     _timestamp = displayLink.timestamp;

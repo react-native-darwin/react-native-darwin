@@ -10,7 +10,7 @@
 
 @protocol RCTDisplayRefreshable
 
-- (void)displayDidRefresh:(CADisplayLink *)displayLink;
+- (void)displayDidRefresh:(RCTPlatformDisplayLink *)displayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 @end
 
@@ -18,6 +18,6 @@
 
 @property (nonatomic, weak) id<RCTDisplayRefreshable> refreshable;
 
-+ (CADisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable;
++ (RCTPlatformDisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
 @end

@@ -93,8 +93,8 @@ static vm_size_t RCTGetResidentMemorySize(void)
   RCTFPSGraph *_uiGraph;
   RCTFPSGraph *_jsGraph;
 
-  CADisplayLink *_uiDisplayLink;
-  CADisplayLink *_jsDisplayLink;
+  RCTPlatformDisplayLink *_uiDisplayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
+  RCTPlatformDisplayLink *_jsDisplayLink;  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 
   NSUInteger _heapSize;
 
@@ -301,7 +301,7 @@ RCT_EXPORT_MODULE()
 
   [RCTKeyWindow() addSubview:self.container];
 
-  _uiDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(threadUpdate:)];
+  _uiDisplayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(threadUpdate:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
   [_uiDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 
   self.container.frame =
@@ -311,7 +311,7 @@ RCT_EXPORT_MODULE()
 
   [_bridge
       dispatchBlock:^{
-        self->_jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(threadUpdate:)];
+        self->_jsDisplayLink = [RCTPlatformDisplayLink displayLinkWithTarget:self selector:@selector(threadUpdate:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
         [self->_jsDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
       }
               queue:RCTJSThread];
@@ -471,7 +471,7 @@ RCT_EXPORT_MODULE()
                    }];
 }
 
-- (void)threadUpdate:(CADisplayLink *)displayLink
+- (void)threadUpdate:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   RCTFPSGraph *graph = displayLink == _jsDisplayLink ? _jsGraph : _uiGraph;
   [graph onTick:displayLink.timestamp];

@@ -9,10 +9,10 @@
 
 @implementation RCTDisplayWeakRefreshable
 
-+ (CADisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable
++ (RCTPlatformDisplayLink *)displayLinkWithWeakRefreshable:(id<RCTDisplayRefreshable>)refreshable  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   RCTDisplayWeakRefreshable *target = [[RCTDisplayWeakRefreshable alloc] initWithRefreshable:refreshable];
-  return [CADisplayLink displayLinkWithTarget:target selector:@selector(displayDidRefresh:)];
+  return [RCTPlatformDisplayLink displayLinkWithTarget:target selector:@selector(displayDidRefresh:)];  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 }
 
 - (instancetype)initWithRefreshable:(id<RCTDisplayRefreshable>)refreshable
@@ -23,7 +23,7 @@
   return self;
 }
 
-- (void)displayDidRefresh:(CADisplayLink *)displayLink
+- (void)displayDidRefresh:(RCTPlatformDisplayLink *)displayLink  // [macOS] RCTPlatformDisplayLink; an alias for CADisplayLink off macOS
 {
   [_refreshable displayDidRefresh:displayLink];
 }

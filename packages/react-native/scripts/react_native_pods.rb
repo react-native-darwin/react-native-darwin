@@ -41,8 +41,16 @@ end
 # By using this function, you won't have to manually change your Podfile
 # when we change the minimum version supported by the framework.
 def min_supported_versions
-  return  { :ios => min_ios_version_supported }
+  # [macOS] :osx added -- every podspec routes through this one helper, so this
+  # single line is what makes ~40 podspecs resolve for the macosx platform.
+  return  { :ios => min_ios_version_supported, :osx => min_macos_version_supported }
 end
+
+# [macOS
+def min_macos_version_supported
+  return Helpers::Constants.min_macos_version_supported
+end
+# macOS]
 
 # This function prepares the project for React Native, before processing
 # all the target exposed by the framework.

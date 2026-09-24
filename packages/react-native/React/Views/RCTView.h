@@ -139,6 +139,3 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 @property (nonatomic, assign) RCTBubblingEventBlock onLostPointerCapture;
 
 @end
-
-@interface ProbeOK : RCTPlatformView  // [macOS]
-@end
