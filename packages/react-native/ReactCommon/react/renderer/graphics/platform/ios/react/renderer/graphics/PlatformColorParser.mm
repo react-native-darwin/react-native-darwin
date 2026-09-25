@@ -63,6 +63,40 @@ SharedColor parsePlatformColor(const ContextContainer &contextContainer, int32_t
         items.at("dynamic").hasType<std::unordered_map<std::string, RawValue>>()) {
       auto dynamicItems = (std::unordered_map<std::string, RawValue>)items.at("dynamic");
       return RCTPlatformColorComponentsFromDynamicItems(contextContainer, surfaceId, dynamicItems);
+#if TARGET_OS_OSX // [macOS
+    } else if (
+        items.find("colorWithSystemEffect") != items.end() &&
+        items.at("colorWithSystemEffect").hasType<std::unordered_map<std::string, RawValue>>()) {
+      // AppKit derives the pressed / disabled / rollover variant of a colour
+      // rather than making the caller supply it. UIKit has no equivalent, so
+      // this arm only exists here.
+      auto effectItems = (std::unordered_map<std::string, RawValue>)items.at("colorWithSystemEffect");
+      if (effectItems.count("baseColor") == 0u || effectItems.count("systemEffect") == 0u) {
+        return clearColor();
+      }
+
+      SharedColor baseSharedColor;
+      fromRawValue(contextContainer, surfaceId, effectItems.at("baseColor"), baseSharedColor);
+      auto effectName = (std::string)effectItems.at("systemEffect");
+
+      static const std::unordered_map<std::string, NSColorSystemEffect> effects = {
+          {"none", NSColorSystemEffectNone},
+          {"pressed", NSColorSystemEffectPressed},
+          {"deepPressed", NSColorSystemEffectDeepPressed},
+          {"disabled", NSColorSystemEffectDisabled},
+          {"rollover", NSColorSystemEffectRollover}};
+
+      auto effect = effects.find(effectName);
+      if (effect == effects.end()) {
+        return clearColor();
+      }
+
+      NSColor *baseColor = RCTPlatformColorFromColor(*baseSharedColor);
+      if (baseColor == nil) {
+        return clearColor();
+      }
+      return SharedColor(Color::createFromHostPlatformColor(wrapManagedObject([baseColor colorWithSystemEffect:effect->second])));
+#endif // macOS]
     }
   }
 

@@ -160,7 +160,7 @@
     [buttonStackView addArrangedSubview:button];
   }
 
-  UIView *topBorder = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+  UIView *topBorder = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
   topBorder.translatesAutoresizingMaskIntoConstraints = NO;
   topBorder.backgroundColor = [UIColor colorWithRed:0.70 green:0.70 blue:0.70 alpha:1.0];
   [topBorder.heightAnchor constraintEqualToConstant:1].active = YES;
@@ -364,7 +364,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder *)aDecoder)
     cell.detailTextLabel.font = [UIFont fontWithName:@"Menlo-Regular" size:11];
     cell.detailTextLabel.lineBreakMode = NSLineBreakByTruncatingMiddle;
     cell.backgroundColor = [UIColor clearColor];
-    cell.selectedBackgroundView = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
+    cell.selectedBackgroundView = [RCTUIView new];  // [macOS] needs a flipped, layer-backed view
     cell.selectedBackgroundView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.2];
   }
 

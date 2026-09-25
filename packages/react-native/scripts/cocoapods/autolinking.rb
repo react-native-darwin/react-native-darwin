@@ -38,7 +38,16 @@ def list_native_modules!(config_command)
   config = JSON.parse(json)
 
   packages = config["dependencies"]
-  ios_project_root = Pathname.new(config["project"]["ios"]["sourceDir"])
+
+  # [macOS] The autolinking JSON is keyed by platform, and a macOS build asks the
+  # CLI for `--platform macos`, so the only key present is "macos" -- indexing
+  # "ios" unconditionally crashes with `undefined method '[]' for nil`. Take the
+  # key from the target's own platform, and fall back to "ios" so nothing changes
+  # for an iOS build. macOS]
+  autolinking_platform = current_target_definition&.platform&.name == :osx ? "macos" : "ios"
+
+  project_config = config["project"][autolinking_platform] || config["project"]["ios"]
+  ios_project_root = Pathname.new(project_config["sourceDir"])
   react_native_path = Pathname.new(config["reactNativePath"])
   codegen_output_path = ios_project_root.join("build/generated/autolinking/autolinking.json")
 
@@ -49,7 +58,7 @@ def list_native_modules!(config_command)
   found_pods = []
 
   packages.each do |package_name, package|
-    next unless package_config = package["platforms"]["ios"]
+    next unless package_config = package["platforms"][autolinking_platform] # [macOS] was hardcoded "ios"
 
     name = package["name"]
     podspec_path = package_config["podspecPath"]

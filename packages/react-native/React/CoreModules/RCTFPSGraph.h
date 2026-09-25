@@ -11,7 +11,7 @@
 
 #if RCT_DEV
 
-@interface RCTFPSGraph : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
+@interface RCTFPSGraph : RCTUIView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 @property (nonatomic, assign, readonly) NSUInteger FPS;
 @property (nonatomic, assign, readonly) NSUInteger maxFPS;

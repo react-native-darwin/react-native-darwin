@@ -15,11 +15,11 @@ static const void *kUIKitCompatCGImageKey = &kUIKitCompatCGImageKey;
 
 // Boxes a CGImageRef so it can live in an associated object and be released
 // with the image rather than with the autorelease pool.
-@interface UIKitCompatCGImageBox : NSObject
+@interface RCTUIKitCompatCGImageBox : NSObject
 @property (nonatomic, readonly, nullable) CGImageRef image;
 @end
 
-@implementation UIKitCompatCGImageBox {
+@implementation RCTUIKitCompatCGImageBox {
   CGImageRef _image;
 }
 
@@ -75,7 +75,7 @@ static const void *kUIKitCompatCGImageKey = &kUIKitCompatCGImageKey;
 
 - (CGImageRef)CGImage
 {
-  UIKitCompatCGImageBox *cached = objc_getAssociatedObject(self, kUIKitCompatCGImageKey);
+  RCTUIKitCompatCGImageBox *cached = objc_getAssociatedObject(self, kUIKitCompatCGImageKey);
   if (cached != nil) {
     return cached.image;
   }
@@ -86,7 +86,7 @@ static const void *kUIKitCompatCGImageKey = &kUIKitCompatCGImageKey;
     return NULL;
   }
 
-  UIKitCompatCGImageBox *box = [[UIKitCompatCGImageBox alloc] initWithCGImage:image];
+  RCTUIKitCompatCGImageBox *box = [[RCTUIKitCompatCGImageBox alloc] initWithCGImage:image];
   objc_setAssociatedObject(self, kUIKitCompatCGImageKey, box, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   return box.image;
 }

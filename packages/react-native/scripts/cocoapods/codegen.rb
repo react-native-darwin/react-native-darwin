@@ -34,7 +34,9 @@ def run_codegen!(
     :config_file_dir => config_file_dir,
     :codegen_output_dir => codegen_output_dir,
     :config_key => config_key,
-    :folly_version => folly_version
+    :folly_version => folly_version,
+    # [macOS] see CodegenUtils#use_react_native_codegen_discovery!
+    :target_platform => (current_target_definition&.platform&.name == :osx ? "macos" : "ios")
   )
 end
 

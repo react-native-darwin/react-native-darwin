@@ -17,7 +17,7 @@ path = File.join(root, 'HelloWorld.xcodeproj')
 FileUtils.rm_rf(path)
 
 project = Xcodeproj::Project.new(path)
-target = project.new_target(:application, 'HelloWorld', :osx, '11.0')
+target = project.new_target(:application, 'HelloWorld', :osx, '14.0')
 
 group = project.new_group('HelloWorld', 'HelloWorld')
 %w[main.m AppDelegate.mm].each do |file|
@@ -31,7 +31,7 @@ target.build_configurations.each do |config|
   s['PRODUCT_BUNDLE_IDENTIFIER'] = 'dev.reactnative.macos.helloworld'
   s['INFOPLIST_FILE'] = 'HelloWorld/Info.plist'
   s['CODE_SIGN_ENTITLEMENTS'] = 'HelloWorld/HelloWorld.entitlements'
-  s['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
+  s['MACOSX_DEPLOYMENT_TARGET'] = '14.0'
   s['CLANG_ENABLE_OBJC_ARC'] = 'YES'
   s['CODE_SIGN_IDENTITY'] = '-'
   s['CODE_SIGNING_REQUIRED'] = 'NO'

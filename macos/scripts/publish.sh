@@ -29,7 +29,7 @@
 #
 # The published package is consumed under the *upstream* name:
 #
-#   "dependencies": { "react-native": "npm:not-react-native-macos@0.87.1" }
+#   "dependencies": { "react-native": "npm:react-native-darwin@0.87.1" }
 #
 # npm installs the tarball at node_modules/react-native. That matters because
 # @react-native/metro-config hardcodes require.resolve("react-native/setup-env")
@@ -40,7 +40,7 @@
 
 set -euo pipefail
 
-PKG_NAME="not-react-native-macos"
+PKG_NAME="react-native-darwin"
 DIST_TAG="latest"
 PKG_VERSION=""      # defaults to the version in package.json
 MODE="pack"
@@ -49,7 +49,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: macos/scripts/publish.sh [--name <pkg>] [--version <v>] [--tag <dist-tag>] [--publish]
 
-  --name <pkg>      npm package name to publish under (default: not-react-native-macos)
+  --name <pkg>      npm package name to publish under (default: react-native-darwin)
   --version <v>     version to publish as. Defaults to the version in
                     package.json, which tracks the upstream tag. Override it for
                     prereleases -- e.g. 0.87.1-rc.1 -- rather than editing the
@@ -114,6 +114,18 @@ cleanup() {
   [ -f "$backup_dir/README.md" ] && cp "$backup_dir/README.md" "$pkg_readme"
   rm -rf "$backup_dir"
   rm -rf "$pkg_dir/macos"
+
+  # The upstream prepack does more than build: it removes tracked files at the
+  # repo root -- scripts/build/ among them -- and never puts them back. Packing
+  # should not be able to damage the checkout, so any tracked file that is now
+  # missing is restored. Only deletions, so nothing edited is touched.
+  local deleted
+  deleted="$(cd "$repo_root" && git ls-files --deleted)"
+  if [ -n "$deleted" ]; then
+    echo "==> restoring tracked files removed by prepack:"
+    printf '%s\n' "$deleted" | sed 's/^/      /'
+    (cd "$repo_root" && printf '%s\n' "$deleted" | xargs -I{} git checkout -- {})
+  fi
 }
 trap cleanup EXIT
 
@@ -127,6 +139,12 @@ echo "==> vendoring macos/ into the package"
 mkdir -p "$pkg_dir/macos"
 cp -R "$compat_src" "$compat_dst"
 cp "$metro_src" "$pkg_dir/macos/metro-config.js"
+# The scaffolder and the files it writes. init.js locates the package from its
+# own path, so it must ship at macos/scripts/init.js -- the same place it sits
+# in the repo, one level under the package root.
+mkdir -p "$pkg_dir/macos/scripts"
+cp "$repo_root/macos/scripts/init.js" "$pkg_dir/macos/scripts/init.js"
+cp -R "$repo_root/macos/template" "$pkg_dir/macos/template"
 
 # --- 2. rewrite the package metadata -----------------------------------------
 
@@ -153,9 +171,13 @@ if (!pkg.files.includes('macos')) {
 pkg.exports['./macos/metro-config'] = './macos/metro-config.js';
 pkg.exports['./macos/*'] = './macos/*';
 
+// The scaffolder, as `npx react-native-darwin-init` from an app that has this
+// package installed. Merged rather than assigned: upstream already ships bins.
+pkg.bin = {...(pkg.bin ?? {}), 'react-native-darwin-init': './macos/scripts/init.js'};
+
 pkg.repository = {
   type: 'git',
-  url: 'git+https://github.com/gabrieldonadel/react-native-macos.git',
+  url: 'git+https://github.com/react-native-darwin/react-native-darwin.git',
   directory: 'packages/react-native',
 };
 
@@ -228,6 +250,9 @@ check() {
 
 missing=0
 check "macos/metro-config.js"                  || missing=1
+check "macos/scripts/init.js"                  || missing=1
+check "macos/template/Podfile"                 || missing=1
+check "macos/template/app/AppDelegate.mm"      || missing=1
 check "macos/UIKitCompat/macos-excludes.txt"   || missing=1
 check "macos/UIKitCompat/RCTPlatformViewCompat.h" || missing=1
 check "macos/UIKitCompat/React-UIKitCompat.podspec" || missing=1

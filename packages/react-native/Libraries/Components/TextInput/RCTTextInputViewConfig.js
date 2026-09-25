@@ -91,6 +91,14 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
     },
   },
   validAttributes: {
+    // [macOS] TextInput is a view too: BaseTextInputProps derives from
+    // ViewProps, which on macOS is already HostPlatformViewProps. The props
+    // were being parsed and then dropped for want of an entry here.
+    tooltip: true,
+    enableFocusRing: true,
+    keyDownEvents: true,
+    keyUpEvents: true,
+    // macOS]
     acceptDragAndDropTypes: true,
     dynamicTypeRamp: true,
     fontSize: true,

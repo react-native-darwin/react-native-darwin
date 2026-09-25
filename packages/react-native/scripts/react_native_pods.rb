@@ -658,6 +658,15 @@ def react_native_post_install(
     print_jsc_removal_message()
   end
 
+  # [macOS] Every pod needs the UIKit shim on its header search path, and the
+  # link line needs two non-existent frameworks taken off it. Done here rather
+  # than in each app's Podfile, because an app whose Podfile is not ours --
+  # Expo's BareExpo, for one -- otherwise cannot build at all.
+  #
+  # Last, deliberately: the steps above rewrite the generated xcconfigs, so
+  # editing the link flags any earlier gets undone.
+  ReactNativePodsUtils.apply_uikit_compat(installer)
+
   print_cocoapods_deprecation_message
   Pod::UI.puts "Pod install took #{Time.now.to_i - $START_TIME} [s] to run".green
 end

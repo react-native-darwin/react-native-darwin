@@ -844,7 +844,7 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     }
   } else {
     // Hides keyboard, but keeps blinking cursor.
-    _backedTextInputView.inputView = [RCTPlatformView new];  // [macOS] needs a flipped, layer-backed view
+    _backedTextInputView.inputView = [RCTUIView new];  // [macOS] needs a flipped, layer-backed view
   }
 }
 

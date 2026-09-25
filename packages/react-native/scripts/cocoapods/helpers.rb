@@ -88,7 +88,13 @@ module Helpers
         # Matches the minos of the macOS hermesvm.framework that upstream
         # already publishes in every release tarball.
         def self.min_macos_version_supported
-            return '11.0'
+            # 14.0, not 11.0. React Native's own C++ and several community
+            # libraries use std::filesystem, which Apple marks unavailable
+            # before macOS 10.15 -- and the errors surface in whichever
+            # third-party pod happens to include it first (RNWorklets, in
+            # practice), which makes them look like that library's problem.
+            # 14.0 is also what Expo targets, so an app using both agrees.
+            return '14.0'
         end
 
         # Path prefixes the macOS build does not ship, read from the single
@@ -112,6 +118,16 @@ module Helpers
                 next nil if prefix.empty? || prefix.start_with?('#')
                 prefix.end_with?('/') ? "#{prefix}**/*" : "#{prefix}*"
             end.compact
+        end
+        # The UIKit compatibility layer's directory, or nil off macOS.
+        #
+        # Same two layouts as above: beside packages/ in the repo, vendored
+        # into the package in a tarball.
+        def self.uikit_compat_dir
+            return [
+                File.join(__dir__, '..', '..', 'macos', 'UIKitCompat'),
+                File.join(__dir__, '..', '..', '..', '..', 'macos', 'UIKitCompat'),
+            ].find { |path| File.directory?(path) }
         end
         # macOS]
 

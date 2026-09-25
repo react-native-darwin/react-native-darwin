@@ -30,6 +30,12 @@ struct Color {
 
   static Color createSemanticColor(std::vector<std::string> &semanticItems);
 
+#if TARGET_OS_OSX // [macOS] Wrap an already-resolved NSColor. AppKit derives some
+  // colours from others -- colorWithSystemEffect: -- so the parser needs a way
+  // to hand back a colour it built itself. macOS]
+  static Color createFromHostPlatformColor(std::shared_ptr<void> hostPlatformColor);
+#endif
+
   std::shared_ptr<void> getUIColor() const
   {
     return uiColor_;

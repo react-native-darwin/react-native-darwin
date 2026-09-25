@@ -21,7 +21,7 @@ on:
       package_name:
         description: 'npm package name to publish under'
         required: true
-        default: 'not-react-native-macos'
+        default: 'react-native-darwin'
       package_version:
         description: 'Version to publish as. Empty = the version in package.json.'
         required: false

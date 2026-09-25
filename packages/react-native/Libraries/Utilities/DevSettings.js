@@ -53,7 +53,11 @@ if (__DEV__) {
   const emitter = new NativeEventEmitter<DevSettingsEventDefinitions>(
     // T88715063: NativeEventEmitter only used this parameter on iOS. Now it uses it on all platforms, so this code was modified automatically to preserve its behavior
     // If you want to use the native module on other platforms, please remove this condition and test its behavior
-    Platform.OS !== 'ios' ? null : NativeDevSettings,
+    // [macOS] macOS uses this parameter too: the module is an
+    // RCTEventEmitter subclass here, exactly as it is on iOS.
+    Platform.OS !== 'ios' && Platform.OS !== 'macos'
+      ? null
+      : NativeDevSettings,
   );
   const subscriptions = new Map<string, EventSubscription>();
 

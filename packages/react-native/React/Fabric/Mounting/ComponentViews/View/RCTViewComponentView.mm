@@ -10,6 +10,7 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <QuartzCore/QuartzCore.h>
+#import <algorithm> // [macOS] std::find, for matching a press against keyDownEvents
 #import <objc/runtime.h>
 #import <ranges>
 
@@ -22,6 +23,11 @@
 #import <React/RCTLinearGradient.h>
 #import <React/RCTLocalizedString.h>
 #import <React/RCTRadialGradient.h>
+#if TARGET_OS_OSX // [macOS] drag and drop: RCTDataURL for dragged image data,
+                  // UTType to name what was dropped.
+#import <React/RCTUtils.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif // macOS]
 #import <react/featureflags/ReactNativeFeatureFlags.h>
 #import <react/renderer/components/view/ViewComponentDescriptor.h>
 #import <react/renderer/components/view/ViewEventEmitter.h>
@@ -55,6 +61,13 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   NSMutableSet<NSString *> *_accessibilityOrderNativeIDs;
   RCTSwiftUIContainerViewWrapper *_swiftUIWrapper;
   BOOL _focusable;
+#if TARGET_OS_OSX // [macOS
+  // AppKit reads these rather than being told them, so they are answered from
+  // stored values by the overrides further down.
+  BOOL _allowsVibrancy;
+  BOOL _mouseDownCanMoveWindow;
+  NSTrackingArea *_mouseTrackingArea;
+#endif // macOS]
 }
 
 #ifdef RCT_DYNAMIC_FRAMEWORKS
@@ -69,6 +82,10 @@ const CGFloat BACKGROUND_COLOR_ZPOSITION = -1024.0f;
   if (self = [super initWithFrame:frame]) {
     _props = ViewShadowNode::defaultSharedProps();
     _reactSubviews = [NSMutableArray new];
+#if TARGET_OS_OSX // [macOS] mirror HostPlatformViewProps' defaults
+    _mouseDownCanMoveWindow = YES;
+    _allowsVibrancy = NO;
+#endif // macOS]
 #if !TARGET_OS_TV
     self.multipleTouchEnabled = YES;
 #endif
@@ -608,8 +625,450 @@ static BOOL RCTLayerTransformCollapsesAxis(CALayer *layer)
 
   _needsInvalidateLayer = _needsInvalidateLayer || needsInvalidateLayer;
 
+#if TARGET_OS_OSX // [macOS
+  [self _updateMacOSProps:oldViewProps newProps:newViewProps];
+#endif // macOS]
+
   _props = std::static_pointer_cast<const ViewProps>(props);
 }
+
+#if TARGET_OS_OSX // [macOS
+/**
+ * The props AppKit has and UIKit does not. They are declared in
+ * HostPlatformViewProps, so `ViewProps` already carries them on this platform.
+ */
+- (void)_updateMacOSProps:(const ViewProps &)oldViewProps newProps:(const ViewProps &)newViewProps
+{
+  if (oldViewProps.tooltip != newViewProps.tooltip) {
+    self.toolTip = newViewProps.tooltip.has_value() ? RCTNSStringFromString(*newViewProps.tooltip) : nil;
+  }
+
+  if (oldViewProps.acceptsFirstMouse != newViewProps.acceptsFirstMouse) {
+    self.acceptsFirstMouse = newViewProps.acceptsFirstMouse;
+  }
+
+  if (oldViewProps.mouseDownCanMoveWindow != newViewProps.mouseDownCanMoveWindow) {
+    _mouseDownCanMoveWindow = newViewProps.mouseDownCanMoveWindow;
+  }
+
+  if (oldViewProps.enableFocusRing != newViewProps.enableFocusRing) {
+    self.enableFocusRing = newViewProps.enableFocusRing;
+  }
+
+  // -allowsVibrancy and -canBecomeKeyView are read by AppKit rather than set,
+  // so the values are stored and the overrides below answer from them.
+  if (oldViewProps.allowsVibrancy != newViewProps.allowsVibrancy) {
+    _allowsVibrancy = newViewProps.allowsVibrancy;
+    self.needsDisplay = YES;
+  }
+
+  if (oldViewProps.focusable != newViewProps.focusable) {
+    _focusable = newViewProps.focusable;
+  }
+
+  if (oldViewProps.hostPlatformEvents != newViewProps.hostPlatformEvents) {
+    [self _updateMouseTracking:newViewProps.hostPlatformEvents.wantsMouseTracking()];
+  }
+
+  if (oldViewProps.draggedTypes != newViewProps.draggedTypes) {
+    [self _updateDraggedTypes:newViewProps.draggedTypes];
+  }
+}
+
+/**
+ * AppKit delivers a drag only to views that registered for one of the
+ * pasteboard types it carries, so without this the drag handlers are
+ * unreachable. The three names are the kinds React Native models; each maps to
+ * the pasteboard types AppKit actually uses for it.
+ */
+- (void)_updateDraggedTypes:(const std::vector<std::string> &)draggedTypes
+{
+  [self unregisterDraggedTypes];
+
+  if (draggedTypes.empty()) {
+    return;
+  }
+
+  NSMutableArray<NSPasteboardType> *types = [NSMutableArray arrayWithCapacity:draggedTypes.size()];
+  for (const auto &draggedType : draggedTypes) {
+    if (draggedType == "fileUrl") {
+      [types addObject:NSPasteboardTypeFileURL];
+    } else if (draggedType == "image") {
+      [types addObject:NSPasteboardTypePNG];
+      [types addObject:NSPasteboardTypeTIFF];
+    } else if (draggedType == "string") {
+      [types addObject:NSPasteboardTypeString];
+    }
+  }
+  [self registerForDraggedTypes:types];
+}
+
+/**
+ * A view only tracks the mouse while something is listening. Tracking every
+ * view would cost a dispatch per view per mouse move.
+ */
+- (void)_updateMouseTracking:(BOOL)wanted
+{
+  if (wanted == (_mouseTrackingArea != nil)) {
+    return;
+  }
+
+  if (!wanted) {
+    [self removeTrackingArea:_mouseTrackingArea];
+    _mouseTrackingArea = nil;
+    return;
+  }
+
+  _mouseTrackingArea = [[NSTrackingArea alloc]
+      initWithRect:NSZeroRect
+           options:NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect
+             owner:self
+          userInfo:nil];
+  [self addTrackingArea:_mouseTrackingArea];
+}
+
+- (HostPlatformViewEventEmitter::MouseEvent)_mouseEventFromNSEvent:(NSEvent *)event
+{
+  NSPoint inWindow = event.locationInWindow;
+  NSPoint inView = [self convertPoint:inWindow fromView:nil];
+  NSPoint onScreen = self.window != nil ? [self.window convertPointToScreen:inWindow] : inWindow;
+
+  HostPlatformViewEventEmitter::MouseEvent mouseEvent = {};
+  mouseEvent.clientX = inView.x;
+  mouseEvent.clientY = inView.y;
+  mouseEvent.pageX = inWindow.x;
+  mouseEvent.pageY = inWindow.y;
+  mouseEvent.screenX = onScreen.x;
+  mouseEvent.screenY = onScreen.y;
+  return mouseEvent;
+}
+
+- (void)mouseEntered:(NSEvent *)event
+{
+  [super mouseEntered:event];
+  if (_eventEmitter != nullptr) {
+    _eventEmitter->onMouseEnter([self _mouseEventFromNSEvent:event]);
+  }
+}
+
+- (void)mouseExited:(NSEvent *)event
+{
+  [super mouseExited:event];
+  if (_eventEmitter != nullptr) {
+    _eventEmitter->onMouseLeave([self _mouseEventFromNSEvent:event]);
+  }
+}
+
+- (void)mouseUp:(NSEvent *)event
+{
+  [super mouseUp:event];
+  const auto &viewProps = static_cast<const ViewProps &>(*_props);
+  if (_eventEmitter != nullptr && event.clickCount == 2 &&
+      viewProps.hostPlatformEvents[HostPlatformViewEvents::Offset::DoubleClick]) {
+    _eventEmitter->onDoubleClick([self _mouseEventFromNSEvent:event]);
+  }
+}
+
+- (void)rightMouseUp:(NSEvent *)event
+{
+  [super rightMouseUp:event];
+  const auto &viewProps = static_cast<const ViewProps &>(*_props);
+  if (_eventEmitter != nullptr && viewProps.hostPlatformEvents[HostPlatformViewEvents::Offset::AuxClick]) {
+    _eventEmitter->onAuxClick([self _mouseEventFromNSEvent:event]);
+  }
+}
+
+#pragma mark - Drag and Drop Events
+
+/**
+ * The pasteboard, shaped like the DOM DataTransfer so a drop handler reads the
+ * same on macOS as on the web.
+ *
+ * Dragged files are reported by path. Dragged image *data* -- an image dragged
+ * out of a browser, say, with no file behind it -- has no path to give, so it
+ * is reported as a data: URL instead; `uri` is what a consumer feeds to
+ * <Image> either way.
+ */
+- (DataTransfer)_dataTransferForPasteboard:(NSPasteboard *)pasteboard
+{
+  DataTransfer dataTransfer{};
+
+  NSArray<NSURL *> *fileURLs = [pasteboard readObjectsForClasses:@[ [NSURL class] ]
+                                                         options:@{NSPasteboardURLReadingFileURLsOnlyKey : @YES}]
+      ?: @[];
+
+  for (NSURL *fileURL in fileURLs) {
+    BOOL isDirectory = NO;
+    if (![NSFileManager.defaultManager fileExistsAtPath:fileURL.path isDirectory:&isDirectory] || isDirectory) {
+      continue;
+    }
+
+    UTType *type = [UTType typeWithFilenameExtension:fileURL.pathExtension];
+    NSString *mimeType = type.preferredMIMEType;
+    std::string typeString = mimeType != nil ? mimeType.UTF8String : "";
+
+    DataTransferFile file = {
+        .name = fileURL.lastPathComponent != nil ? fileURL.lastPathComponent.UTF8String : "",
+        .type = typeString,
+        .uri = fileURL.path != nil ? fileURL.path.UTF8String : "",
+    };
+
+    NSNumber *fileSize = nil;
+    if ([fileURL getResourceValue:&fileSize forKey:NSURLFileSizeKey error:NULL]) {
+      file.size = fileSize.intValue;
+    }
+
+    if ([mimeType hasPrefix:@"image/"]) {
+      NSImage *image = [[NSImage alloc] initWithContentsOfURL:fileURL];
+      CGImageRef cgImage = [image CGImageForProposedRect:NULL context:nil hints:nil];
+      if (cgImage != NULL) {
+        file.width = static_cast<int>(CGImageGetWidth(cgImage));
+        file.height = static_cast<int>(CGImageGetHeight(cgImage));
+      }
+    }
+
+    dataTransfer.files.push_back(file);
+    dataTransfer.items.push_back({.kind = "file", .type = typeString});
+    dataTransfer.types.push_back(typeString);
+  }
+
+  NSPasteboardType imageType = [pasteboard availableTypeFromArray:@[ NSPasteboardTypePNG, NSPasteboardTypeTIFF ]];
+  if (imageType != nil && fileURLs.count == 0) {
+    NSString *mimeType = [imageType isEqualToString:NSPasteboardTypePNG] ? UTTypePNG.preferredMIMEType
+                                                                        : UTTypeTIFF.preferredMIMEType;
+    NSData *imageData = [pasteboard dataForType:imageType];
+    std::string typeString = mimeType != nil ? mimeType.UTF8String : "";
+
+    NSString *dataURL = RCTDataURL(mimeType, imageData).absoluteString;
+    DataTransferFile file = {
+        .name = "",
+        .type = typeString,
+        .uri = dataURL != nil ? dataURL.UTF8String : "",
+    };
+    file.size = static_cast<int>(imageData.length);
+
+    NSImage *image = [[NSImage alloc] initWithData:imageData];
+    CGImageRef cgImage = [image CGImageForProposedRect:NULL context:nil hints:nil];
+    if (cgImage != NULL) {
+      file.width = static_cast<int>(CGImageGetWidth(cgImage));
+      file.height = static_cast<int>(CGImageGetHeight(cgImage));
+    }
+
+    dataTransfer.files.push_back(file);
+    dataTransfer.items.push_back({.kind = "image", .type = typeString});
+    dataTransfer.types.push_back(typeString);
+  }
+
+  return dataTransfer;
+}
+
+- (DragEvent)_dragEventFromDraggingInfo:(id<NSDraggingInfo>)info
+{
+  NSPoint inWindow = info.draggingLocation;
+  NSPoint inView = [self convertPoint:inWindow fromView:nil];
+  NSEventModifierFlags flags = self.window.currentEvent.modifierFlags;
+
+  DragEvent event = {};
+  event.clientX = inView.x;
+  event.clientY = inView.y;
+  event.pageX = inWindow.x;
+  event.pageY = inWindow.y;
+  event.screenX = inWindow.x;
+  event.screenY = inWindow.y;
+  event.altKey = static_cast<bool>(flags & NSEventModifierFlagOption);
+  event.ctrlKey = static_cast<bool>(flags & NSEventModifierFlagControl);
+  event.shiftKey = static_cast<bool>(flags & NSEventModifierFlagShift);
+  event.metaKey = static_cast<bool>(flags & NSEventModifierFlagCommand);
+  event.dataTransfer = [self _dataTransferForPasteboard:info.draggingPasteboard];
+  return event;
+}
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
+{
+  if (_eventEmitter != nullptr) {
+    _eventEmitter->onDragEnter([self _dragEventFromDraggingInfo:sender]);
+  }
+
+  // The answer is the cursor the user sees, so it has to reflect what this view
+  // would actually accept -- claiming a drag the pasteboard cannot satisfy shows
+  // a drop cursor over content that will refuse it.
+  if ([sender.draggingPasteboard availableTypeFromArray:self.registeredDraggedTypes] == nil) {
+    return NSDragOperationNone;
+  }
+
+  NSDragOperation offered = sender.draggingSourceOperationMask;
+  if (offered & NSDragOperationLink) {
+    return NSDragOperationLink;
+  }
+  if (offered & NSDragOperationCopy) {
+    return NSDragOperationCopy;
+  }
+  return NSDragOperationNone;
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)sender
+{
+  if (_eventEmitter != nullptr) {
+    _eventEmitter->onDragLeave([self _dragEventFromDraggingInfo:sender]);
+  }
+}
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
+{
+  if (_eventEmitter == nullptr) {
+    return NO;
+  }
+  _eventEmitter->onDrop([self _dragEventFromDraggingInfo:sender]);
+  return YES;
+}
+
+#pragma mark - Keyboard Events
+
+/**
+ * The W3C `key` name for a press, per https://www.w3.org/TR/uievents-key/.
+ *
+ * `charactersIgnoringModifiers` already gives the right answer for anything
+ * printable. The cases below are the ones where it gives a private-use unichar
+ * (the arrows, the function keys) or a control character (Return, Delete)
+ * instead of a name. Tab and Escape are matched on keyCode rather than
+ * character because AppKit reports them as \t and \e, which would otherwise
+ * arrive as those literal characters.
+ *
+ * Naming follows the cross-platform reconciliation react-native-windows and
+ * react-native-macos both use, so a key handler is portable between them.
+ */
+static NSString *RCTKeyFromNSEvent(NSEvent *event)
+{
+  NSString *characters = event.charactersIgnoringModifiers;
+  unichar code = characters.length > 0 ? [characters characterAtIndex:0] : 0;
+
+  switch (event.keyCode) {
+    case 48:
+      return @"Tab";
+    case 53:
+      return @"Escape";
+    default:
+      break;
+  }
+
+  switch (code) {
+    case NSEnterCharacter:
+    case NSNewlineCharacter:
+    case NSCarriageReturnCharacter:
+      return @"Enter";
+    case NSLeftArrowFunctionKey:
+      return @"ArrowLeft";
+    case NSRightArrowFunctionKey:
+      return @"ArrowRight";
+    case NSUpArrowFunctionKey:
+      return @"ArrowUp";
+    case NSDownArrowFunctionKey:
+      return @"ArrowDown";
+    case NSBackspaceCharacter:
+    case NSDeleteCharacter:
+      return @"Backspace";
+    case NSDeleteFunctionKey:
+      return @"Delete";
+    case NSHomeFunctionKey:
+      return @"Home";
+    case NSEndFunctionKey:
+      return @"End";
+    case NSPageUpFunctionKey:
+      return @"PageUp";
+    case NSPageDownFunctionKey:
+      return @"PageDown";
+    default:
+      break;
+  }
+
+  if (code >= NSF1FunctionKey && code <= NSF12FunctionKey) {
+    return [NSString stringWithFormat:@"F%u", (unsigned)(code - NSF1FunctionKey + 1)];
+  }
+
+  return characters;
+}
+
+/**
+ * Emits the press and reports whether the view claimed it.
+ *
+ * Claiming matters because AppKit interprets an unclaimed key itself once the
+ * responder chain is done with it: Tab moves focus, Escape cancels, anything
+ * else beeps. A view says which keys it means to act on through `keyDownEvents`
+ * / `keyUpEvents`, and only those suppress the default behaviour. Listening via
+ * `onKeyDown` alone deliberately does not, so observing a key does not change
+ * what it does.
+ */
+- (BOOL)handleKeyboardEvent:(NSEvent *)event
+{
+  NSEventModifierFlags flags = event.modifierFlags;
+  KeyEvent keyEvent = {
+      .key = RCTStringFromNSString(RCTKeyFromNSEvent(event)),
+      .altKey = static_cast<bool>(flags & NSEventModifierFlagOption),
+      .ctrlKey = static_cast<bool>(flags & NSEventModifierFlagControl),
+      .shiftKey = static_cast<bool>(flags & NSEventModifierFlagShift),
+      .metaKey = static_cast<bool>(flags & NSEventModifierFlagCommand),
+      .capsLockKey = static_cast<bool>(flags & NSEventModifierFlagCapsLock),
+      .numericPadKey = static_cast<bool>(flags & NSEventModifierFlagNumericPad),
+      .helpKey = static_cast<bool>(flags & NSEventModifierFlagHelp),
+      .functionKey = static_cast<bool>(flags & NSEventModifierFlagFunction),
+  };
+
+  BOOL isKeyDown = event.type == NSEventTypeKeyDown;
+  const auto &viewProps = static_cast<const ViewProps &>(*_props);
+
+  // Calling super walks the responder chain, which is the view hierarchy, so
+  // every ancestor view would emit the same press. Fabric bubbles the event
+  // through the shadow tree on its own, so only the innermost view should emit.
+  // The flag rides on the NSEvent because that is the one object the whole
+  // chain shares.
+  static const char kEmittedKey = 0;
+  if (_eventEmitter != nullptr && !((NSNumber *)objc_getAssociatedObject(event, &kEmittedKey)).boolValue) {
+    if (isKeyDown) {
+      _eventEmitter->onKeyDown(keyEvent);
+    } else {
+      _eventEmitter->onKeyUp(keyEvent);
+    }
+    objc_setAssociatedObject(event, &kEmittedKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  }
+
+  const auto &handled = isKeyDown ? viewProps.keyDownEvents : viewProps.keyUpEvents;
+  return std::find(handled.cbegin(), handled.cend(), keyEvent) != handled.cend();
+}
+
+- (void)keyDown:(NSEvent *)event
+{
+  if (![self handleKeyboardEvent:event]) {
+    [super keyDown:event];
+  }
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+  if (![self handleKeyboardEvent:event]) {
+    [super keyUp:event];
+  }
+}
+
+- (BOOL)allowsVibrancy
+{
+  return _allowsVibrancy;
+}
+
+- (BOOL)mouseDownCanMoveWindow
+{
+  return _mouseDownCanMoveWindow;
+}
+
+- (BOOL)canBecomeKeyView
+{
+  return _focusable;
+}
+
+- (BOOL)acceptsFirstResponder
+{
+  return _focusable || [super acceptsFirstResponder];
+}
+#endif // macOS]
 
 - (void)updateEventEmitter:(const EventEmitter::Shared &)eventEmitter
 {
@@ -916,7 +1375,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   if (self.styleNeedsSwiftUIContainer) {
     if (_swiftUIWrapper == nullptr) {
       _swiftUIWrapper = [RCTSwiftUIContainerViewWrapper new];
-      UIView *swiftUIContentView = [[RCTPlatformView alloc] init];  // [macOS] needs a flipped, layer-backed view
+      UIView *swiftUIContentView = [[RCTUIView alloc] init];  // [macOS] needs a flipped, layer-backed view
       for (UIView *subview = nullptr in self.subviews) {
         [swiftUIContentView addSubview:subview];
       }
@@ -960,7 +1419,7 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
 
   if (_useCustomContainerView) {
     if (!_containerView) {
-      _containerView = [[RCTPlatformView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];  // [macOS] needs a flipped, layer-backed view
+      _containerView = [[RCTUIView alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];  // [macOS] needs a flipped, layer-backed view
       for (UIView *subview = nullptr in effectiveContentView.subviews) {
         [_containerView addSubview:subview];
       }
@@ -1772,7 +2231,16 @@ static NSString *RCTRecursiveAccessibilityLabel(UIView *view)
 
 - (void)focus
 {
+#if TARGET_OS_OSX // [macOS] On AppKit -becomeFirstResponder is the window
+  // notifying the view that it happened, not the view asking. Sending it
+  // directly changes nothing: -makeFirstResponder: is the request. Without
+  // this, `focusable` views never receive key events, because nothing ever
+  // makes them first responder -- AppKit moves focus on Tab only, and only
+  // when Full Keyboard Access is on.
+  [self.window makeFirstResponder:self];
+#else // [macOS]
   [self becomeFirstResponder];
+#endif // [macOS]
 
 #if TARGET_OS_TV
   RCTSurfaceHostingProxyRootView *rootView = [self containingRootView];
@@ -1788,7 +2256,14 @@ static NSString *RCTRecursiveAccessibilityLabel(UIView *view)
 
 - (void)blur
 {
+#if TARGET_OS_OSX // [macOS] Symmetrically: resigning is granted by the window,
+  // and only if this view still holds the focus.
+  if (self.window.firstResponder == self) {
+    [self.window makeFirstResponder:nil];
+  }
+#else // [macOS]
   [self resignFirstResponder];
+#endif // [macOS]
 }
 
 - (BOOL)becomeFirstResponder

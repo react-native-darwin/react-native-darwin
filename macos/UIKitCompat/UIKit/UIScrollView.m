@@ -8,7 +8,7 @@
 
 #import "UIScrollView.h"
 
-@implementation UIScrollViewClipView
+@implementation RCTUIKitCompatScrollViewClipView
 
 - (BOOL)isFlipped
 {
@@ -25,7 +25,7 @@
 
 @end
 
-@implementation UIScrollView {
+@implementation RCTUIKitCompatScrollView {
   UIView *_documentView;
   BOOL _liveScrolling;
 }

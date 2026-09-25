@@ -7,7 +7,7 @@
 
 #import "UIKeyCommand.h"
 
-@implementation UIKeyCommand
+@implementation RCTUIKitCompatKeyCommand
 
 + (instancetype)keyCommandWithInput:(NSString *)input
                       modifierFlags:(UIKeyModifierFlags)modifierFlags
@@ -39,7 +39,7 @@
 
 @end
 
-@implementation UITextDropProposal
+@implementation RCTUIKitCompatTextDropProposal
 
 - (instancetype)initWithDropOperation:(UIDropOperation)operation
 {
@@ -51,10 +51,10 @@
 
 @end
 
-@implementation UIBarButtonItemGroup
+@implementation RCTUIKitCompatBarButtonItemGroup
 @end
 
-@implementation UITextInputPasswordRules
+@implementation RCTUIKitCompatTextInputPasswordRules
 
 + (instancetype)passwordRulesWithDescriptor:(NSString *)descriptor
 {

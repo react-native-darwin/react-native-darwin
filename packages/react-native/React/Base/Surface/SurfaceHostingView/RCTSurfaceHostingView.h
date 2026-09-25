@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
  * This class can be used as easy-to-use general purpose integration point
  * of ReactNative-powered experiences in UIKit based apps.
  */
-@interface RCTSurfaceHostingView : RCTPlatformView <RCTSurfaceDelegate>  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
+@interface RCTSurfaceHostingView : RCTUIView <RCTSurfaceDelegate>  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 /**
  * Designated initializer.

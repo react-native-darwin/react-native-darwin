@@ -12,6 +12,23 @@
 #import "UIKitDefines.h"
 #import "UIText.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatAlertAction;
+@class RCTUIKitCompatAlertController;
+@class RCTUIKitCompatActivityViewController;
+@compatibility_alias UIAlertAction RCTUIKitCompatAlertAction;
+@compatibility_alias UIAlertController RCTUIKitCompatAlertController;
+@compatibility_alias UIActivityViewController RCTUIKitCompatActivityViewController;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, UIAlertActionStyle) {
@@ -25,7 +42,7 @@ typedef NS_ENUM(NSInteger, UIAlertControllerStyle) {
   UIAlertControllerStyleAlert,
 };
 
-@interface UIAlertAction : NSObject
+@interface RCTUIKitCompatAlertAction : NSObject
 @property (nonatomic, readonly, copy, nullable) NSString *title;
 @property (nonatomic, readonly) UIAlertActionStyle style;
 @property (nonatomic, assign, getter=isEnabled) BOOL enabled;
@@ -44,7 +61,7 @@ typedef NS_ENUM(NSInteger, UIAlertControllerStyle) {
  * Declared as an NSViewController subclass because upstream stores it in
  * UIViewController-typed properties and presents it through the same paths.
  */
-@interface UIAlertController : NSViewController
+@interface RCTUIKitCompatAlertController : NSViewController
 
 @property (nonatomic, readonly) NSArray<UIAlertAction *> *actions;
 @property (nonatomic, assign) UIAlertControllerStyle preferredStyle;
@@ -75,7 +92,7 @@ typedef NSString *UIActivityType NS_TYPED_ENUM;
  * view. The UIKit shape is kept so upstream's presentation code compiles, and
  * -presentFromView: does the AppKit thing.
  */
-@interface UIActivityViewController : NSViewController
+@interface RCTUIKitCompatActivityViewController : NSViewController
 
 @property (nonatomic, copy, nullable) void (^completionWithItemsHandler)
     (UIActivityType _Nullable activityType, BOOL completed, NSArray *_Nullable items, NSError *_Nullable error);

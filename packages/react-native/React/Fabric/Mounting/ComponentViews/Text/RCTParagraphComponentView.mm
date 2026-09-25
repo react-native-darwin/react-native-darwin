@@ -36,7 +36,7 @@ using namespace facebook::react;
 
 // ParagraphTextView is an auxiliary view we set as contentView so the drawing
 // can happen on top of the layers manipulated by RCTViewComponentView (the parent view)
-@interface RCTParagraphTextView : RCTPlatformView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
+@interface RCTParagraphTextView : RCTUIView  // [macOS] concrete flipped, layer-backed view; UIView is an alias for NSView
 
 @property (nonatomic) ParagraphShadowNode::ConcreteState::Shared state;
 @property (nonatomic) ParagraphAttributes paragraphAttributes;

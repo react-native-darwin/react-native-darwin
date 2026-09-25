@@ -15,11 +15,15 @@
  *      transitive import supplies them. A build flag fixes all of those at
  *      once, with no upstream edit.
  *
- *   2. On every platform, define the RCTPlatform* concrete types:
+ *   2. On every platform, define the platform types:
  *
- *        RCTPlatformView            iOS: UIView          macOS: flipped, layer-backed NSView
+ *        RCTPlatformView            iOS: UIView          macOS: NSView (pointer type)
+ *        RCTUIView                  iOS: UIView          macOS: flipped, layer-backed NSView
  *        RCTPlatformDisplayLink     iOS: CADisplayLink   macOS: CADisplayLink on 14+, NSTimer below
  *        RCTPlatformTouchesForEvent iOS: -allTouches     macOS: synthesised from NSEvent
+ *
+ *      The RCTPlatformView / RCTUIView split matches react-native-macos, so
+ *      modules written against that fork compile here unchanged.
  *
  *      Both are aliases on iOS, so those builds gain two names and change in no
  *      other way. Upstream already uses the RCTPlatformDisplayLink name itself:
@@ -37,7 +41,7 @@
 
 #if TARGET_OS_OSX
 
-// Resolves to macos/UIKitCompat/UIKit/UIKit.h, which declares RCTPlatformView.
+// Resolves to macos/UIKitCompat/UIKit/UIKit.h, which declares both names.
 #import <UIKit/UIKit.h>
 
 #else
@@ -46,8 +50,12 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-// On iOS, tvOS and visionOS the concrete classes are simply the UIKit ones.
-@compatibility_alias RCTPlatformView UIView;
+// On iOS, tvOS and visionOS both names are simply UIView. RCTPlatformView
+// comes from RCTPlatformTypes.h, which defines the shared vocabulary for both
+// platforms; only the concrete-class name is added here.
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
+
+@compatibility_alias RCTUIView UIView;
 @compatibility_alias RCTPlatformDisplayLink CADisplayLink;
 
 // -[UIEvent allTouches] is unavailable under its own name on macOS, because

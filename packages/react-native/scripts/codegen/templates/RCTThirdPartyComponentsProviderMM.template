@@ -19,9 +19,30 @@
   static dispatch_once_t nativeComponentsToken;
 
   dispatch_once(&nativeComponentsToken, ^{
-    thirdPartyComponents = @{
+    // [macOS] Built key by key, skipping classes that are not in the binary.
+    //
+    // The entries below are class *names*, resolved one at a time. A literal of
+    // NSClassFromString results throws "attempt to insert nil object" the moment
+    // one misses. On iOS none ever do. On an out-of-tree platform they do: the
+    // dependency tree holds libraries that are not built for it, and codegen
+    // cannot always tell -- a podspec may advertise a platform that autolinking
+    // then skips.
+    //
+    // A component that is not linked cannot be rendered either way. Leaving it
+    // out of the map lets the rest of the app start. macOS]
+    NSDictionary<NSString *, NSString *> *candidates = @{
 {thirdPartyComponentsMapping}
     };
+
+    NSMutableDictionary<NSString *, Class<RCTComponentViewProtocol>> *resolved =
+        [NSMutableDictionary dictionaryWithCapacity:candidates.count];
+    for (NSString *name in candidates) {
+      Class componentClass = NSClassFromString(candidates[name]);
+      if (componentClass != nil) {
+        resolved[name] = componentClass;
+      }
+    }
+    thirdPartyComponents = [resolved copy];
   });
 
   return thirdPartyComponents;

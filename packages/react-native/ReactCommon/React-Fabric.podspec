@@ -102,6 +102,10 @@ Pod::Spec.new do |s|
         "\"$(PODS_TARGET_SRCROOT)/react/renderer/components/legacyviewmanagerinterop/platform/ios\"",
         "\"$(PODS_TARGET_SRCROOT)/react/renderer/components/text/platform/cxx\"",
         "\"$(PODS_TARGET_SRCROOT)/react/renderer/components/textinput/platform/ios\"",
+        # [macOS] macOS has its own HostPlatformViewProps -- tooltip, focus ring,
+        # first mouse and the rest. Its directory has to come first so it wins
+        # over the shared C++ one. macOS]
+        "\"$(PODS_TARGET_SRCROOT)/react/renderer/components/view/platform/macos\"",
         "\"$(PODS_TARGET_SRCROOT)/react/renderer/components/view/platform/cxx\"",
       ]
     end
@@ -135,6 +139,11 @@ Pod::Spec.new do |s|
       sss.dependency             "React-renderercss"
       sss.dependency             "Yoga"
       sss.source_files         = podspec_sources(["react/renderer/components/view/*.{m,mm,cpp,h}", "react/renderer/components/view/platform/cxx/**/*.{m,mm,cpp,h}"], ["react/renderer/components/view/*.{h}", "react/renderer/components/view/platform/cxx/**/*.{h}"])
+      # [macOS] Swap the shared C++ host-platform view files for the macOS ones.
+      # Both define the same symbols, so this is a replacement, not an addition.
+      sss.osx.source_files     = podspec_sources(["react/renderer/components/view/*.{m,mm,cpp,h}", "react/renderer/components/view/platform/macos/**/*.{m,mm,cpp,h}"], ["react/renderer/components/view/*.{h}", "react/renderer/components/view/platform/macos/**/*.{h}"])
+      sss.osx.exclude_files    = "react/renderer/components/view/platform/cxx/**/*"
+      # macOS]
       sss.header_dir           = "react/renderer/components/view"
     end
 

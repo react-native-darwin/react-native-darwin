@@ -17,7 +17,9 @@ const reactNativeRoot = path.resolve(__dirname, '../../packages/react-native');
 
 const appNodeModules = path.resolve(__dirname, 'node_modules');
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), getMacOSConfig(), {
+const baseConfig = getDefaultConfig(__dirname);
+
+module.exports = mergeConfig(baseConfig, getMacOSConfig(baseConfig), {
   resolver: {
     // react-native is a path dependency here, so its own `require('react')`
     // resolves upward from packages/react-native and misses the app's copy.

@@ -75,7 +75,11 @@ if (Platform.OS === 'android') {
   AndroidTextInput = require('./AndroidTextInputNativeComponent').default;
   AndroidTextInputCommands =
     require('./AndroidTextInputNativeComponent').Commands;
-} else if (Platform.OS === 'ios') {
+  // [macOS] macOS uses the same two Apple-platform components. Without this
+  // branch neither module is ever required, both locals stay undefined, and
+  // the render below -- also gated on `ios` -- returns nothing at all: a
+  // TextInput silently renders as empty space, with no error anywhere.
+} else if (Platform.OS === 'ios' || Platform.OS === 'macos') {
   RCTSinglelineTextInputView =
     require('./RCTSingelineTextInputNativeComponent').default;
   RCTSinglelineTextInputNativeCommands =
@@ -564,7 +568,8 @@ function InternalTextInput(props: TextInputProps): React.Node {
     }
   }
 
-  if (Platform.OS === 'ios') {
+  // [macOS] The Apple-platform render path; see the require above.
+  if (Platform.OS === 'ios' || Platform.OS === 'macos') {
     const RCTTextInputView =
       props.multiline === true
         ? RCTMultilineTextInputView

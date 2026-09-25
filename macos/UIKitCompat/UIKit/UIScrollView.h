@@ -13,9 +13,24 @@
 #import "UIKitDefines.h"
 #import "UIView.h"
 
+// The shim's compile-time names, which is all this layer is for.
+//
+// Deliberately aliases rather than real classes: registering a UIKit name
+// with the ObjC runtime makes Apple's own frameworks mistake the process for
+// Catalyst. macOS's one-time-code AutoFill does exactly that for the focused
+// text field, and answering yes sends it into UIKitMacHelper, which dlopens a
+// UIKit.framework that does not exist here and takes the process down.
+//
+// Forward-declared first so the aliases can appear before anything uses them.
+@class RCTUIKitCompatScrollView;
+@class RCTUIKitCompatScrollViewClipView;
+@compatibility_alias UIScrollView RCTUIKitCompatScrollView;
+@compatibility_alias UIScrollViewClipView RCTUIKitCompatScrollViewClipView;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
-@class UIScrollView;
+@class RCTUIKitCompatScrollView;
 
 @protocol UIScrollViewDelegate <NSObject>
 @optional
@@ -35,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
  * unless the clip view is flipped. Everything below reconciles that with
  * UIKit's model, so React Native's scroll code does not have to.
  */
-@interface UIScrollView : NSScrollView
+@interface RCTUIKitCompatScrollView : NSScrollView
 
 @property (nonatomic, assign) CGPoint contentOffset;
 @property (nonatomic, assign) CGSize contentSize;
@@ -99,7 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
  * NSClipView constrains scrolling to the document rect. React Native drives
  * contentOffset directly and expects to be able to overshoot.
  */
-@interface UIScrollViewClipView : NSClipView
+@interface RCTUIKitCompatScrollViewClipView : NSClipView
 @property (nonatomic, assign) BOOL constrainScrolling;
 @end
 

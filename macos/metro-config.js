@@ -36,36 +36,84 @@
 
 'use strict';
 
-const MACOS_SUFFIX = /\.macos\.[^.]+$/;
+const path = require('path');
 
 /**
- * Resolve one specifier as `.macos.*` -> iOS resolution.
+ * This package, as a directory rather than a name.
  *
- * Only a file that genuinely carries the `.macos.` suffix counts as an
- * override. Anything else is the shared file, which iOS resolution reaches too
- * -- and which may itself be the re-export that needs a suffixed sibling.
+ * The app installs it under an alias -- `react-native-macos:
+ * npm:react-native-darwin@...` -- so its name is whatever the app chose. A
+ * path is the one thing that is true either way, and Metro resolves absolute
+ * paths directly, which also sidesteps the `exports` gate on deep imports.
  */
-function resolveMacOS(context, moduleName, platform) {
+const PACKAGE_ROOT = path.resolve(__dirname, '..');
+
+/**
+ * The name this package is installed under, which is the specifier its own
+ * `exports` are reachable by. The directory name rather than the `name` field,
+ * because the app installs it under an alias.
+ */
+const PACKAGE_SPECIFIER = path.basename(PACKAGE_ROOT);
+
+/**
+ * Rewrites an import of upstream React Native onto this package.
+ *
+ * The point of the dual install: an app keeps `react-native` for iOS and
+ * Android and adds this one for macOS, so the same `import {View} from
+ * 'react-native'` has to mean different packages on different platforms.
+ * Without the rewrite a macOS bundle pulls in the iOS package -- which has no
+ * `Platform.macos.js`, no macOS view configs, and no idea the platform exists.
+ *
+ * Two forms, and both are needed. A subpath may be a package *export* rather
+ * than a file -- `react-native/asset-registry` is one, and every bundled image
+ * imports it -- so the specifier form is tried first, where `exports` still
+ * applies. Deep imports of real files are not in `exports` and only resolve as
+ * paths, so that is the fallback.
+ *
+ * Only for `platform === 'macos'`; iOS and Android bundles are untouched.
+ */
+function redirectionsFor(moduleName) {
+  if (moduleName === 'react-native') {
+    return [PACKAGE_ROOT];
+  }
+  if (moduleName.startsWith('react-native/')) {
+    const subpath = moduleName.slice('react-native/'.length);
+    return [`${PACKAGE_SPECIFIER}/${subpath}`, path.join(PACKAGE_ROOT, subpath)];
+  }
+  return [];
+}
+
+
+function resolveMacOS(context, moduleName, platform, next) {
+  const resolve = next ?? ((ctx, name, plat) => ctx.resolveRequest(ctx, name, plat));
+
   if (platform !== 'macos') {
-    return context.resolveRequest(context, moduleName, platform);
+    return resolve(context, moduleName, platform);
+  }
+
+  for (const candidate of redirectionsFor(moduleName)) {
+    try {
+      return resolve(context, candidate, platform);
+    } catch {
+      // Try the next form; the error from the original name is the useful one.
+    }
   }
 
   const attempt = candidate => {
     try {
-      return context.resolveRequest(context, moduleName, candidate);
+      return resolve(context, moduleName, candidate);
     } catch (error) {
       return error;
     }
   };
 
   const macos = attempt('macos');
-  if (
-    macos != null &&
-    !(macos instanceof Error) &&
-    typeof macos.filePath === 'string' &&
-    MACOS_SUFFIX.test(macos.filePath)
-  ) {
-    return macos;
+  if (!(macos instanceof Error)) {
+    const resolvedToImporter =
+      typeof macos.filePath === 'string' && macos.filePath === context.originModulePath;
+    if (!resolvedToImporter) {
+      return macos;
+    }
   }
 
   const ios = attempt('ios');
@@ -73,24 +121,65 @@ function resolveMacOS(context, moduleName, platform) {
     return ios;
   }
 
-  // Report the macOS failure, not the iOS one: it names the platform asked for.
-  if (macos instanceof Error) {
-    throw macos;
+  // Report the macOS failure: it names the platform that was asked for.
+  throw macos instanceof Error ? macos : ios;
+}
+
+
+/**
+ * The module React Native runs before anything else, from *this* package.
+ *
+ * `@react-native/metro-config` points this at `react-native/setup-env`,
+ * resolved from the app -- which in a dual install is the iOS package. That
+ * module is not in the macOS graph, Metro quietly skips it (it only emits a
+ * `__r` for modules it actually has), and InitializeCore never runs. Nothing
+ * reports an error: the first symptom is `Property 'window' doesn't exist`
+ * from whichever module happens to touch a global first.
+ *
+ * Both paths are returned, because the serializer has no platform to branch
+ * on. Metro keeps whichever is in the graph and drops the other, so an iOS
+ * bundle still runs the iOS one.
+ */
+function setupEnvPath() {
+  try {
+    return require.resolve(`${PACKAGE_SPECIFIER}/setup-env`, {paths: [PACKAGE_ROOT]});
+  } catch {
+    return null;
   }
-  return macos;
 }
 
 /**
  * A Metro config fragment that teaches the resolver about macOS.
  *
- * Merge it over `getDefaultConfig()`. It sets nothing else, so an app keeps
- * full control of transformer, serializer and watch folders.
+ * Pass the config you are extending. If it already has a `resolveRequest` --
+ * `@expo/metro-config` installs a substantial one -- this *wraps* it rather
+ * than replacing it, because `context.resolveRequest` inside a custom resolver
+ * is Metro's default resolver, not whatever was configured before. Assigning
+ * over it silently drops the other resolver's behaviour.
+ *
+ * Sets nothing else, so an app keeps full control of transformer, serializer
+ * and watch folders.
+ *
+ *   const config = getDefaultConfig(__dirname);
+ *   module.exports = mergeConfig(config, getMacOSConfig(config));
  */
-function getMacOSConfig() {
+function getMacOSConfig(baseConfig) {
+  const upstream = baseConfig?.resolver?.resolveRequest;
+
+  const upstreamRunFirst = baseConfig?.serializer?.getModulesRunBeforeMainModule;
+  const ourSetupEnv = setupEnvPath();
+
   return {
     resolver: {
       platforms: ['macos', 'ios', 'android', 'native'],
-      resolveRequest: resolveMacOS,
+      resolveRequest: (context, moduleName, platform) =>
+        resolveMacOS(context, moduleName, platform, upstream),
+    },
+    serializer: {
+      getModulesRunBeforeMainModule: entryFilePath => [
+        ...(upstreamRunFirst?.(entryFilePath) ?? []),
+        ...(ourSetupEnv != null ? [ourSetupEnv] : []),
+      ],
     },
   };
 }
