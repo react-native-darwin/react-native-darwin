@@ -42,6 +42,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)scrollViewDidScroll:(RCTPlatformScrollView *)scrollView;
 
+// [macOS
+// The Mac context menu lets the user turn autocorrect, spell checking and
+// grammar checking on and off per field. An app that mirrors those settings
+// in its own UI has to hear about it, and there is no UIKit equivalent.
+- (void)textInputDidChangeAutoCorrect:(BOOL)enabled;
+- (void)textInputDidChangeSpellCheck:(BOOL)enabled;
+- (void)textInputDidChangeGrammarCheck:(BOOL)enabled;
+
+// `items` is one dictionary per pasted object, with `kind`, `type`, and for a
+// file also `uri`, `width`, `height` and `size`.
+- (void)textInputDidPaste:(NSArray<NSDictionary<NSString *, id> *> *)items;
+// macOS]
+
 @end
 
 NS_ASSUME_NONNULL_END

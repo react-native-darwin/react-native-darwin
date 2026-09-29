@@ -7,6 +7,8 @@
 
 #import "UIText.h"
 
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
 #import <objc/message.h>
 #import <objc/runtime.h>
 
@@ -120,7 +122,147 @@ static BOOL RCTUIKitCompatDispatchKeyEvent(NSView *view, NSEvent *event)
 @interface RCTUIKitCompatFieldEditor : NSTextView
 @end
 
+NSArray<NSDictionary<NSString *, id> *> *RCTUIKitCompatPastedItems(NSPasteboard *pasteboard)
+{
+  NSMutableArray<NSDictionary<NSString *, id> *> *items = [NSMutableArray new];
+
+  NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[ NSURL.class ]
+                                                     options:@{NSPasteboardURLReadingFileURLsOnlyKey : @YES}];
+  for (NSURL *url in urls) {
+    NSNumber *size = nil;
+    [url getResourceValue:&size forKey:NSURLFileSizeKey error:NULL];
+    NSString *type = @"application/octet-stream";
+    NSString *identifier = nil;
+    if ([url getResourceValue:&identifier forKey:NSURLTypeIdentifierKey error:NULL] && identifier != nil) {
+      UTType *utType = [UTType typeWithIdentifier:identifier];
+      type = utType.preferredMIMEType ?: identifier;
+    }
+    NSSize pixelSize = NSZeroSize;
+    if ([type hasPrefix:@"image/"]) {
+      NSImage *image = [[NSImage alloc] initWithContentsOfURL:url];
+      pixelSize = image != nil ? image.size : NSZeroSize;
+    }
+    [items addObject:@{
+      @"kind" : @"file",
+      @"type" : type,
+      @"uri" : url.absoluteString ?: @"",
+      @"width" : @(pixelSize.width),
+      @"height" : @(pixelSize.height),
+      @"size" : size ?: @0,
+    }];
+  }
+
+  // An image copied from another application arrives as raw data rather than
+  // as a file. Write it out so JavaScript has a uri it can actually load.
+  if (urls.count == 0) {
+    NSArray<NSImage *> *images = [pasteboard readObjectsForClasses:@[ NSImage.class ] options:nil];
+    for (NSImage *image in images) {
+      NSData *tiff = image.TIFFRepresentation;
+      NSBitmapImageRep *rep = tiff != nil ? [[NSBitmapImageRep alloc] initWithData:tiff] : nil;
+      NSData *png = [rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+      if (png == nil) {
+        continue;
+      }
+      NSString *path = [NSTemporaryDirectory()
+          stringByAppendingPathComponent:[NSString stringWithFormat:@"RCTPaste-%@.png", NSUUID.UUID.UUIDString]];
+      if (![png writeToFile:path atomically:YES]) {
+        continue;
+      }
+      [items addObject:@{
+        @"kind" : @"file",
+        @"type" : @"image/png",
+        @"uri" : [NSURL fileURLWithPath:path].absoluteString ?: @"",
+        @"width" : @(rep.pixelsWide),
+        @"height" : @(rep.pixelsHigh),
+        @"size" : @(png.length),
+      }];
+    }
+  }
+
+  NSArray<NSString *> *strings = [pasteboard readObjectsForClasses:@[ NSString.class ] options:nil];
+  for (NSString *string in strings) {
+    [items addObject:@{
+      @"kind" : @"string",
+      @"type" : @"text/plain",
+      @"uri" : @"",
+      @"width" : @0,
+      @"height" : @0,
+      @"size" : @(string.length),
+    }];
+  }
+
+  return items;
+}
+
 @implementation RCTUIKitCompatFieldEditor
+
+// The field editor is shared across every field in the window, so everything
+// below is forwarded to whichever field is currently being edited rather than
+// handled here.
+- (id<RCTUIKitCompatTextEditingObserver>)uikitCompat_observer
+{
+  id delegate = self.delegate;
+  return [delegate conformsToProtocol:@protocol(RCTUIKitCompatTextEditingObserver)] ? delegate : nil;
+}
+
+- (NSArray<NSPasteboardType> *)readablePasteboardTypes
+{
+  NSMutableArray<NSPasteboardType> *types = [[super readablePasteboardTypes] mutableCopy] ?: [NSMutableArray new];
+  id<RCTUIKitCompatTextEditingObserver> observer = [self uikitCompat_observer];
+  NSArray<NSString *> *pastedTypes = [observer respondsToSelector:@selector(uikitCompat_pastedTypes)]
+      ? [observer uikitCompat_pastedTypes]
+      : nil;
+  for (NSString *pastedType in pastedTypes) {
+    NSArray<NSPasteboardType> *added = nil;
+    if ([pastedType isEqualToString:@"image"]) {
+      added = @[ NSPasteboardTypePNG, NSPasteboardTypeTIFF ];
+    } else if ([pastedType isEqualToString:@"fileUrl"]) {
+      added = @[ NSPasteboardTypeFileURL ];
+    }
+    for (NSPasteboardType type in added) {
+      if (![types containsObject:type]) {
+        [types addObject:type];
+      }
+    }
+  }
+  return types;
+}
+
+- (void)paste:(id)sender
+{
+  [super paste:sender];
+  id<RCTUIKitCompatTextEditingObserver> observer = [self uikitCompat_observer];
+  if ([observer respondsToSelector:@selector(uikitCompat_didPasteItems:)]) {
+    [observer uikitCompat_didPasteItems:RCTUIKitCompatPastedItems(NSPasteboard.generalPasteboard)];
+  }
+}
+
+- (void)toggleAutomaticSpellingCorrection:(id)sender
+{
+  [super toggleAutomaticSpellingCorrection:sender];
+  id<RCTUIKitCompatTextEditingObserver> observer = [self uikitCompat_observer];
+  if ([observer respondsToSelector:@selector(uikitCompat_didToggleAutoCorrect:)]) {
+    [observer uikitCompat_didToggleAutoCorrect:self.isAutomaticSpellingCorrectionEnabled];
+  }
+}
+
+- (void)toggleContinuousSpellChecking:(id)sender
+{
+  [super toggleContinuousSpellChecking:sender];
+  id<RCTUIKitCompatTextEditingObserver> observer = [self uikitCompat_observer];
+  if ([observer respondsToSelector:@selector(uikitCompat_didToggleSpellCheck:)]) {
+    [observer uikitCompat_didToggleSpellCheck:self.isContinuousSpellCheckingEnabled];
+  }
+}
+
+- (void)toggleGrammarChecking:(id)sender
+{
+  [super toggleGrammarChecking:sender];
+  id<RCTUIKitCompatTextEditingObserver> observer = [self uikitCompat_observer];
+  if ([observer respondsToSelector:@selector(uikitCompat_didToggleGrammarCheck:)]) {
+    [observer uikitCompat_didToggleGrammarCheck:self.isGrammarCheckingEnabled];
+  }
+}
 
 - (void)keyDown:(NSEvent *)event
 {

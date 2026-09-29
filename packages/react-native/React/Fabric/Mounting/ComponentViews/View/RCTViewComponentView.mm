@@ -1056,10 +1056,10 @@ static NSString *RCTKeyFromNSEvent(NSEvent *event)
  * `onKeyDown` alone deliberately does not, so observing a key does not change
  * what it does.
  */
-- (BOOL)handleKeyboardEvent:(NSEvent *)event
+KeyEvent RCTKeyEventFromNSEvent(NSEvent *event)
 {
   NSEventModifierFlags flags = event.modifierFlags;
-  KeyEvent keyEvent = {
+  return KeyEvent{
       .key = RCTStringFromNSString(RCTKeyFromNSEvent(event)),
       .altKey = static_cast<bool>(flags & NSEventModifierFlagOption),
       .ctrlKey = static_cast<bool>(flags & NSEventModifierFlagControl),
@@ -1070,6 +1070,11 @@ static NSString *RCTKeyFromNSEvent(NSEvent *event)
       .helpKey = static_cast<bool>(flags & NSEventModifierFlagHelp),
       .functionKey = static_cast<bool>(flags & NSEventModifierFlagFunction),
   };
+}
+
+- (BOOL)handleKeyboardEvent:(NSEvent *)event
+{
+  KeyEvent keyEvent = RCTKeyEventFromNSEvent(event);
 
   BOOL isKeyDown = event.type == NSEventTypeKeyDown;
   const auto &viewProps = static_cast<const ViewProps &>(*_props);

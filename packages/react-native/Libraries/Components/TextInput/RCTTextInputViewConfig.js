@@ -92,6 +92,20 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
     topKeyPressSync: {
       registrationName: 'onKeyPressSync',
     },
+    // [macOS
+    topPaste: {
+      registrationName: 'onPaste',
+    },
+    topAutoCorrectChange: {
+      registrationName: 'onAutoCorrectChange',
+    },
+    topSpellCheckChange: {
+      registrationName: 'onSpellCheckChange',
+    },
+    topGrammarCheckChange: {
+      registrationName: 'onGrammarCheckChange',
+    },
+    // macOS]
   },
   validAttributes: {
     // [macOS] TextInput is a view too: BaseTextInputProps derives from
@@ -169,6 +183,7 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
     grammarCheck: true,
     hideVerticalScrollIndicator: true,
     pastedTypes: true,
+    submitKeyEvents: true,
     // macOS]
     ...ConditionallyIgnoredEventHandlers({
       onChange: true,
@@ -177,6 +192,12 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
       onScroll: true,
       onChangeSync: true,
       onKeyPressSync: true,
+      // [macOS
+      onPaste: true,
+      onAutoCorrectChange: true,
+      onSpellCheckChange: true,
+      onGrammarCheckChange: true,
+      // macOS]
     }),
     disableKeyboardShortcuts: true,
   },

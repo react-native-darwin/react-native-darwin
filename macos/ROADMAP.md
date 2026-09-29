@@ -126,9 +126,9 @@ already links it.
 
 Real gaps, none of which stop an app working.
 
-  - **TextInput, nine props.** `submitKeyEvents`, `onPaste`, `pastedTypes`,
+  - **TextInput, nine props.** `submitKeyEvents` -- done, `onPaste` -- done, `pastedTypes` -- done,
     `grammarCheck`, `clearTextOnSubmit`, `hideVerticalScrollIndicator`,
-    `onAutoCorrectChange`, `onSpellCheckChange`, `onGrammarCheckChange`.
+    `onAutoCorrectChange` -- done, `onSpellCheckChange` -- done, `onGrammarCheckChange` -- done.
     `onPaste` and `pastedTypes` can reuse the `DataTransfer` plumbing already
     written for drag and drop.
   - **`Alert.promptMacOS`.** An NSAlert with accessory text fields.
