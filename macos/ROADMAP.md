@@ -58,23 +58,39 @@ not the lookup.
 **Verify.** A `<Button>` taps; `Animated` with `useNativeDriver: true` runs to
 completion; a `console.warn` renders LogBox instead of blanking the app.
 
-## P0d - multiline TextInput does not scroll
+## P0d - multiline TextInput does not scroll -- FIXED
 
 Found while adding `hideVerticalScrollIndicator`, which turned out to be a
-no-op: the text view's `enclosingScrollView` is nil.
+no-op: the text view's `enclosingScrollView` was nil.
 
 On iOS `UITextView` *is* a `UIScrollView`. The compatibility layer backs it
-with a bare `NSTextView`, which is not in a scroll view and is not one, so
-`scrollEnabled`, `contentOffset` and `contentSize` all degrade to nothing --
-and a multiline field taller than its frame simply clips.
+with a bare `NSTextView`, which is neither in a scroll view nor one itself, so
+`scrollEnabled`, `contentOffset` and `contentSize` all degraded to nothing and
+a multiline field taller than its frame simply clipped.
 
-Reproduced: a `multiline` TextInput with twenty lines in a 90pt box, twelve
-wheel events over it, screenshots before and after are byte-identical.
+`RCTTextInputComponentView` now hosts a multiline field in a real
+`NSScrollView` with the text view as its document view, and the text view is
+vertically resizable so it grows with its text. `onScroll` is driven from the
+clip view's bounds-change notification, which is how AppKit reports scrolling.
 
-The fix is to give the shim's `RCTUIKitCompatTextView` a real `NSScrollView`,
-which is how AppKit expects an `NSTextView` to be used. That is a change to
-the view hierarchy the shim hands back, so it needs care: React Native sets
-frames on the text view directly.
+Verified: 25 lines in a 120pt box, wheel events move the text and `onScroll`
+fires with a rising offset; `hideVerticalScrollIndicator` removes the scroller.
+
+## P0e - the first keystroke in a multiline field was swallowed -- FIXED
+
+Found while regression-testing P0d, and not caused by it -- it reproduced
+before that change too.
+
+`textInputDidChangeSelection` carries an iOS workaround: for multiline, a
+selection change whose text differs from the last state is treated as a text
+change, and `_ignoreNextTextInputCall` is armed. On AppKit, clicking into a
+field moves the selection while that last state is still nil, so it fired a
+change carrying the *pre-edit* text -- and the armed flag then swallowed the
+first real keystroke. `onChangeText` reported `""`, then `"pq"`, then `"pqr"`.
+
+The workaround is unnecessary here: `NSTextView` funnels every edit, including
+paste, drops and undo, through `-didChangeText`, which the compatibility layer
+bridges. It is now gated out on macOS.
 
 ## P1 — the component surface nobody has exercised
 
