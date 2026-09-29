@@ -38,6 +38,7 @@ type AccessibilityEventDefinitions = {
   change: [boolean], // screenReaderChanged
   grayscaleChanged: [boolean],
   invertColorsChanged: [boolean],
+  highContrastChanged: [boolean], // [macOS]
   reduceMotionChanged: [boolean],
   screenReaderChanged: [boolean],
 };
@@ -70,6 +71,7 @@ const EventNames: Map<keyof AccessibilityEventDefinitions, string> =
         ['reduceTransparencyChanged', 'reduceTransparencyChanged'],
         ['screenReaderChanged', 'screenReaderChanged'],
         ['darkerSystemColorsChanged', 'darkerSystemColorsChanged'],
+        ['highContrastChanged', 'highContrastChanged'], // [macOS]
       ]);
 
 /**
@@ -146,6 +148,33 @@ const AccessibilityInfo = {
    *
    * @platform ios
    */
+  // [macOS
+  /**
+   * Query whether "Increase contrast" is currently enabled.
+   *
+   * Returns a promise which resolves to a boolean.
+   * The result is `true` when high contrast is enabled and `false` otherwise.
+   *
+   * @platform macos
+   */
+  isHighContrastEnabled(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      if (NativeAccessibilityManagerIOS?.getCurrentHighContrastState != null) {
+        NativeAccessibilityManagerIOS.getCurrentHighContrastState(
+          resolve,
+          reject,
+        );
+      } else {
+        reject(
+          new Error(
+            'NativeAccessibilityManagerIOS.getCurrentHighContrastState is not available',
+          ),
+        );
+      }
+    });
+  },
+  // macOS]
+
   isInvertColorsEnabled(): Promise<boolean> {
     if (Platform.OS === 'android') {
       return new Promise((resolve, reject) => {

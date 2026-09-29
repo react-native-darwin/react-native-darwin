@@ -79,6 +79,13 @@ typedef NS_ENUM(NSInteger, UIAlertControllerStyle) {
 @property (nonatomic, readonly, nullable) NSArray<UITextField *> *textFields;
 
 // Runs the alert as a sheet on `window`, or application-modal when nil.
+/**
+ * Draw the alert in NSAlert's critical style -- the one with the caution
+ * badge. UIKit has no equivalent, so this is a compatibility-layer addition
+ * rather than a UIKit method, and is named accordingly.
+ */
+@property (nonatomic, assign) BOOL uikitCompat_critical;
+
 - (void)presentFromWindow:(nullable NSWindow *)window;
 
 @end

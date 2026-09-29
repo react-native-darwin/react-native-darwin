@@ -28,6 +28,9 @@ extern NSString *const RCTAccessibilityManagerDidUpdateMultiplierNotification; /
 @property (nonatomic, assign) BOOL prefersCrossFadeTransitions;
 @property (nonatomic, assign) BOOL isReduceTransparencyEnabled;
 @property (nonatomic, assign) BOOL isVoiceOverEnabled;
+// [macOS] "Increase contrast" in System Settings. There is no UIKit
+// equivalent, so this is macOS-only, as it is in react-native-macos.
+@property (nonatomic, assign) BOOL isHighContrastEnabled;
 
 @end
 
