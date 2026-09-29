@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTSurfacePointerHandler : UIGestureRecognizer
+@interface RCTSurfacePointerHandler : RCTPlatformGestureRecognizer
 
 /*
  * Attaches (and detaches) a view to the touch handler.
  * The receiver does not retain the provided view.
  */
-- (void)attachToView:(UIView *)view;
-- (void)detachFromView:(UIView *)view;
+- (void)attachToView:(RCTPlatformView *)view;
+- (void)detachFromView:(RCTPlatformView *)view;
 
 /*
  * Offset of the attached view relative to the root component in points.

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <AppKit/AppKit.h>
 
 #import "UIKitDefines.h"
@@ -317,10 +318,7 @@ extern NSNotificationName const UIDeviceOrientationDidChangeNotification;
 + (NSUserInterfaceLayoutDirection)userInterfaceLayoutDirectionForSemanticContentAttribute:(NSInteger)attribute;
 @end
 
-@protocol UIUserActivityRestoring <NSObject>
-@optional
-- (void)restoreUserActivityState:(NSUserActivity *)activity;
-@end
+#define UIUserActivityRestoring RCTPlatformUserActivityRestoring
 
 #ifdef __cplusplus
 extern "C" {

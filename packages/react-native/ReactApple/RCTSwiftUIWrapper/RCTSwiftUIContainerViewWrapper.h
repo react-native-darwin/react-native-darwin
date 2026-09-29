@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -12,15 +13,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface RCTSwiftUIContainerViewWrapper : NSObject
 
-- (UIView *_Nullable)contentView;
+- (RCTPlatformView *_Nullable)contentView;
 - (void)updateBlurRadius:(NSNumber *)radius;
 - (void)updateGrayscale:(NSNumber *)grayscale;
-- (void)updateDropShadow:(NSNumber *)standardDeviation x:(NSNumber *)x y:(NSNumber *)y color:(UIColor *)color;
+- (void)updateDropShadow:(NSNumber *)standardDeviation x:(NSNumber *)x y:(NSNumber *)y color:(RCTUIColor *)color;
 - (void)updateSaturation:(NSNumber *)saturation;
 - (void)updateContrast:(NSNumber *)contrast;
 - (void)updateHueRotate:(NSNumber *)degrees;
-- (void)updateContentView:(UIView *)view;
-- (UIView *_Nullable)hostingView;
+- (void)updateContentView:(RCTPlatformView *)view;
+- (RCTPlatformView *_Nullable)hostingView;
 - (void)resetStyles;
 - (void)updateLayoutWithBounds:(CGRect)bounds;
 

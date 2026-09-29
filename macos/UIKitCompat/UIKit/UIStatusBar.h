@@ -7,6 +7,7 @@
 
 #pragma once
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <AppKit/AppKit.h>
 
 #import "UIKitDefines.h"
@@ -26,11 +27,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSInteger, UIStatusBarAnimation) {
-  UIStatusBarAnimationNone = 0,
-  UIStatusBarAnimationFade,
-  UIStatusBarAnimationSlide,
-};
+typedef RCTPlatformStatusBarAnimation UIStatusBarAnimation;
+#define UIStatusBarAnimationNone RCTPlatformStatusBarAnimationNone
+#define UIStatusBarAnimationFade RCTPlatformStatusBarAnimationFade
+#define UIStatusBarAnimationSlide RCTPlatformStatusBarAnimationSlide
 
 /**
  * macOS has no status bar. The menu bar is the closest thing and it is not

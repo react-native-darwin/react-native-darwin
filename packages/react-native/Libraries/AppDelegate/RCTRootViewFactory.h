@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTBridge.h>
 #import <React/RCTRootView.h>
 #import <React/RCTUtils.h>
@@ -24,11 +25,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Blocks' definitions
-typedef UIView *_Nonnull (
+typedef RCTPlatformView *_Nonnull (
     ^RCTCreateRootViewWithBridgeBlock)(RCTBridge *bridge, NSString *moduleName, NSDictionary *initProps);
 typedef RCTBridge *_Nonnull (
     ^RCTCreateBridgeWithDelegateBlock)(id<RCTBridgeDelegate> delegate, NSDictionary *launchOptions);
-typedef void (^RCTCustomizeRootViewBlock)(UIView *rootView);
+typedef void (^RCTCustomizeRootViewBlock)(RCTPlatformView *rootView);
 typedef NSURL *_Nullable (^RCTSourceURLForBridgeBlock)(RCTBridge *bridge);
 typedef NSURL *_Nullable (^RCTBundleURLBlock)(void);
 typedef NSArray<id<RCTBridgeModule>> *_Nonnull (^RCTExtraModulesForBridgeBlock)(RCTBridge *bridge);
@@ -204,20 +205,20 @@ typedef void (^RCTLoadSourceForBridgeBlock)(RCTBridge *bridge, RCTSourceLoadBloc
  * @parameter: bundleConfiguration  - a configuration for custom bundle source URL.
  * @parameter: devMenuConfiguration - a configuration for enabling/disabling dev menu.
  */
-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName
                      initialProperties:(NSDictionary *__nullable)initialProperties
                          launchOptions:(NSDictionary *__nullable)launchOptions
                    bundleConfiguration:(RCTBundleConfiguration *)bundleConfiguration
                   devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration;
 
-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName
                      initialProperties:(NSDictionary *__nullable)initialProperties
                          launchOptions:(NSDictionary *__nullable)launchOptions;
 
-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName
+- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName
                      initialProperties:(NSDictionary *__nullable)initialProperties;
 
-- (UIView *_Nonnull)viewWithModuleName:(NSString *)moduleName;
+- (RCTPlatformView *_Nonnull)viewWithModuleName:(NSString *)moduleName;
 
 #pragma mark - RCTRootViewFactory Helpers
 

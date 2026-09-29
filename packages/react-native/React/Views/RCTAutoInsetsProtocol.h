@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 /**
@@ -12,7 +13,7 @@
  */
 @protocol RCTAutoInsetsProtocol
 
-@property (nonatomic, assign, readwrite) UIEdgeInsets contentInset;
+@property (nonatomic, assign, readwrite) RCTPlatformEdgeInsets contentInset;
 @property (nonatomic, assign, readwrite) BOOL automaticallyAdjustContentInsets;
 
 /**

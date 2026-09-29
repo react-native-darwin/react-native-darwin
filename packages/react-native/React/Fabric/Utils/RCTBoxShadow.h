@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <vector>
 
 #import <React/RCTBorderDrawing.h>
@@ -15,5 +16,5 @@
 RCT_EXTERN CALayer *RCTGetBoxShadowLayer(
     const facebook::react::BoxShadow &shadow,
     RCTCornerRadii cornerRadii,
-    UIEdgeInsets edgeInsets,
+    RCTPlatformEdgeInsets edgeInsets,
     CGSize layerSize);

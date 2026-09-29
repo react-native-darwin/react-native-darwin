@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTBridge.h>
 #import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTSurfaceView.h>
 #import <UIKit/UIKit.h>
 
-@interface RCTLogBoxView : UIWindow
+@interface RCTLogBoxView : RCTPlatformWindow
 
 - (instancetype)initWithFrame:(CGRect)frame;
 
-- (void)createRootViewController:(UIView *)view;
+- (void)createRootViewController:(RCTPlatformView *)view;
 
-- (instancetype)initWithWindow:(UIWindow *)window surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
+- (instancetype)initWithWindow:(RCTPlatformWindow *)window surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 
 - (void)show;
 

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -392,7 +393,7 @@ RCT_EXTERN_C_END
 - (id)moduleForClass:(Class)moduleClass;
 @end
 
-typedef UIView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
+typedef RCTPlatformView * (^RCTBridgelessComponentViewProvider)(NSNumber *);
 
 typedef void (^RCTViewRegistryUIBlock)(RCTViewRegistry *viewRegistry);
 
@@ -402,7 +403,7 @@ typedef void (^RCTViewRegistryUIBlock)(RCTViewRegistry *viewRegistry);
 @interface RCTViewRegistry : NSObject
 - (void)setBridgelessComponentViewProvider:(RCTBridgelessComponentViewProvider)bridgelessComponentViewProvider;
 
-- (UIView *)viewForReactTag:(NSNumber *)reactTag;
+- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag;
 - (void)addUIBlock:(RCTViewRegistryUIBlock)block;
 @end
 

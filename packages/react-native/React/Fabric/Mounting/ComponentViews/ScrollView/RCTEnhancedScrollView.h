@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTGenericDelegateSplitter.h>
@@ -19,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @protocol RCTEnhancedScrollViewOverridingDelegate <NSObject>
 
-- (BOOL)touchesShouldCancelInContentView:(UIView *)view;
+- (BOOL)touchesShouldCancelInContentView:(RCTPlatformView *)view;
 
 @end
 
@@ -27,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
  * `UIScrollView` subclass which has some improvements and tweaks
  * which are not directly related to React Native.
  */
-@interface RCTEnhancedScrollView : UIScrollView
+@interface RCTEnhancedScrollView : RCTPlatformScrollView
 
 /*
  * Returns a delegate splitter that can be used to create as many `UIScrollView` delegates as needed.
@@ -40,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
  * resilient to other code as possible: even if something else nil the delegate, other delegates that were subscribed
  * via the splitter will continue working.
  */
-@property (nonatomic, strong, readonly) RCTGenericDelegateSplitter<id<UIScrollViewDelegate>> *delegateSplitter;
+@property (nonatomic, strong, readonly) RCTGenericDelegateSplitter<id<RCTPlatformScrollViewDelegate>> *delegateSplitter;
 
 @property (nonatomic, weak) id<RCTEnhancedScrollViewOverridingDelegate> overridingDelegate;
 @property (nonatomic, assign) BOOL pinchGestureEnabled;

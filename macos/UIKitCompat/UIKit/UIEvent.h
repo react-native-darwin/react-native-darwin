@@ -8,6 +8,7 @@
 
 #pragma once
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <AppKit/AppKit.h>
 
 // The shim's compile-time names, which is all this layer is for.

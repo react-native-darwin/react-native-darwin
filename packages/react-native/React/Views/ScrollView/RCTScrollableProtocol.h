@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTComponent.h>
 #import <UIKit/UIKit.h>
 
@@ -25,8 +26,8 @@
 - (void)scrollToEnd:(BOOL)animated;
 - (void)zoomToRect:(CGRect)rect animated:(BOOL)animated;
 
-- (void)addScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
-- (void)removeScrollListener:(NSObject<UIScrollViewDelegate> *)scrollListener;
+- (void)addScrollListener:(NSObject<RCTPlatformScrollViewDelegate> *)scrollListener;
+- (void)removeScrollListener:(NSObject<RCTPlatformScrollViewDelegate> *)scrollListener;
 
 @end
 
@@ -39,6 +40,6 @@
 @property (nonatomic, readonly, getter=isRefreshing) BOOL refreshing;
 
 @optional
-@property (nonatomic, weak) UIScrollView *scrollView;
+@property (nonatomic, weak) RCTPlatformScrollView *scrollView;
 
 @end

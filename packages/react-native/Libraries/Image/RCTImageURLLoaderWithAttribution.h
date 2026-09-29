@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTImageLoaderLoggable.h>
 #import <React/RCTImageLoaderProtocol.h>
 #import <React/RCTImageURLLoader.h>
@@ -64,7 +65,7 @@ struct ImageURLLoaderAttribution {
 /**
  * Image instrumentation - start tracking the on-screen visibility of the native image view.
  */
-- (void)trackURLImageVisibilityForRequest:(RCTImageURLLoaderRequest *)loaderRequest imageView:(UIView *)imageView;
+- (void)trackURLImageVisibilityForRequest:(RCTImageURLLoaderRequest *)loaderRequest imageView:(RCTPlatformView *)imageView;
 
 /**
  * Image instrumentation - notify that the request was destroyed.

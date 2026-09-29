@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
 
@@ -73,22 +74,22 @@ typedef NSURL RCTFileURL;
 + (NSUnderlineStyle)NSUnderlineStyle:(id)json;
 + (NSWritingDirection)NSWritingDirection:(id)json;
 + (NSLineBreakStrategy)NSLineBreakStrategy:(id)json;
-+ (UITextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
-+ (UITextFieldViewMode)UITextFieldViewMode:(id)json;
-+ (UIKeyboardType)UIKeyboardType:(id)json;
-+ (UIKeyboardAppearance)UIKeyboardAppearance:(id)json;
-+ (UIReturnKeyType)UIReturnKeyType:(id)json;
-+ (UIUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
++ (RCTPlatformTextAutocapitalizationType)UITextAutocapitalizationType:(id)json;
++ (RCTPlatformTextFieldViewMode)UITextFieldViewMode:(id)json;
++ (RCTPlatformKeyboardType)UIKeyboardType:(id)json;
++ (RCTPlatformKeyboardAppearance)UIKeyboardAppearance:(id)json;
++ (RCTPlatformReturnKeyType)UIReturnKeyType:(id)json;
++ (RCTPlatformUserInterfaceStyle)UIUserInterfaceStyle:(id)json API_AVAILABLE(ios(12));
 #if !TARGET_OS_TV
-+ (UIInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
++ (RCTPlatformInterfaceOrientationMask)UIInterfaceOrientationMask:(NSString *)orientation;
 #endif
-+ (UIModalPresentationStyle)UIModalPresentationStyle:(id)json;
++ (RCTPlatformModalPresentationStyle)UIModalPresentationStyle:(id)json;
 
 #if !TARGET_OS_TV
-+ (UIDataDetectorTypes)UIDataDetectorTypes:(id)json;
++ (RCTPlatformDataDetectorTypes)UIDataDetectorTypes:(id)json;
 #endif
 
-+ (UIViewContentMode)UIViewContentMode:(id)json;
++ (RCTPlatformViewContentMode)UIViewContentMode:(id)json;
 
 + (RCTCursor)RCTCursor:(id)json;
 
@@ -96,21 +97,21 @@ typedef NSURL RCTFileURL;
 + (CGPoint)CGPoint:(id)json;
 + (CGSize)CGSize:(id)json;
 + (CGRect)CGRect:(id)json;
-+ (UIEdgeInsets)UIEdgeInsets:(id)json;
++ (RCTPlatformEdgeInsets)UIEdgeInsets:(id)json;
 
 + (CGLineCap)CGLineCap:(id)json;
 + (CGLineJoin)CGLineJoin:(id)json;
 
 + (CGAffineTransform)CGAffineTransform:(id)json;
 
-+ (UIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
-+ (UIColor *)UIColorWithRed:(CGFloat)red
++ (RCTUIColor *)UIColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
++ (RCTUIColor *)UIColorWithRed:(CGFloat)red
                       green:(CGFloat)green
                        blue:(CGFloat)blue
                       alpha:(CGFloat)alpha
               andColorSpace:(RCTColorSpace)colorSpace;
 + (RCTColorSpace)RCTColorSpaceFromString:(NSString *)colorSpace;
-+ (UIColor *)UIColor:(id)json;
++ (RCTUIColor *)UIColor:(id)json;
 + (CGColorRef)CGColor:(id)json CF_RETURNS_NOT_RETAINED;
 
 + (YGValue)YGValue:(id)json;
@@ -122,7 +123,7 @@ typedef NSURL RCTFileURL;
 + (NSArray<NSURL *> *)NSURLArray:(id)json;
 + (NSArray<RCTFileURL *> *)RCTFileURLArray:(id)json;
 + (NSArray<NSNumber *> *)NSNumberArray:(id)json;
-+ (NSArray<UIColor *> *)UIColorArray:(id)json;
++ (NSArray<RCTUIColor *> *)UIColorArray:(id)json;
 
 typedef NSArray CGColorArray;
 + (CGColorArray *)CGColorArray:(id)json;
@@ -164,14 +165,14 @@ typedef NSArray NSDictionaryArray __deprecated_msg("Use NSArray<NSDictionary *>"
 typedef NSArray NSURLArray __deprecated_msg("Use NSArray<NSURL *>");
 typedef NSArray RCTFileURLArray __deprecated_msg("Use NSArray<RCTFileURL *>");
 typedef NSArray NSNumberArray __deprecated_msg("Use NSArray<NSNumber *>");
-typedef NSArray UIColorArray __deprecated_msg("Use NSArray<UIColor *>");
+typedef NSArray UIColorArray __deprecated_msg("Use NSArray<RCTUIColor *>");
 
 /**
  * Synchronous image loading is generally a bad idea for performance reasons.
  * If you need to pass image references, try to use `RCTImageSource` and then
  * `RCTImageLoader` instead of converting directly to a UIImage.
  */
-+ (UIImage *)UIImage:(id)json;
++ (RCTPlatformImage *)UIImage:(id)json;
 + (CGImageRef)CGImage:(id)json CF_RETURNS_NOT_RETAINED;
 
 @end

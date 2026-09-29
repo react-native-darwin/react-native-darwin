@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTDefines.h>
 #import <UIKit/UIKit.h>
 
@@ -12,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 RCT_EXTERN_C_BEGIN
 
-UIEdgeInsets RCTContentInsets(UIView *view);
+RCTPlatformEdgeInsets RCTContentInsets(RCTPlatformView *view);
 
 RCT_EXTERN_C_END
 

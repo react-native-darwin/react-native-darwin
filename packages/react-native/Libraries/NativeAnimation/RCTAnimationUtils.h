@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -34,7 +35,7 @@ RCT_EXTERN CGFloat RCTInterpolateValueInRange(
     NSString *extrapolateRight);
 
 RCT_EXTERN uint32_t
-RCTInterpolateColorInRange(CGFloat value, NSArray<NSNumber *> *inputRange, NSArray<UIColor *> *outputRange);
+RCTInterpolateColorInRange(CGFloat value, NSArray<NSNumber *> *inputRange, NSArray<RCTUIColor *> *outputRange);
 
 // Represents a color as a int32_t. RGB components are assumed to be in [0-255] range and alpha in [0-1] range
 RCT_EXTERN uint32_t RCTColorFromComponents(CGFloat red, CGFloat green, CGFloat blue, CGFloat alpha);

@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Accelerate/Accelerate.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
 
-RCT_EXTERN UIImage *RCTBlurredImageWithRadius(UIImage *inputImage, CGFloat radius);
+RCT_EXTERN RCTPlatformImage *RCTBlurredImageWithRadius(RCTPlatformImage *inputImage, CGFloat radius);

@@ -7,13 +7,14 @@
 
 #include <react/cxxstableapi/FrameworksGuard.h>
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTConvert.h>
 #import <React/RCTImageLoader.h>
 #import <react/renderer/imagemanager/primitives.h>
 
-inline static UIViewContentMode RCTContentModeFromImageResizeMode(facebook::react::ImageResizeMode imageResizeMode)
+inline static RCTPlatformViewContentMode RCTContentModeFromImageResizeMode(facebook::react::ImageResizeMode imageResizeMode)
 {
   switch (imageResizeMode) {
     case facebook::react::ImageResizeMode::Cover:

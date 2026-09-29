@@ -106,9 +106,6 @@ typedef NS_ENUM(NSInteger, UIDropOperation) {
 @property (nonatomic, readonly, nullable) id<UIDropSession> dropSession;
 @end
 
-@protocol UIAdaptivePresentationControllerDelegate <NSObject>
-@optional
-- (void)presentationControllerDidDismiss:(id)presentationController;
-@end
+#define UIAdaptivePresentationControllerDelegate RCTPlatformAdaptivePresentationControllerDelegate
 
 NS_ASSUME_NONNULL_END

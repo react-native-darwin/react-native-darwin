@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <react/renderer/attributedstring/AttributedString.h>
@@ -19,12 +20,12 @@
                  layoutManager:(RCTTextLayoutManager *)layoutManager
            paragraphAttributes:(facebook::react::ParagraphAttributes)paragraphAttributes
                          frame:(CGRect)frame
-                          view:(UIView *)view;
+                          view:(RCTPlatformView *)view;
 
 /*
  * Returns an array of `UIAccessibilityElement`s to be used for `UIAccessibilityContainer` implementation.
  */
-- (NSArray<UIAccessibilityElement *> *)accessibilityElements;
+- (NSArray<RCTPlatformAccessibilityElement *> *)accessibilityElements;
 
 /**
  @abstract To make sure the provider is up to date.

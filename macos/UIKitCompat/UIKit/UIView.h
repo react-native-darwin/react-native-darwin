@@ -126,24 +126,10 @@ NS_ASSUME_NONNULL_BEGIN
  * to about 20 upstream files instead of the 538 that react-native-macos edits,
  * and macos/ci/check-budget.sh enforces it.
  */
-@interface RCTUIView : NSView
-
-// NSView already provides -clipsToBounds (10.9+), so it is not redeclared here.
-
-// UIKit subclasses override -canBecomeFirstResponder and expect the framework
-// to honour it. RCTUIView bridges that to AppKit's
-// -acceptsFirstResponder, and terminates the chain at NSView's own
-// implementation rather than bouncing back through the category.
-@property (nonatomic, readonly) BOOL canBecomeFirstResponder;
-
-// Draw the focus ring when this view is first responder.
-@property (nonatomic, assign) BOOL enableFocusRing;
-
-// Receive the mouse-down that activates a background window, rather than
-// swallowing it to raise the window. UIKit has no equivalent; AppKit needs it.
-@property (nonatomic, assign) BOOL acceptsFirstMouse;
-
-@end
+// RCTUIView's interface lives in RCTPlatformTypes.h. Third-party code
+// written against react-native-macos subclasses it through
+// <React/RCTUIKit.h>, which must not import this shim -- that is what
+// would leak the UIKit names back out. The implementation stays here.
 
 #ifdef __cplusplus
 extern "C" {

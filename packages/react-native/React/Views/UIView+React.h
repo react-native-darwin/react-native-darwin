@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTComponent.h>
@@ -19,15 +20,15 @@ typedef struct {
   CGFloat z;
 } RCTTransformOrigin;
 
-@interface UIView (React) <RCTComponent>
+@interface RCTPlatformView (React) <RCTComponent>
 
 /**
  * RCTComponent interface.
  */
-- (NSArray<UIView *> *)reactSubviews NS_REQUIRES_SUPER;
-- (UIView *)reactSuperview NS_REQUIRES_SUPER;
-- (void)insertReactSubview:(UIView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
-- (void)removeReactSubview:(UIView *)subview NS_REQUIRES_SUPER;
+- (NSArray<RCTPlatformView *> *)reactSubviews NS_REQUIRES_SUPER;
+- (RCTPlatformView *)reactSuperview NS_REQUIRES_SUPER;
+- (void)insertReactSubview:(RCTPlatformView *)subview atIndex:(NSInteger)atIndex NS_REQUIRES_SUPER;
+- (void)removeReactSubview:(RCTPlatformView *)subview NS_REQUIRES_SUPER;
 
 /**
  * The native id of the view, used to locate view from native codes
@@ -45,7 +46,7 @@ typedef struct {
  * Internally backed to `semanticContentAttribute` property.
  * Defaults to `LeftToRight` in case of ambiguity.
  */
-@property (nonatomic, assign) UIUserInterfaceLayoutDirection reactLayoutDirection;
+@property (nonatomic, assign) RCTPlatformUserInterfaceLayoutDirection reactLayoutDirection;
 
 /**
  * Yoga `display` style property. Can be `flex` or `none`.
@@ -63,7 +64,7 @@ typedef struct {
  * Subviews sorted by z-index. Note that this method doesn't do any caching (yet)
  * and sorts all the views each call.
  */
-- (NSArray<UIView *> *)reactZIndexSortedSubviews;
+- (NSArray<RCTPlatformView *> *)reactZIndexSortedSubviews;
 
 /**
  * Updates the subviews array based on the reactSubviews. Default behavior is
@@ -86,7 +87,7 @@ typedef struct {
 /**
  * This method finds and returns the containing view controller for the view.
  */
-- (UIViewController *)reactViewController;
+- (RCTPlatformViewController *)reactViewController;
 
 /**
  * This method attaches the specified controller as a child of the
@@ -94,7 +95,7 @@ typedef struct {
  * controller is found (which may happen if the view is not currently
  * attached to the view hierarchy).
  */
-- (void)reactAddControllerToClosestParent:(UIViewController *)controller;
+- (void)reactAddControllerToClosestParent:(RCTPlatformViewController *)controller;
 
 /**
  * Focus manipulation.
@@ -106,9 +107,9 @@ typedef struct {
 /**
  * Useful properties for computing layout.
  */
-@property (nonatomic, readonly) UIEdgeInsets reactBorderInsets;
-@property (nonatomic, readonly) UIEdgeInsets reactPaddingInsets;
-@property (nonatomic, readonly) UIEdgeInsets reactCompoundInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets reactBorderInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets reactPaddingInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets reactCompoundInsets;
 @property (nonatomic, readonly) CGRect reactContentFrame;
 
 /**
@@ -125,7 +126,7 @@ typedef struct {
  * transparent in favour of some subview.
  * Defaults to `self`.
  */
-@property (nonatomic, readonly) UIView *reactAccessibilityElement;
+@property (nonatomic, readonly) RCTPlatformView *reactAccessibilityElement;
 
 /**
  * Accessibility properties
@@ -136,8 +137,8 @@ typedef struct {
 @property (nonatomic, copy) NSArray<NSDictionary *> *accessibilityActions;
 @property (nonatomic, copy) NSDictionary *accessibilityValueInternal;
 @property (nonatomic, copy) NSString *accessibilityLanguage;
-@property (nonatomic) UIAccessibilityTraits accessibilityRoleTraits;
-@property (nonatomic) UIAccessibilityTraits roleTraits;
+@property (nonatomic) RCTPlatformAccessibilityTraits accessibilityRoleTraits;
+@property (nonatomic) RCTPlatformAccessibilityTraits roleTraits;
 
 /**
  * Used in debugging to get a description of the view hierarchy rooted at

@@ -32,19 +32,46 @@ Pod::Spec.new do |s|
   s.author                 = "Meta Platforms, Inc. and its affiliates"
   s.source                 = { :git => "https://github.com/react-native-darwin/react-native-darwin.git", :tag => "v#{version}" }
 
-  # macOS only. On every other platform the real UIKit is used, and shipping
-  # these headers would shadow it.
-  s.platforms              = { :osx => "14.0" }
+  # The pod spans both platforms, but only one half of it does.
+  #
+  # RCTPlatformTypes.h is the public vocabulary -- RCTPlatformView, RCTUIColor
+  # and the rest -- that installed headers are written in. Those headers are
+  # compiled on iOS too, so the vocabulary has to resolve there; on iOS it is
+  # simply the UIKit type under a neutral name.
+  #
+  # The UIKit shim is macOS only. On every other platform the real UIKit is
+  # used, and shipping these headers would shadow it.
+  # 15.1 matches Helpers::Constants.min_ios_version_supported. It is written
+  # out rather than read from there because this podspec is evaluated from an
+  # npm tarball layout too, where that file is not on the load path.
+  s.platforms              = { :ios => "15.1", :osx => "14.0" }
 
-  s.source_files           = "UIKit/**/*.{h,m}", "RCTPlatformTypes/**/*.h"
-  s.header_dir             = "UIKit"
+  s.source_files           = "Public/RCTPlatformTypes/*.h"
+  s.header_dir             = "RCTPlatformTypes"
 
-  # RCTPlatformTypes.h is the public half: the RCT* vocabulary, naming no UIKit
-  # type, so it is safe on every pod's search path. Its own header_dir keeps it
-  # reachable as <RCTPlatformTypes/RCTPlatformTypes.h> rather than under UIKit/.
-  s.subspec 'RCTPlatformTypes' do |ss|
-    ss.source_files = "RCTPlatformTypes/**/*.h"
-    ss.header_dir   = "RCTPlatformTypes"
+  # The public <UIKit/UIKit.h>: it satisfies React Native's own import for
+  # every consumer -- the app target included -- and declares nothing, so a
+  # library is free to declare `UIView` itself. The real shim is the private
+  # subspec below.
+  s.subspec 'PublicUIKit' do |ss|
+    ss.platforms    = { :osx => "14.0" }
+    ss.source_files = "Public/UIKit/*.h"
+    ss.header_dir   = "UIKit"
+  end
+
+  s.subspec 'UIKit' do |ss|
+    ss.platforms    = { :osx => "14.0" }
+    ss.source_files         = "UIKit/**/*.{h,m}"
+    ss.header_dir           = "UIKit"
+    # Private, not public. Installing these would put `UIView` and forty-odd
+    # more names on every pod's search path, which is the thing this migration
+    # exists to stop. This fork's own pods reach them through the header search
+    # path that `apply_uikit_compat` adds, not through Pods/Headers/Public.
+    ss.private_header_files = "UIKit/**/*.h"
+    ss.frameworks   = "AppKit", "QuartzCore"
+    ss.pod_target_xcconfig = {
+      "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)\""
+    }
   end
   s.frameworks             = "AppKit", "QuartzCore"
 

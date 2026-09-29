@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <react/renderer/components/view/AccessibilityPrimitives.h>
@@ -57,7 +58,7 @@ inline std::string RCTStringFromNSString(NSString *string)
   return std::string{static_cast<const char *>(data.bytes), data.length};
 }
 
-inline UIColor *_Nullable RCTUIColorFromSharedColor(const facebook::react::SharedColor &sharedColor)
+inline RCTUIColor *_Nullable RCTUIColorFromSharedColor(const facebook::react::SharedColor &sharedColor)
 {
   return RCTPlatformColorFromColor(*sharedColor);
 }
@@ -83,71 +84,71 @@ inline CGRect RCTCGRectFromRect(const facebook::react::Rect &rect)
   return {RCTCGPointFromPoint(rect.origin), RCTCGSizeFromSize(rect.size)};
 }
 
-inline UIEdgeInsets RCTUIEdgeInsetsFromEdgeInsets(const facebook::react::EdgeInsets &edgeInsets)
+inline RCTPlatformEdgeInsets RCTUIEdgeInsetsFromEdgeInsets(const facebook::react::EdgeInsets &edgeInsets)
 {
   return {edgeInsets.top, edgeInsets.left, edgeInsets.bottom, edgeInsets.right};
 }
 
-const UIAccessibilityTraits AccessibilityTraitSwitch = 0x20000000000001;
+const RCTPlatformAccessibilityTraits AccessibilityTraitSwitch = 0x20000000000001;
 
-inline UIAccessibilityTraits RCTUIAccessibilityTraitsFromAccessibilityTraits(
+inline RCTPlatformAccessibilityTraits RCTUIAccessibilityTraitsFromAccessibilityTraits(
     facebook::react::AccessibilityTraits accessibilityTraits)
 {
   using AccessibilityTraits = facebook::react::AccessibilityTraits;
-  UIAccessibilityTraits result = UIAccessibilityTraitNone;
+  RCTPlatformAccessibilityTraits result = RCTPlatformAccessibilityTraitNone;
   if ((accessibilityTraits & AccessibilityTraits::Button) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitButton;
+    result |= RCTPlatformAccessibilityTraitButton;
   }
   if ((accessibilityTraits & AccessibilityTraits::Link) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitLink;
+    result |= RCTPlatformAccessibilityTraitLink;
   }
   if ((accessibilityTraits & AccessibilityTraits::Image) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitImage;
+    result |= RCTPlatformAccessibilityTraitImage;
   }
   if ((accessibilityTraits & AccessibilityTraits::Selected) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitSelected;
+    result |= RCTPlatformAccessibilityTraitSelected;
   }
   if ((accessibilityTraits & AccessibilityTraits::PlaysSound) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitPlaysSound;
+    result |= RCTPlatformAccessibilityTraitPlaysSound;
   }
   if ((accessibilityTraits & AccessibilityTraits::KeyboardKey) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitKeyboardKey;
+    result |= RCTPlatformAccessibilityTraitKeyboardKey;
   }
   if ((accessibilityTraits & AccessibilityTraits::StaticText) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitStaticText;
+    result |= RCTPlatformAccessibilityTraitStaticText;
   }
   if ((accessibilityTraits & AccessibilityTraits::SummaryElement) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitSummaryElement;
+    result |= RCTPlatformAccessibilityTraitSummaryElement;
   }
   if ((accessibilityTraits & AccessibilityTraits::NotEnabled) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitNotEnabled;
+    result |= RCTPlatformAccessibilityTraitNotEnabled;
   }
   if ((accessibilityTraits & AccessibilityTraits::UpdatesFrequently) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitUpdatesFrequently;
+    result |= RCTPlatformAccessibilityTraitUpdatesFrequently;
   }
   if ((accessibilityTraits & AccessibilityTraits::SearchField) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitSearchField;
+    result |= RCTPlatformAccessibilityTraitSearchField;
   }
   if ((accessibilityTraits & AccessibilityTraits::StartsMediaSession) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitStartsMediaSession;
+    result |= RCTPlatformAccessibilityTraitStartsMediaSession;
   }
   if ((accessibilityTraits & AccessibilityTraits::Adjustable) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitAdjustable;
+    result |= RCTPlatformAccessibilityTraitAdjustable;
   }
   if ((accessibilityTraits & AccessibilityTraits::AllowsDirectInteraction) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitAllowsDirectInteraction;
+    result |= RCTPlatformAccessibilityTraitAllowsDirectInteraction;
   }
   if ((accessibilityTraits & AccessibilityTraits::CausesPageTurn) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitCausesPageTurn;
+    result |= RCTPlatformAccessibilityTraitCausesPageTurn;
   }
   if ((accessibilityTraits & AccessibilityTraits::Header) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitHeader;
+    result |= RCTPlatformAccessibilityTraitHeader;
   }
   if ((accessibilityTraits & AccessibilityTraits::Switch) != AccessibilityTraits::None) {
     result |= AccessibilityTraitSwitch;
   }
   if ((accessibilityTraits & AccessibilityTraits::TabBar) != AccessibilityTraits::None) {
-    result |= UIAccessibilityTraitTabBar;
+    result |= RCTPlatformAccessibilityTraitTabBar;
   }
   return result;
 };
@@ -196,7 +197,7 @@ inline facebook::react::Rect RCTRectFromCGRect(const CGRect &rect)
   return {.origin = RCTPointFromCGPoint(rect.origin), .size = RCTSizeFromCGSize(rect.size)};
 }
 
-inline facebook::react::EdgeInsets RCTEdgeInsetsFromUIEdgeInsets(const UIEdgeInsets &edgeInsets)
+inline facebook::react::EdgeInsets RCTEdgeInsetsFromUIEdgeInsets(const RCTPlatformEdgeInsets &edgeInsets)
 {
   return {edgeInsets.left, edgeInsets.top, edgeInsets.right, edgeInsets.bottom};
 }

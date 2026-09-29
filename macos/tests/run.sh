@@ -47,9 +47,37 @@ echo "==> Building"
 clang -fobjc-arc -fmodules -Wall -Werror \
   -mmacosx-version-min=14.0 \
   -I macos/UIKitCompat \
+  -I macos/UIKitCompat/Public \
   -framework AppKit -framework Foundation -framework QuartzCore \
   -o "$OUT" \
   macos/tests/UIKitCompatTest.m macos/UIKitCompat/UIKit/*.m
 
 echo "==> Running"
 "$OUT"
+
+# The acceptance test for the alias migration: a third-party pod that declares
+# the UIKit names itself must still compile against React Native's installed
+# headers. It needs a pod install to have happened, so it is skipped when there
+# is none rather than failing a fresh checkout.
+PODS="macos/HelloWorld/Pods/Headers/Public"
+if [ -d "$PODS" ]; then
+  echo "==> Checking a third-party pod that declares UIKit names itself"
+  includes=""
+  for dir in "$PODS"/*/; do
+    includes="$includes -I $dir"
+  done
+  if clang -fsyntax-only -fobjc-arc -x objective-c++ -std=c++20 -Werror \
+      -mmacosx-version-min=14.0 \
+      -I "$PODS" $includes \
+      -I macos/UIKitCompat/Public \
+      macos/tests/third-party/ThirdPartyPodProbe.mm; then
+    echo "    ok: it compiles -- the aliases no longer escape"
+  else
+    echo "error: a pod declaring its own UIKit names cannot compile against" >&2
+    echo "       this fork. The shim is leaking again; see" >&2
+    echo "       macos/PLAN-drop-uikit-aliases.md." >&2
+    exit 1
+  fi
+else
+  echo "==> Skipping the third-party pod check (no Pods installed)"
+fi

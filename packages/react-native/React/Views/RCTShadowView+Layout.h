@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTShadowView.h>
@@ -13,9 +14,9 @@
 
 #pragma mark - Computed Layout-Inferred Metrics
 
-@property (nonatomic, readonly) UIEdgeInsets paddingAsInsets;
-@property (nonatomic, readonly) UIEdgeInsets borderAsInsets;
-@property (nonatomic, readonly) UIEdgeInsets compoundInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets paddingAsInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets borderAsInsets;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets compoundInsets;
 @property (nonatomic, readonly) CGSize availableSize;
 @property (nonatomic, readonly) CGRect contentFrame;
 

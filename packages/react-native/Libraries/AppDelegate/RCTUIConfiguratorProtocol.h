@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTConvert.h>
 #import <UIKit/UIKit.h>
 
@@ -46,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @return: an instance of `UIViewController`.
  */
-- (UIViewController *)createRootViewController;
+- (RCTPlatformViewController *)createRootViewController;
 
 /**
  * It assigns the rootView to the rootViewController
@@ -54,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If you are not using a simple UIViewController, then there could be other methods to use to setup the rootView.
  * For example: UISplitViewController requires `setViewController(_:for:)`
  */
-- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController;
+- (void)setRootView:(RCTPlatformView *)rootView toRootViewController:(RCTPlatformViewController *)rootViewController;
 @end
 
 NS_ASSUME_NONNULL_END

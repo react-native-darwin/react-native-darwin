@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
@@ -23,9 +24,9 @@ typedef NS_ENUM(NSInteger, RCTDisplayType) {
 struct RCTLayoutMetrics {
   CGRect frame;
   CGRect contentFrame;
-  UIEdgeInsets borderWidth;
+  RCTPlatformEdgeInsets borderWidth;
   RCTDisplayType displayType;
-  UIUserInterfaceLayoutDirection layoutDirection;
+  RCTPlatformUserInterfaceLayoutDirection layoutDirection;
 };
 typedef struct CG_BOXABLE RCTLayoutMetrics RCTLayoutMetrics;
 
@@ -60,8 +61,8 @@ RCT_EXTERN CGFloat RCTCoreGraphicsFloatFromYogaValue(YGValue value, CGFloat base
 /**
  * Converts `YGDirection` to `UIUserInterfaceLayoutDirection` and vise versa.
  */
-RCT_EXTERN YGDirection RCTYogaLayoutDirectionFromUIKitLayoutDirection(UIUserInterfaceLayoutDirection direction);
-RCT_EXTERN UIUserInterfaceLayoutDirection RCTUIKitLayoutDirectionFromYogaLayoutDirection(YGDirection direction);
+RCT_EXTERN YGDirection RCTYogaLayoutDirectionFromUIKitLayoutDirection(RCTPlatformUserInterfaceLayoutDirection direction);
+RCT_EXTERN RCTPlatformUserInterfaceLayoutDirection RCTUIKitLayoutDirectionFromYogaLayoutDirection(YGDirection direction);
 
 /**
  * Converts `YGDisplay` to `RCTDisplayType` and vise versa.

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBorderCurve.h>
@@ -13,7 +14,7 @@
 #import <React/RCTCursor.h>
 #import <React/RCTPointerEvents.h>
 
-extern const UIAccessibilityTraits SwitchAccessibilityTrait;
+extern const RCTPlatformAccessibilityTraits SwitchAccessibilityTrait;
 
 @protocol RCTAutoInsetsProtocol;
 
@@ -32,8 +33,8 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
  */
 @property (nonatomic, assign) RCTPointerEvents pointerEvents;
 
-+ (void)autoAdjustInsetsForView:(UIView<RCTAutoInsetsProtocol> *)parentView
-                 withScrollView:(UIScrollView *)scrollView
++ (void)autoAdjustInsetsForView:(RCTPlatformView<RCTAutoInsetsProtocol> *)parentView
+                 withScrollView:(RCTPlatformScrollView *)scrollView
                    updateOffset:(BOOL)updateOffset;
 
 /**
@@ -41,7 +42,7 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
  * This is inherited from UIView+React, but we override it here
  * to improve performance and make subclassing/overriding possible/easier.
  */
-@property (nonatomic, assign) UIUserInterfaceLayoutDirection reactLayoutDirection;
+@property (nonatomic, assign) RCTPlatformUserInterfaceLayoutDirection reactLayoutDirection;
 
 /**
  * This is an optimization used to improve performance
@@ -80,16 +81,16 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 /**
  * Border colors (actually retained).
  */
-@property (nonatomic, strong) UIColor *borderTopColor;
-@property (nonatomic, strong) UIColor *borderRightColor;
-@property (nonatomic, strong) UIColor *borderBottomColor;
-@property (nonatomic, strong) UIColor *borderLeftColor;
-@property (nonatomic, strong) UIColor *borderStartColor;
-@property (nonatomic, strong) UIColor *borderEndColor;
-@property (nonatomic, strong) UIColor *borderColor;
-@property (nonatomic, strong) UIColor *borderBlockColor;
-@property (nonatomic, strong) UIColor *borderBlockEndColor;
-@property (nonatomic, strong) UIColor *borderBlockStartColor;
+@property (nonatomic, strong) RCTUIColor *borderTopColor;
+@property (nonatomic, strong) RCTUIColor *borderRightColor;
+@property (nonatomic, strong) RCTUIColor *borderBottomColor;
+@property (nonatomic, strong) RCTUIColor *borderLeftColor;
+@property (nonatomic, strong) RCTUIColor *borderStartColor;
+@property (nonatomic, strong) RCTUIColor *borderEndColor;
+@property (nonatomic, strong) RCTUIColor *borderColor;
+@property (nonatomic, strong) RCTUIColor *borderBlockColor;
+@property (nonatomic, strong) RCTUIColor *borderBlockEndColor;
+@property (nonatomic, strong) RCTUIColor *borderBlockStartColor;
 
 /**
  * Border widths.
@@ -119,7 +120,7 @@ extern const UIAccessibilityTraits SwitchAccessibilityTrait;
 /**
  *  Insets used when hit testing inside this view.
  */
-@property (nonatomic, assign) UIEdgeInsets hitTestEdgeInsets;
+@property (nonatomic, assign) RCTPlatformEdgeInsets hitTestEdgeInsets;
 
 @property (nonatomic, assign) RCTCursor cursor;
 

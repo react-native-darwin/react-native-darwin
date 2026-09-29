@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTConvert.h>
@@ -13,8 +14,8 @@
 #if !TARGET_OS_TV
 @interface RCTConvert (UIStatusBar)
 
-+ (UIStatusBarStyle)UIStatusBarStyle:(id)json;
-+ (UIStatusBarAnimation)UIStatusBarAnimation:(id)json;
++ (RCTPlatformStatusBarStyle)UIStatusBarStyle:(id)json;
++ (RCTPlatformStatusBarAnimation)UIStatusBarAnimation:(id)json;
 
 @end
 #endif

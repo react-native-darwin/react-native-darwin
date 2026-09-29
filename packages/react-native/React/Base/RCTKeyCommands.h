@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @interface RCTKeyCommands : NSObject
@@ -15,17 +16,17 @@
  * Register a keyboard command.
  */
 - (void)registerKeyCommandWithInput:(NSString *)input
-                      modifierFlags:(UIKeyModifierFlags)flags
-                             action:(void (^)(UIKeyCommand *command))block;
+                      modifierFlags:(RCTPlatformKeyModifierFlags)flags
+                             action:(void (^)(RCTPlatformKeyCommand *command))block;
 
 /**
  * Unregister a keyboard command.
  */
-- (void)unregisterKeyCommandWithInput:(NSString *)input modifierFlags:(UIKeyModifierFlags)flags;
+- (void)unregisterKeyCommandWithInput:(NSString *)input modifierFlags:(RCTPlatformKeyModifierFlags)flags;
 
 /**
  * Check if a command is registered.
  */
-- (BOOL)isKeyCommandRegisteredForInput:(NSString *)input modifierFlags:(UIKeyModifierFlags)flags;
+- (BOOL)isKeyCommandRegisteredForInput:(NSString *)input modifierFlags:(RCTPlatformKeyModifierFlags)flags;
 
 @end

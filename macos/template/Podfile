@@ -26,6 +26,11 @@ post_install do |installer|
   # This wires the UIKit compatibility layer in for you -- the header search
   # path, the -include prelude, and taking two frameworks that do not exist on
   # macOS off the link line. Nothing else is needed here.
+  #
+  # It deliberately does not give third-party pods the shim: those get the
+  # public <UIKit/UIKit.h>, which satisfies the import and declares nothing, so
+  # a library that declares `UIView` itself still compiles. Re-adding the
+  # prelude for every target here would undo that.
   react_native_post_install(installer, '__RN_PATH__')
 
   installer.pods_project.targets.each do |target|
