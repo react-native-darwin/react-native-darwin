@@ -32,21 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
  *               it drives animation at roughly the right cadence, which is what
  *               React Native falls back to on iOS when no link is available.
  */
-@interface RCTPlatformDisplayLink : NSObject
-
-+ (instancetype)displayLinkWithTarget:(id)target selector:(SEL)selector;
-
-- (void)addToRunLoop:(NSRunLoop *)runloop forMode:(NSRunLoopMode)mode;
-- (void)removeFromRunLoop:(NSRunLoop *)runloop forMode:(NSRunLoopMode)mode;
-- (void)invalidate;
-
-@property (nonatomic, getter=isPaused) BOOL paused;
-@property (nonatomic, readonly) CFTimeInterval timestamp;
-@property (nonatomic, readonly) CFTimeInterval duration;
-@property (nonatomic, readonly) CFTimeInterval targetTimestamp;
-@property (nonatomic, assign) NSInteger preferredFramesPerSecond;
-
-@end
+// RCTPlatformDisplayLink is declared in RCTPlatformTypes.h, the public half:
+// third-party code imports <React/RCTPlatformDisplayLink.h> and expects the
+// type, the way it does against react-native-macos. The implementation stays
+// here.
 
 NS_ASSUME_NONNULL_END
 
