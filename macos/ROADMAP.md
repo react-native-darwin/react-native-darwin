@@ -156,6 +156,29 @@ obvious but is exact:
 - A `typedef`, a `#define`, an inline function and a category can all be
   declared twice as long as they match. **Public**, and every pod gets them.
 
+### The half that was missing
+
+Removing the aliases was only half the contract, and the first real Expo build
+found the other half. `expo-modules-core` declares seven names itself — `UIView`,
+`UIColor`, `UIImage`, `UIWindow`, `UIResponder`, `UIImageView`,
+`UIHostingController` — and imports `<React/RCTUIKit.h>` for everything else it
+uses. react-native-macos declares 44 more there, including `UIViewController`.
+This fork declared none, so `EXReactDelegateWrapper.h` failed on
+`- (UIViewController *)createRootViewController` with `expected a type`.
+
+So the partition is not "React Native declares nothing". It is that the
+ecosystem already agreed a split, and the two sets are disjoint: libraries own
+the seven, React Native owns the other 44. `React/RCTUIKit.h` now declares that
+44 — suppressed inside this fork's own pods, which already have the full shim —
+and `check-budget.sh` rule 8b fails the build if any of the seven is ever
+claimed there.
+
+The acceptance test was rewritten at the same time, because it had been giving
+false confidence: it declared `UIFont`, `UIViewController` and `UIBezierPath`
+itself, which no real library does, so it passed while the real library did
+not build. A stand-in more self-sufficient than the thing it stands in for
+proves nothing.
+
 Installed headers use the neutral vocabulary — `RCTPlatformView`, `RCTUIColor`
 — which is what react-native-macos uses too, so third-party code written
 against that fork compiles here unchanged. `check-budget.sh` rule 8 fails the

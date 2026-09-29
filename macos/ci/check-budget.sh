@@ -51,7 +51,7 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # work-in-progress commit has to be noticed and folded in rather than
 # accumulating. Raising it should mean a genuinely new topic; the diff budgets
 # above are the real measure of fork size.
-MAX_COMMITS=13
+MAX_COMMITS=14
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -352,9 +352,17 @@ fi
 #
 # See macos/PLAN-drop-uikit-aliases.md.
 
+# React/RCTUIKit.h is the one exception, and it is a deliberate one. It exists
+# to give code written against react-native-macos the names that fork declares,
+# because a library that declares its own UIView still fails on the first
+# `UIViewController *` in its headers if nothing provides it -- which is exactly
+# how expo-modules-core failed here. The set it may declare is checked below:
+# it must stay disjoint from the names libraries declare for themselves, which
+# is the property that keeps the two from colliding.
 leaking=$(git ls-files -- '*.h' \
   ':(exclude)macos/UIKitCompat/UIKit/*' \
   ':(exclude)macos/tests/*' \
+  ':(exclude)packages/react-native/React/Base/RCTUIKit.h' \
   | python3 -c '
 import re, sys
 
@@ -379,6 +387,26 @@ for path in sys.stdin.read().split():
     if names:
         print(path + ": " + ", ".join(names))
 ')
+
+# --- 8b. RCTUIKit.h must not claim a name libraries declare themselves --------
+#
+# The exception above is only safe while the two sets stay apart. These seven
+# are what expo-modules-core declares in its own Platform.h, and reanimated,
+# safe-area-context and screens declare much the same. Claiming one of them
+# here is the original bug: two @compatibility_alias declarations of the same
+# name are a hard error even when both name the same class.
+
+claimed=$(sed -n 's/^[[:space:]]*@compatibility_alias[[:space:]]\{1,\}\(UI[A-Za-z][A-Za-z0-9_]*\).*/\1/p;s/^[[:space:]]*#define[[:space:]]\{1,\}\(UI[A-Za-z][A-Za-z0-9_]*\)[[:space:]].*/\1/p' \
+  packages/react-native/React/Base/RCTUIKit.h 2>/dev/null \
+  | grep -xE 'UIView|UIColor|UIImage|UIWindow|UIResponder|UIImageView|UIHostingController' || true)
+
+if [ -z "$claimed" ]; then
+  pass "RCTUIKit.h claims no name a library declares for itself"
+else
+  bad "RCTUIKit.h claims names that libraries declare themselves:"
+  echo "$claimed" | sort -u | sed 's/^/    /'
+  note "A library declaring the same name cannot then compile. Leave these to it."
+fi
 
 if [ -z "$leaking" ]; then
   pass "no header outside the private shim declares a UIKit name"

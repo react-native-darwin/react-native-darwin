@@ -23,16 +23,21 @@
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 
+// Exactly what expo-modules-core's Platform.h declares, and no more. That
+// "no more" is the point: an earlier version of this test declared UIFont,
+// UIViewController and UIBezierPath too, which no real library does -- they
+// expect React Native to provide them -- and the test passed while
+// expo-modules-core itself failed to build. A stand-in that is more
+// self-sufficient than the real thing proves nothing.
 @compatibility_alias UIView NSView;
 @compatibility_alias UIResponder NSResponder;
 @compatibility_alias UIColor NSColor;
-@compatibility_alias UIImage NSImage;
-@compatibility_alias UIViewController NSViewController;
-@compatibility_alias UIApplication NSApplication;
 @compatibility_alias UIWindow NSWindow;
-@compatibility_alias UIFont NSFont;
-@compatibility_alias UIScreen NSScreen;
-@compatibility_alias UIBezierPath NSBezierPath;
+@compatibility_alias UIImage NSImage;
+@compatibility_alias UIImageView NSImageView;
+#ifndef UIApplication
+@compatibility_alias UIApplication NSApplication;
+#endif
 @protocol UIApplicationDelegate <NSApplicationDelegate> @end
 @protocol UISceneDelegate <NSWindowDelegate> @end
 #endif
@@ -52,6 +57,12 @@
 @property (nonatomic, strong) UIView *ownView;         // its own alias
 @property (nonatomic, strong) RCTPlatformView *rnView; // React Native's name
 @property (nonatomic, strong) RCTUIView *concrete;     // react-native-macos's name
+// Names the library does *not* declare, and expects React Native to provide.
+// This is the half the earlier test was missing: expo-modules-core's
+// EXReactDelegateWrapper.h fails on exactly this line without them.
+- (UIViewController *)createRootViewController;
+@property (nonatomic, strong) UIFont *font;
 @end
 @implementation ThirdPartyProbe
+- (UIViewController *)createRootViewController { return nil; }
 @end
