@@ -37,6 +37,25 @@
   return _alertWindow;
 }
 
+#if TARGET_OS_OSX // [macOS]
+- (void)show:(__unused BOOL)animated completion:(void (^)(void))completion
+{
+  // The compatibility layer turns this controller into a real NSAlert, which
+  // is run modally on a window rather than presented inside one. The iOS path
+  // below builds a throwaway UIWindow to present into; doing that on AppKit
+  // puts up an empty window and no alert. Hand the app's own window over
+  // instead, so the alert comes down as a sheet on it.
+  // RCTKeyWindow() is nil whenever another application holds focus, and a nil
+  // window makes the alert run app-modal instead of coming down as a sheet.
+  // Fall back to the app's own window so it always has one to attach to.
+  NSWindow *window = RCTKeyWindow() ?: NSApp.mainWindow ?: NSApp.windows.firstObject;
+  [self presentFromWindow:window];
+  if (completion) {
+    completion();
+  }
+}
+#else // [macOS]
+
 - (void)show:(BOOL)animated completion:(void (^)(void))completion
 {
   UIUserInterfaceStyle style = self.overrideUserInterfaceStyle;
@@ -50,6 +69,8 @@
   [self.alertWindow makeKeyAndVisible];
   [self.alertWindow.rootViewController presentViewController:self animated:animated completion:completion];
 }
+
+#endif // [macOS]
 
 - (void)hide
 {

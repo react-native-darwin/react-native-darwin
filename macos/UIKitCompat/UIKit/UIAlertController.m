@@ -75,7 +75,11 @@
                                  message:(NSString *)message
                           preferredStyle:(UIAlertControllerStyle)preferredStyle
 {
-  UIAlertController *controller = [[UIAlertController alloc] initWithNibName:nil bundle:nil];
+  // [self alloc], not [UIAlertController alloc]: React Native subclasses this
+  // (RCTAlertController) and calls the factory on the subclass, so hardcoding
+  // the class here hands back the wrong one and the subclass's own methods are
+  // unrecognized selectors at runtime.
+  UIAlertController *controller = [[self alloc] initWithNibName:nil bundle:nil];
   controller.title = title;
   controller.message = message;
   controller.preferredStyle = preferredStyle;
@@ -126,6 +130,7 @@
   NSAlert *alert = [NSAlert new];
   alert.messageText = self.title ?: @"";
   alert.informativeText = self.message ?: @"";
+  alert.alertStyle = _uikitCompat_critical ? NSAlertStyleCritical : NSAlertStyleWarning;
 
   // NSAlert orders buttons right to left and treats the first as default,
   // which is the opposite of how UIKit lists a cancel action. Put cancel last

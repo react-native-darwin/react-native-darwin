@@ -23,6 +23,8 @@ export type Args = {
   preferredButtonKey?: string,
   keyboardType?: string,
   userInterfaceStyle?: string,
+  // [macOS] NSAlert's critical style, which has no UIKit equivalent.
+  critical?: boolean,
 };
 
 export interface Spec extends TurboModule {
