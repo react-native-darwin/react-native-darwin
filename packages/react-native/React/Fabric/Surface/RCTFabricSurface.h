@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTSurfaceProtocol.h>
 #import <react/renderer/scheduler/SurfaceHandler.h>
 
@@ -47,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)resetWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter;
 
-#pragma mark - Dealing with UIView representation, the Main thread only access
+#pragma mark - Dealing with RCTPlatformView representation, the Main thread only access
 
 /**
  * Creates (if needed) and returns `UIView` instance which represents the Surface.

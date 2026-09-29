@@ -129,6 +129,26 @@ module Helpers
                 File.join(__dir__, '..', '..', '..', '..', 'macos', 'UIKitCompat'),
             ].find { |path| File.directory?(path) }
         end
+
+        # The public half of the compatibility layer: RCTPlatformTypes.h, the
+        # neutral vocabulary every installed header is written in, and a
+        # <UIKit/UIKit.h> that satisfies React Native's own import and declares
+        # nothing. Both live in one directory so that a single header search
+        # path serves a pod that depends on nothing of ours -- which is the
+        # normal case. Only this fork's own pods get the real shim alongside it.
+        # See macos/PLAN-drop-uikit-aliases.md.
+        def self.public_uikit_dir
+            root = uikit_compat_dir
+            return nil if root.nil?
+            path = File.join(root, 'Public')
+            return File.directory?(path) ? path : nil
+        end
+
+        # The root of this fork's own package, used to tell our pods from
+        # everybody else's.
+        def self.fork_package_root
+            return File.expand_path(File.join(__dir__, '..', '..'))
+        end
         # macOS]
 
         def self.min_xcode_version_supported

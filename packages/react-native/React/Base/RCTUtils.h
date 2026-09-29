@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -87,19 +88,19 @@ RCT_EXTERN BOOL RCTRunningInTestEnvironment(void);
 RCT_EXTERN BOOL RCTRunningInAppExtension(void);
 
 // Returns the shared UIApplication instance, or nil if running in an App Extension
-RCT_EXTERN UIApplication *__nullable RCTSharedApplication(void);
+RCT_EXTERN RCTPlatformApplication *__nullable RCTSharedApplication(void);
 
 // Returns the current main window, useful if you need to access the root view
 // or view controller
-RCT_EXTERN UIWindow *__nullable RCTKeyWindow(void);
+RCT_EXTERN RCTPlatformWindow *__nullable RCTKeyWindow(void);
 
 // Returns the presented view controller, useful if you need
 // e.g. to present a modal view controller or alert over it
-RCT_EXTERN UIViewController *__nullable RCTPresentedViewController(void);
+RCT_EXTERN RCTPlatformViewController *__nullable RCTPresentedViewController(void);
 
 // Retrieve current window UIStatusBarManager
 #if !TARGET_OS_TV
-RCT_EXTERN UIStatusBarManager *__nullable RCTUIStatusBarManager(void) API_AVAILABLE(ios(13));
+RCT_EXTERN RCTPlatformStatusBarManager *__nullable RCTUIStatusBarManager(void) API_AVAILABLE(ios(13));
 #endif
 
 // Does this device support force touch (aka 3D Touch)?
@@ -157,12 +158,12 @@ RCT_EXTERN BOOL RCTIsLocalAssetURL(NSURL *__nullable imageURL);
 
 // Returns an UIImage for a local image asset. Returns nil if the URL
 // does not correspond to a local asset.
-RCT_EXTERN UIImage *__nullable RCTImageFromLocalAssetURL(NSURL *imageURL);
+RCT_EXTERN RCTPlatformImage *__nullable RCTImageFromLocalAssetURL(NSURL *imageURL);
 
 // Only used in case when RCTImageFromLocalAssetURL fails to get an image
 // This method basically checks for the image in the bundle location, instead
 // of the CodePush location
-RCT_EXTERN UIImage *__nullable RCTImageFromLocalBundleAssetURL(NSURL *imageURL);
+RCT_EXTERN RCTPlatformImage *__nullable RCTImageFromLocalBundleAssetURL(NSURL *imageURL);
 
 // Creates a new, unique temporary file path with the specified extension
 RCT_EXTERN NSString *__nullable RCTTempFilePath(NSString *__nullable extension, NSError **error);

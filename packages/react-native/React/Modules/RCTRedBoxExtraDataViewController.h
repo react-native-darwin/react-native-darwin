@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @protocol RCTRedBoxExtraDataActionDelegate <NSObject>
 - (void)reload;
 @end
 
-@interface RCTRedBoxExtraDataViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
+@interface RCTRedBoxExtraDataViewController : RCTPlatformViewController <RCTPlatformTableViewDelegate, RCTPlatformTableViewDataSource>
 
 @property (nonatomic, weak) id<RCTRedBoxExtraDataActionDelegate> actionDelegate;
 

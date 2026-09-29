@@ -5,16 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @protocol RCTFabricModalHostViewControllerDelegate <NSObject>
 - (void)boundsDidChange:(CGRect)newBounds;
 @end
 
-@interface RCTFabricModalHostViewController : UIViewController
+@interface RCTFabricModalHostViewController : RCTPlatformViewController
 
 @property (nonatomic, weak) id<RCTFabricModalHostViewControllerDelegate> delegate;
 
-@property (nonatomic, assign) UIInterfaceOrientationMask supportedInterfaceOrientations;
+@property (nonatomic, assign) RCTPlatformInterfaceOrientationMask supportedInterfaceOrientations;
 
 @end

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTDefines.h>
 
 #import "RCTRedBox+Internal.h"
@@ -13,7 +14,7 @@
 
 typedef void (^RCTRedBox2ButtonPressHandler)(void);
 
-@interface RCTRedBox2Controller : UIViewController <RCTRedBox2Controlling, UITableViewDelegate, UITableViewDataSource>
+@interface RCTRedBox2Controller : RCTPlatformViewController <RCTRedBox2Controlling, RCTPlatformTableViewDelegate, RCTPlatformTableViewDataSource>
 
 @property (nonatomic, weak) id<RCTRedBoxControllerActionDelegate> actionDelegate;
 

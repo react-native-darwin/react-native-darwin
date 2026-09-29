@@ -31,43 +31,41 @@
 #if TARGET_OS_OSX
 
 #import <AppKit/AppKit.h>
-#import <UIKit/UIKit.h> // The AppKit-backed shim: UIView, UIColor, UIImage, ...
 
-// Colour and image come from RCTPlatformTypes.h, the half of the compatibility
-// layer that names no UIKit type and is therefore safe on every pod's search
-// path. Declaring them here as well is an error even though both spellings
-// name NSColor. See macos/PLAN-drop-uikit-aliases.md.
+// This header is imported by third-party code, so it must not reach the UIKit
+// shim: that is exactly how the aliases used to escape into everyone else's
+// translation units. Everything below is built from RCTPlatformTypes.h, the
+// half of the compatibility layer that names no UIKit type.
+// See macos/PLAN-drop-uikit-aliases.md.
 #import <RCTPlatformTypes/RCTPlatformTypes.h>
 
-// RCTUIView and RCTPlatformView are declared by the UIKit shim imported above,
-// with the same split react-native-macos uses: RCTPlatformView is NSView, and
-// RCTUIView is the concrete subclass carrying the UIKit method surface. See
-// MACOS-FORK.md section 4.5.
+// RCTUIView and RCTPlatformView come from RCTPlatformTypes.h, with the same
+// split react-native-macos uses: RCTPlatformView is NSView, and RCTUIView is
+// the concrete subclass carrying the UIKit method surface. See MACOS-FORK.md
+// section 4.5.
 
-// The rest of the RCTUI* / RCTPlatform* vocabulary. Each one already exists in
-// the shim under its UIKit name, so these are pure renames -- which is the
-// whole point: react-native-macos had to invent the names because it has no
-// UIKit to borrow them from.
-@compatibility_alias RCTUIScrollView UIScrollView;
-@compatibility_alias RCTUISlider UISlider;
-@compatibility_alias RCTUILabel UILabel;
-@compatibility_alias RCTUISwitch UISwitch;
-@compatibility_alias RCTUIActivityIndicatorView UIActivityIndicatorView;
-@compatibility_alias RCTUITouch UITouch;
-@compatibility_alias RCTUIImageView UIImageView;
-@compatibility_alias RCTUIPanGestureRecognizer UIPanGestureRecognizer;
-@compatibility_alias RCTUIGraphicsImageRenderer UIGraphicsImageRenderer;
-@compatibility_alias RCTUIGraphicsImageRendererFormat UIGraphicsImageRendererFormat;
-@compatibility_alias RCTUIGraphicsImageRendererContext UIGraphicsImageRendererContext;
-@compatibility_alias RCTUIApplication UIApplication;
-// RCTPlatformWindow and RCTPlatformViewController also come from
-// RCTPlatformTypes.h.
-@compatibility_alias RCTPlatformSwitch UISwitch;
+// The rest of the RCTUI* vocabulary, renamed from the neutral names.
+@compatibility_alias RCTUIScrollView RCTPlatformScrollView;
+@compatibility_alias RCTUISlider RCTPlatformSlider;
+@compatibility_alias RCTUILabel RCTPlatformLabel;
+@compatibility_alias RCTUISwitch RCTPlatformSwitch;
+@compatibility_alias RCTUIActivityIndicatorView RCTPlatformActivityIndicatorView;
+@compatibility_alias RCTUITouch RCTPlatformTouch;
+@compatibility_alias RCTUIImageView RCTPlatformImageView;
+@compatibility_alias RCTUIPanGestureRecognizer RCTPlatformPanGestureRecognizer;
+@compatibility_alias RCTUIGraphicsImageRenderer RCTPlatformGraphicsImageRenderer;
+@compatibility_alias RCTUIGraphicsImageRendererFormat RCTPlatformGraphicsImageRendererFormat;
+@compatibility_alias RCTUIGraphicsImageRendererContext RCTPlatformGraphicsImageRendererContext;
+@compatibility_alias RCTUIApplication RCTPlatformApplication;
+// The whole RCTPlatform* vocabulary -- RCTPlatformSwitch, RCTPlatformWindow,
+// RCTPlatformViewController and the rest -- comes from RCTPlatformTypes.h,
+// imported above. Declaring any of it a second time is a hard error even when
+// both declarations name the same class, so this header must not repeat it.
 
 // Protocols and non-class names cannot use @compatibility_alias.
-#define RCTUIScrollViewDelegate UIScrollViewDelegate
-typedef UIAccessibilityTraits RCTUIAccessibilityTraits;
-typedef void (^RCTUIGraphicsImageDrawingActions)(UIGraphicsImageRendererContext *rendererContext);
+#define RCTUIScrollViewDelegate RCTPlatformScrollViewDelegate
+typedef RCTPlatformAccessibilityTraits RCTUIAccessibilityTraits;
+typedef void (^RCTUIGraphicsImageDrawingActions)(RCTPlatformGraphicsImageRendererContext *_Nonnull rendererContext);
 
 #import <React/RCTConvert.h>
 
@@ -91,12 +89,12 @@ typedef void (^RCTUIGraphicsImageDrawingActions)(UIGraphicsImageRendererContext 
 #else
 
 #import <UIKit/UIKit.h>
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 
-@compatibility_alias RCTUIColor UIColor;
-@compatibility_alias RCTPlatformColor UIColor;
-@compatibility_alias RCTUIImage UIImage;
-@compatibility_alias RCTPlatformImage UIImage;
-// RCTUIView and RCTPlatformView come from the force-included prelude here.
+// RCTUIColor, RCTPlatformColor, RCTUIImage and RCTPlatformImage come from
+// RCTPlatformTypes.h, which is where the whole vocabulary is declared on both
+// platforms. RCTUIView and RCTPlatformView come from the force-included
+// prelude here.
 
 @compatibility_alias RCTUIScrollView UIScrollView;
 @compatibility_alias RCTUISlider UISlider;
@@ -109,9 +107,10 @@ typedef void (^RCTUIGraphicsImageDrawingActions)(UIGraphicsImageRendererContext 
 @compatibility_alias RCTUIGraphicsImageRenderer UIGraphicsImageRenderer;
 @compatibility_alias RCTUIGraphicsImageRendererFormat UIGraphicsImageRendererFormat;
 @compatibility_alias RCTUIApplication UIApplication;
-// RCTPlatformWindow and RCTPlatformViewController also come from
-// RCTPlatformTypes.h.
-@compatibility_alias RCTPlatformSwitch UISwitch;
+// The whole RCTPlatform* vocabulary -- RCTPlatformSwitch, RCTPlatformWindow,
+// RCTPlatformViewController and the rest -- comes from RCTPlatformTypes.h,
+// imported above. Declaring any of it a second time is a hard error even when
+// both declarations name the same class, so this header must not repeat it.
 
 #define RCTUIScrollViewDelegate UIScrollViewDelegate
 typedef UIAccessibilityTraits RCTUIAccessibilityTraits;

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridge.h>
@@ -13,13 +14,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^RCTImageLoaderProgressBlock)(int64_t progress, int64_t total);
-typedef void (^RCTImageLoaderPartialLoadBlock)(UIImage *image);
-typedef void (^RCTImageLoaderCompletionBlock)(NSError *_Nullable error, UIImage *_Nullable image);
+typedef void (^RCTImageLoaderPartialLoadBlock)(RCTPlatformImage *image);
+typedef void (^RCTImageLoaderCompletionBlock)(NSError *_Nullable error, RCTPlatformImage *_Nullable image);
 // Metadata is passed as a id in an additional parameter because there are forks of RN without this parameter,
 // and the complexity of RCTImageLoader would make using protocols here difficult to typecheck.
 typedef void (^RCTImageLoaderCompletionBlockWithMetadata)(
     NSError *_Nullable error,
-    UIImage *_Nullable image,
+    RCTPlatformImage *_Nullable image,
     id _Nullable metadata);
 typedef dispatch_block_t RCTImageLoaderCancellationBlock;
 

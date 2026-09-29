@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIScrollView.h>
+#import <UIKit/UIKit.h> // [macOS] an installed header must not name a shim header

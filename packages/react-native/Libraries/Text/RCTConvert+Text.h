@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTConvert.h>
 
 #import "RCTTextTransform.h"
@@ -13,10 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface RCTConvert (Text)
 
-+ (UITextAutocorrectionType)UITextAutocorrectionType:(nullable id)json;
-+ (UITextSpellCheckingType)UITextSpellCheckingType:(nullable id)json;
++ (RCTPlatformTextAutocorrectionType)UITextAutocorrectionType:(nullable id)json;
++ (RCTPlatformTextSpellCheckingType)UITextSpellCheckingType:(nullable id)json;
 + (RCTTextTransform)RCTTextTransform:(nullable id)json;
-+ (UITextSmartInsertDeleteType)UITextSmartInsertDeleteType:(nullable id)json;
++ (RCTPlatformTextSmartInsertDeleteType)UITextSmartInsertDeleteType:(nullable id)json;
 
 @end
 

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTSurfaceStage.h>
 #import <UIKit/UIKit.h>
 
@@ -37,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize viewportOffset:(CGPoint)viewportOffset;
 
-#pragma mark - Dealing with UIView representation, the Main thread only access
+#pragma mark - Dealing with RCTPlatformView representation, the Main thread only access
 
 /**
  * Creates (if needed) and returns `UIView` instance which represents the Surface.

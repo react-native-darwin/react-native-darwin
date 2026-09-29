@@ -245,17 +245,9 @@ typedef NS_ENUM(NSInteger, UIBarButtonSystemItem) {
 // build. Declared so the file parses rather than needing an upstream guard.
 @class RCTUIKitCompatTableView;
 
-@protocol UITableViewDataSource <NSObject>
-@optional
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
-@end
+#define UITableViewDataSource RCTPlatformTableViewDataSource
 
-@protocol UITableViewDelegate <NSObject>
-@optional
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(id)indexPath;
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(id)indexPath;
-@end
+#define UITableViewDelegate RCTPlatformTableViewDelegate
 
 typedef NS_ENUM(NSInteger, UITableViewCellStyle) {
   UITableViewCellStyleDefault = 0,

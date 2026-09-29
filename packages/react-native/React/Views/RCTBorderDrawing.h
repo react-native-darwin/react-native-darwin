@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBorderStyle.h>
@@ -29,21 +30,21 @@ typedef struct {
 } RCTCornerInsets;
 
 typedef struct {
-  UIColor *top;
-  UIColor *left;
-  UIColor *bottom;
-  UIColor *right;
+  RCTUIColor *top;
+  RCTUIColor *left;
+  RCTUIColor *bottom;
+  RCTUIColor *right;
 } RCTBorderColors;
 
 /**
  * Determine the largest border inset value.
  */
-RCT_EXTERN CGFloat RCTMaxBorderInset(UIEdgeInsets borderInsets);
+RCT_EXTERN CGFloat RCTMaxBorderInset(RCTPlatformEdgeInsets borderInsets);
 
 /**
  * Determine if the border widths, colors and radii are all equal.
  */
-RCT_EXTERN BOOL RCTBorderInsetsAreEqual(UIEdgeInsets borderInsets);
+RCT_EXTERN BOOL RCTBorderInsetsAreEqual(RCTPlatformEdgeInsets borderInsets);
 RCT_EXTERN BOOL RCTCornerRadiiAreEqualAndSymmetrical(RCTCornerRadii cornerRadii);
 RCT_EXTERN BOOL RCTBorderColorsAreEqual(RCTBorderColors borderColors);
 
@@ -51,7 +52,7 @@ RCT_EXTERN BOOL RCTBorderColorsAreEqual(RCTBorderColors borderColors);
  * Convert RCTCornerRadii to RCTCornerInsets by applying border insets.
  * Effectively, returns radius - inset, with a lower bound of 0.0.
  */
-RCT_EXTERN RCTCornerInsets RCTGetCornerInsets(RCTCornerRadii cornerRadii, UIEdgeInsets borderInsets);
+RCT_EXTERN RCTCornerInsets RCTGetCornerInsets(RCTCornerRadii cornerRadii, RCTPlatformEdgeInsets borderInsets);
 
 /**
  * Create a CGPath representing a rounded rectangle with the specified bounds
@@ -69,11 +70,11 @@ RCT_EXTERN CGPathRef RCTPathCreateWithRoundedRect(
  *
  * `borderInsets` defines the border widths for each edge.
  */
-RCT_EXTERN UIImage *RCTGetBorderImage(
+RCT_EXTERN RCTPlatformImage *RCTGetBorderImage(
     RCTBorderStyle borderStyle,
     CGSize viewSize,
     RCTCornerRadii cornerRadii,
-    UIEdgeInsets borderInsets,
+    RCTPlatformEdgeInsets borderInsets,
     RCTBorderColors borderColors,
-    UIColor *backgroundColor,
+    RCTUIColor *backgroundColor,
     BOOL drawToEdge);

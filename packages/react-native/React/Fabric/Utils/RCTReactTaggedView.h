@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -16,14 +17,14 @@ NS_ASSUME_NONNULL_BEGIN
  * changed from the one provided at initialization time (i.e. recycled).
  */
 @interface RCTReactTaggedView : NSObject {
-  UIView *_view;
+  RCTPlatformView *_view;
   NSInteger _tag;
 }
 
-+ (RCTReactTaggedView *)wrap:(UIView *)view;
++ (RCTReactTaggedView *)wrap:(RCTPlatformView *)view;
 
-- (instancetype)initWithView:(UIView *)view;
-- (nullable UIView *)view;
+- (instancetype)initWithView:(RCTPlatformView *)view;
+- (nullable RCTPlatformView *)view;
 - (NSInteger)tag;
 
 - (BOOL)isEqual:(id)other;

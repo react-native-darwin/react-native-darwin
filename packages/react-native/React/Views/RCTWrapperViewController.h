@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @class RCTWrapperViewController;
 
-@interface RCTWrapperViewController : UIViewController
+@interface RCTWrapperViewController : RCTPlatformViewController
 
-- (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContentView:(RCTPlatformView *)contentView NS_DESIGNATED_INITIALIZER;
 
 @end

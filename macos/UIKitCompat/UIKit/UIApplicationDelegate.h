@@ -48,21 +48,7 @@ extern UIApplicationLaunchOptionsKey const UIApplicationLaunchOptionsUserActivit
  * subset React Native's RCTAppDelegate actually implements, and inherits
  * NSApplicationDelegate so the object can still be handed to NSApplication.
  */
-@protocol UIApplicationDelegate <NSApplicationDelegate>
-@optional
-@property (nonatomic, strong, nullable) NSWindow *window;
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions;
-- (BOOL)application:(UIApplication *)application
-            openURL:(NSURL *)url
-            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options;
-- (BOOL)application:(UIApplication *)application
-    continueUserActivity:(NSUserActivity *)userActivity
-      restorationHandler:(void (^)(NSArray *restorableObjects))restorationHandler;
-- (void)applicationDidBecomeActive:(UIApplication *)application;
-- (void)applicationWillResignActive:(UIApplication *)application;
-- (void)applicationWillTerminate:(UIApplication *)application;
-@end
+#define UIApplicationDelegate RCTPlatformApplicationDelegate
 
 typedef NS_ENUM(NSInteger, UIDeviceOrientation) {
   UIDeviceOrientationUnknown = 0,

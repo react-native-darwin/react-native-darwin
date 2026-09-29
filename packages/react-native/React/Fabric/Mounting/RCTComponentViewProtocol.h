@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <react/renderer/componentregistry/ComponentDescriptorProvider.h>
@@ -54,14 +55,14 @@ typedef NS_OPTIONS(NSInteger, RNComponentViewUpdateMask) {
  * component view.
  * Receiver must add `childComponentView` as a subview.
  */
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)mountChildComponentView:(RCTPlatformView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
 
 /*
  * Called for unmounting (detaching) a child component view from `self`
  * component view.
  * Receiver must remove `childComponentView` as a subview.
  */
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)unmountChildComponentView:(RCTPlatformView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
 
 /*
  * Called for updating component's props.

@@ -18,25 +18,39 @@ NS_ASSUME_NONNULL_BEGIN
 // mapping onto NSAccessibility happens at the view layer, not here.
 typedef uint64_t UIAccessibilityTraits;
 
-static const UIAccessibilityTraits UIAccessibilityTraitNone = 0;
-static const UIAccessibilityTraits UIAccessibilityTraitButton = 1 << 0;
-static const UIAccessibilityTraits UIAccessibilityTraitLink = 1 << 1;
-static const UIAccessibilityTraits UIAccessibilityTraitImage = 1 << 2;
-static const UIAccessibilityTraits UIAccessibilityTraitSelected = 1 << 3;
-static const UIAccessibilityTraits UIAccessibilityTraitPlaysSound = 1 << 4;
-static const UIAccessibilityTraits UIAccessibilityTraitKeyboardKey = 1 << 5;
-static const UIAccessibilityTraits UIAccessibilityTraitStaticText = 1 << 6;
-static const UIAccessibilityTraits UIAccessibilityTraitSummaryElement = 1 << 7;
-static const UIAccessibilityTraits UIAccessibilityTraitNotEnabled = 1 << 8;
-static const UIAccessibilityTraits UIAccessibilityTraitUpdatesFrequently = 1 << 9;
-static const UIAccessibilityTraits UIAccessibilityTraitSearchField = 1 << 10;
-static const UIAccessibilityTraits UIAccessibilityTraitStartsMediaSession = 1 << 11;
-static const UIAccessibilityTraits UIAccessibilityTraitAdjustable = 1 << 12;
-static const UIAccessibilityTraits UIAccessibilityTraitAllowsDirectInteraction = 1 << 13;
-static const UIAccessibilityTraits UIAccessibilityTraitCausesPageTurn = 1 << 14;
-static const UIAccessibilityTraits UIAccessibilityTraitHeader = 1 << 16;
-static const UIAccessibilityTraits UIAccessibilityTraitTabBar = 1 << 21;
-static const UIAccessibilityTraits UIAccessibilityTraitSwitch = 0x20000000000001;
+// The values live in RCTPlatformTypes.h; these are the UIKit spellings.
+#define UIAccessibilityTraitNone RCTPlatformAccessibilityTraitNone
+#define UIAccessibilityTraitButton RCTPlatformAccessibilityTraitButton
+#define UIAccessibilityTraitLink RCTPlatformAccessibilityTraitLink
+#define UIAccessibilityTraitImage RCTPlatformAccessibilityTraitImage
+#define UIAccessibilityTraitSelected RCTPlatformAccessibilityTraitSelected
+#define UIAccessibilityTraitPlaysSound RCTPlatformAccessibilityTraitPlaysSound
+#define UIAccessibilityTraitKeyboardKey RCTPlatformAccessibilityTraitKeyboardKey
+#define UIAccessibilityTraitStaticText RCTPlatformAccessibilityTraitStaticText
+#define UIAccessibilityTraitSummaryElement RCTPlatformAccessibilityTraitSummaryElement
+#define UIAccessibilityTraitNotEnabled RCTPlatformAccessibilityTraitNotEnabled
+#define UIAccessibilityTraitUpdatesFrequently RCTPlatformAccessibilityTraitUpdatesFrequently
+#define UIAccessibilityTraitSearchField RCTPlatformAccessibilityTraitSearchField
+#define UIAccessibilityTraitStartsMediaSession RCTPlatformAccessibilityTraitStartsMediaSession
+#define UIAccessibilityTraitAdjustable RCTPlatformAccessibilityTraitAdjustable
+#define UIAccessibilityTraitAllowsDirectInteraction RCTPlatformAccessibilityTraitAllowsDirectInteraction
+#define UIAccessibilityTraitCausesPageTurn RCTPlatformAccessibilityTraitCausesPageTurn
+#define UIAccessibilityTraitHeader RCTPlatformAccessibilityTraitHeader
+#define UIAccessibilityTraitTabBar RCTPlatformAccessibilityTraitTabBar
+#define UIAccessibilityTraitSwitch RCTPlatformAccessibilityTraitSwitch
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 extern NSString *const UIAccessibilityAnnouncementKeyStringValue;
 extern NSString *const UIAccessibilityAnnouncementKeyWasSuccessful;

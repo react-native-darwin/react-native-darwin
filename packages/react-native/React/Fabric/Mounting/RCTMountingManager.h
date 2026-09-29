@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTMountingManagerDelegate.h>
@@ -37,12 +38,12 @@ NS_ASSUME_NONNULL_BEGIN
  * influence the intrinsic size of the view and cannot be measured using UIView/UIKit layout API.
  * Must be called on the main thead.
  */
-- (void)attachSurfaceToView:(UIView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
+- (void)attachSurfaceToView:(RCTPlatformView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
 
 /**
  * Stops designating the view as a rendering viewport of a React Native surface.
  */
-- (void)detachSurfaceFromView:(UIView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
+- (void)detachSurfaceFromView:(RCTPlatformView *)view surfaceId:(facebook::react::SurfaceId)surfaceId;
 
 /**
  * Schedule a mounting transaction to be performed on the main thread.

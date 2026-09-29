@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -49,7 +50,7 @@ typedef NS_OPTIONS(NSInteger, RCTFontVariant) {
 struct RCTFontProperties {
   NSString *family = nil;
   CGFloat size = NAN;
-  UIFontWeight weight = NAN;
+  RCTPlatformFontWeight weight = NAN;
   RCTFontStyle style = RCTFontStyleUndefined;
   RCTFontVariant variant = RCTFontVariantUndefined;
   CGFloat sizeMultiplier = NAN;

@@ -21,7 +21,7 @@
 #include <TargetConditionals.h>
 
 #if TARGET_OS_OSX
-#import <UIKit/UIDisplayLink.h>
+#import <UIKit/UIKit.h> // [macOS] an installed header must not name a shim header
 #else
 #import <QuartzCore/QuartzCore.h>
 #endif

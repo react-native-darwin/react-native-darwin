@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 
 #import <React/RCTConvert.h>
@@ -31,7 +32,7 @@ typedef NS_ENUM(NSInteger, RCTDynamicTypeRamp) {
 @end
 
 /// Generates a `UIFontMetrics` instance representing a particular Dynamic Type ramp.
-UIFontMetrics *_Nonnull RCTUIFontMetricsForDynamicTypeRamp(RCTDynamicTypeRamp dynamicTypeRamp);
+RCTPlatformFontMetrics *_Nonnull RCTUIFontMetricsForDynamicTypeRamp(RCTDynamicTypeRamp dynamicTypeRamp);
 /// The "reference" size for a particular font scale ramp, equal to a text element's size under default text size
 /// settings.
 CGFloat RCTBaseSizeForDynamicTypeRamp(RCTDynamicTypeRamp dynamicTypeRamp);

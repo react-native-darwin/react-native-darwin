@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #include <react/renderer/graphics/RCTPlatformColorUtils.h>
@@ -126,7 +127,7 @@ inline static NSUnderlineStyle RCTNSUnderlineStyleFromTextDecorationStyle(
 }
 
 // TODO: this file has some duplicates method, we can remove it
-inline static UIColor *_Nullable RCTUIColorFromSharedColor(const facebook::react::SharedColor &sharedColor)
+inline static RCTUIColor *_Nullable RCTUIColorFromSharedColor(const facebook::react::SharedColor &sharedColor)
 {
   return RCTPlatformColorFromColor(*sharedColor);
 }

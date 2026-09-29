@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -12,8 +13,8 @@
 /**
  Set the global presented view controller instance override.
  */
-+ (void)setPresentedViewController:(UIViewController *)presentedViewController;
-+ (UIViewController *)presentedViewController;
++ (void)setPresentedViewController:(RCTPlatformViewController *)presentedViewController;
++ (RCTPlatformViewController *)presentedViewController;
 + (BOOL)hasPresentedViewController;
 
 @end

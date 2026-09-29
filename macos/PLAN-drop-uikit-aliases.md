@@ -122,6 +122,24 @@ from AppKit. That is the commit that actually closes the leak.
 and prelude to pods that are not ours. Third-party pods keep building, because
 after phase 2 nothing they import mentions a UIKit type.
 
+**Done**, with one addition the plan did not anticipate. Making the shim
+private is not enough on its own: 138 installed headers still write
+`#import <UIKit/UIKit.h>`, and that import has to resolve or nothing
+downstream compiles. Editing all 138 would have cost more than phase 2 did.
+
+So a *second*, public `<UIKit/UIKit.h>` is vended -- `PublicUIKit/UIKit/UIKit.h`
+-- which imports AppKit and `RCTPlatformTypes.h` and declares nothing at all.
+It satisfies the import for every third-party pod and for the app target, and
+claims no name, so a library is free to declare `UIView` itself exactly as it
+does against react-native-macos.
+
+Two headers of the same name then exist, and which one wins is decided by
+search-path order -- which is not something to leave to chance. The
+force-included prelude therefore imports the shim with quotes rather than
+angle brackets, so it resolves relative to the prelude's own directory and
+always finds the real one. This fork's own pods get the full shim that way;
+everybody else gets the empty one.
+
 ### 4. Re-baseline the checks
 
   - `MAX_UPSTREAM_FILES_MODIFIED` rises by roughly 58. Worth restating plainly
@@ -133,6 +151,18 @@ after phase 2 nothing they import mentions a UIKit type.
     concrete class, and that distinction is what keeps reanimated working.
   - Add a rule: no installed public header matches `\bUI[A-Z]`. That is the
     invariant this whole migration buys, and it should fail a build.
+
+**Done.** The budgets are re-baselined to 200 files and 450 removed lines, with
+the reasoning written into `check-budget.sh`. Rule 5 was rescoped, and rule 8
+now fails the build if any header outside the private shim *declares* a UIKit
+name -- declares, not mentions, so a category on `UIView` and a selector called
+`UIColor:` both stay legal. Rule 4 learned to recognise a pure vocabulary
+rename, because demanding a platform marker on three hundred mechanical hunks
+would be noise that teaches a reader nothing.
+
+The measured cost came in higher than the estimate above: 135 headers renamed,
+not 58. The estimate counted only the headers naming a type in one pod's
+installed set; the real figure is across all of them.
 
 ### 5. Validate against real dependents
 

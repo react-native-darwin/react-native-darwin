@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTFrameUpdate.h>
 
 @class RCTBridge;
 
-@interface RCTTouchHandler : UIGestureRecognizer
+@interface RCTTouchHandler : RCTPlatformGestureRecognizer
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
-- (void)attachToView:(UIView *)view;
-- (void)detachFromView:(UIView *)view;
+- (void)attachToView:(RCTPlatformView *)view;
+- (void)detachFromView:(RCTPlatformView *)view;
 
 - (void)cancel;
 

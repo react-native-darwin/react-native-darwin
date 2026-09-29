@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-RCT_EXTERN UIFont *__nullable RCTGetLegacyDefaultFont(CGFloat fontSize, UIFontWeight fontWeight);
+RCT_EXTERN RCTPlatformFont *__nullable RCTGetLegacyDefaultFont(CGFloat fontSize, RCTPlatformFontWeight fontWeight);
 
 NS_ASSUME_NONNULL_END

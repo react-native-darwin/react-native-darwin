@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -14,13 +15,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Default implementation of RCTComponentViewProtocol.
  */
-@interface UIView (ComponentViewProtocol) <RCTComponentViewProtocol>
+@interface RCTPlatformView (ComponentViewProtocol) <RCTComponentViewProtocol>
 
 + (std::vector<facebook::react::ComponentDescriptorProvider>)supplementalComponentDescriptorProviders;
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)mountChildComponentView:(RCTPlatformView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)unmountChildComponentView:(RCTPlatformView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
 
 - (void)updateProps:(const facebook::react::Props::Shared &)props
            oldProps:(const facebook::react::Props::Shared &)oldProps;
@@ -46,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:(nullable NSSet<NSString *> *)props;
 - (nullable NSSet<NSString *> *)propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN;
 
-- (void)updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(UIView *)clipView;
+- (void)updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(RCTPlatformView *)clipView;
 
 @end
 

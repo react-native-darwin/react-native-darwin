@@ -16,6 +16,7 @@
 
 #pragma once
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <QuartzCore/QuartzCore.h>
@@ -269,32 +270,30 @@ enum : NSUInteger {
 // NSViewLayerContentsRedrawOnSetNeedsDisplay, so ScaleAspectFit and Redraw
 // collapse to the same constant and any switch over the enum stops compiling.
 // The translation to AppKit happens in -setContentMode:.
-typedef NS_ENUM(NSInteger, UIViewContentMode) {
-  UIViewContentModeScaleToFill = 0,
-  UIViewContentModeScaleAspectFit = 1,
-  UIViewContentModeScaleAspectFill = 2,
-  UIViewContentModeRedraw = 3,
-  UIViewContentModeCenter = 4,
-  UIViewContentModeTop = 5,
-  UIViewContentModeBottom = 6,
-  UIViewContentModeLeft = 7,
-  UIViewContentModeRight = 8,
-  UIViewContentModeTopLeft = 9,
-  UIViewContentModeTopRight = 10,
-  UIViewContentModeBottomLeft = 11,
-  UIViewContentModeBottomRight = 12,
-};
+typedef RCTPlatformViewContentMode UIViewContentMode;
+#define UIViewContentModeScaleToFill RCTPlatformViewContentModeScaleToFill
+#define UIViewContentModeScaleAspectFit RCTPlatformViewContentModeScaleAspectFit
+#define UIViewContentModeScaleAspectFill RCTPlatformViewContentModeScaleAspectFill
+#define UIViewContentModeRedraw RCTPlatformViewContentModeRedraw
+#define UIViewContentModeCenter RCTPlatformViewContentModeCenter
+#define UIViewContentModeTop RCTPlatformViewContentModeTop
+#define UIViewContentModeBottom RCTPlatformViewContentModeBottom
+#define UIViewContentModeLeft RCTPlatformViewContentModeLeft
+#define UIViewContentModeRight RCTPlatformViewContentModeRight
+#define UIViewContentModeTopLeft RCTPlatformViewContentModeTopLeft
+#define UIViewContentModeTopRight RCTPlatformViewContentModeTopRight
+#define UIViewContentModeBottomLeft RCTPlatformViewContentModeBottomLeft
+#define UIViewContentModeBottomRight RCTPlatformViewContentModeBottomRight
 
 enum : NSInteger {
   UIUserInterfaceLayoutDirectionLeftToRight = NSUserInterfaceLayoutDirectionLeftToRight,
   UIUserInterfaceLayoutDirectionRightToLeft = NSUserInterfaceLayoutDirectionRightToLeft,
 };
 
-typedef NS_ENUM(NSInteger, UIUserInterfaceStyle) {
-  UIUserInterfaceStyleUnspecified = 0,
-  UIUserInterfaceStyleLight = 1,
-  UIUserInterfaceStyleDark = 2,
-};
+typedef RCTPlatformUserInterfaceStyle UIUserInterfaceStyle;
+#define UIUserInterfaceStyleUnspecified RCTPlatformUserInterfaceStyleUnspecified
+#define UIUserInterfaceStyleLight RCTPlatformUserInterfaceStyleLight
+#define UIUserInterfaceStyleDark RCTPlatformUserInterfaceStyleDark
 
 typedef NS_ENUM(NSInteger, UIUserInterfaceSizeClass) {
   UIUserInterfaceSizeClassUnspecified = 0,
@@ -309,93 +308,84 @@ typedef NS_ENUM(NSInteger, UIScrollViewContentInsetAdjustmentBehavior) {
   UIScrollViewContentInsetAdjustmentAlways,
 };
 
-typedef NS_ENUM(NSInteger, UITextSmartInsertDeleteType) {
-  UITextSmartInsertDeleteTypeDefault = 0,
-  UITextSmartInsertDeleteTypeNo,
-  UITextSmartInsertDeleteTypeYes,
-};
+typedef RCTPlatformTextSmartInsertDeleteType UITextSmartInsertDeleteType;
+#define UITextSmartInsertDeleteTypeDefault RCTPlatformTextSmartInsertDeleteTypeDefault
+#define UITextSmartInsertDeleteTypeNo RCTPlatformTextSmartInsertDeleteTypeNo
+#define UITextSmartInsertDeleteTypeYes RCTPlatformTextSmartInsertDeleteTypeYes
 
-typedef NS_ENUM(NSInteger, UITextSmartQuotesType) {
-  UITextSmartQuotesTypeDefault = 0,
-  UITextSmartQuotesTypeNo,
-  UITextSmartQuotesTypeYes,
-};
+typedef RCTPlatformTextSmartQuotesType UITextSmartQuotesType;
+#define UITextSmartQuotesTypeDefault RCTPlatformTextSmartQuotesTypeDefault
+#define UITextSmartQuotesTypeNo RCTPlatformTextSmartQuotesTypeNo
+#define UITextSmartQuotesTypeYes RCTPlatformTextSmartQuotesTypeYes
 
-typedef NS_ENUM(NSInteger, UITextSmartDashesType) {
-  UITextSmartDashesTypeDefault = 0,
-  UITextSmartDashesTypeNo,
-  UITextSmartDashesTypeYes,
-};
+typedef RCTPlatformTextSmartDashesType UITextSmartDashesType;
+#define UITextSmartDashesTypeDefault RCTPlatformTextSmartDashesTypeDefault
+#define UITextSmartDashesTypeNo RCTPlatformTextSmartDashesTypeNo
+#define UITextSmartDashesTypeYes RCTPlatformTextSmartDashesTypeYes
 
 @protocol UIMenuBuilder <NSObject>
 @end
 
-typedef NS_ENUM(NSInteger, UIStatusBarStyle) {
-  UIStatusBarStyleDefault = 0,
-  UIStatusBarStyleLightContent = 1,
-  UIStatusBarStyleDarkContent = 3,
-};
+typedef RCTPlatformStatusBarStyle UIStatusBarStyle;
+#define UIStatusBarStyleDefault RCTPlatformStatusBarStyleDefault
+#define UIStatusBarStyleLightContent RCTPlatformStatusBarStyleLightContent
+#define UIStatusBarStyleDarkContent RCTPlatformStatusBarStyleDarkContent
 
-typedef NS_OPTIONS(NSUInteger, UIInterfaceOrientationMask) {
-  UIInterfaceOrientationMaskPortrait = 1 << 1,
-  UIInterfaceOrientationMaskLandscapeLeft = 1 << 4,
-  UIInterfaceOrientationMaskLandscapeRight = 1 << 3,
-  UIInterfaceOrientationMaskPortraitUpsideDown = 1 << 2,
-  UIInterfaceOrientationMaskLandscape = (1 << 3) | (1 << 4),
-  UIInterfaceOrientationMaskAllButUpsideDown = 0,
-  UIInterfaceOrientationMaskAll = 0,
-};
+typedef RCTPlatformInterfaceOrientationMask UIInterfaceOrientationMask;
+#define UIInterfaceOrientationMaskPortrait RCTPlatformInterfaceOrientationMaskPortrait
+#define UIInterfaceOrientationMaskLandscapeLeft RCTPlatformInterfaceOrientationMaskLandscapeLeft
+#define UIInterfaceOrientationMaskLandscapeRight RCTPlatformInterfaceOrientationMaskLandscapeRight
+#define UIInterfaceOrientationMaskPortraitUpsideDown RCTPlatformInterfaceOrientationMaskPortraitUpsideDown
+#define UIInterfaceOrientationMaskLandscape RCTPlatformInterfaceOrientationMaskLandscape
+#define UIInterfaceOrientationMaskAllButUpsideDown RCTPlatformInterfaceOrientationMaskAllButUpsideDown
+#define UIInterfaceOrientationMaskAll RCTPlatformInterfaceOrientationMaskAll
 
-typedef NS_ENUM(NSInteger, UIKeyboardType) {
-  UIKeyboardTypeDefault = 0,
-  UIKeyboardTypeASCIICapable,
-  UIKeyboardTypeNumbersAndPunctuation,
-  UIKeyboardTypeURL,
-  UIKeyboardTypeNumberPad,
-  UIKeyboardTypePhonePad,
-  UIKeyboardTypeNamePhonePad,
-  UIKeyboardTypeEmailAddress,
-  UIKeyboardTypeDecimalPad,
-  UIKeyboardTypeTwitter,
-  UIKeyboardTypeWebSearch,
-  UIKeyboardTypeASCIICapableNumberPad,
-};
+typedef RCTPlatformKeyboardType UIKeyboardType;
+#define UIKeyboardTypeDefault RCTPlatformKeyboardTypeDefault
+#define UIKeyboardTypeASCIICapable RCTPlatformKeyboardTypeASCIICapable
+#define UIKeyboardTypeNumbersAndPunctuation RCTPlatformKeyboardTypeNumbersAndPunctuation
+#define UIKeyboardTypeURL RCTPlatformKeyboardTypeURL
+#define UIKeyboardTypeNumberPad RCTPlatformKeyboardTypeNumberPad
+#define UIKeyboardTypePhonePad RCTPlatformKeyboardTypePhonePad
+#define UIKeyboardTypeNamePhonePad RCTPlatformKeyboardTypeNamePhonePad
+#define UIKeyboardTypeEmailAddress RCTPlatformKeyboardTypeEmailAddress
+#define UIKeyboardTypeDecimalPad RCTPlatformKeyboardTypeDecimalPad
+#define UIKeyboardTypeTwitter RCTPlatformKeyboardTypeTwitter
+#define UIKeyboardTypeWebSearch RCTPlatformKeyboardTypeWebSearch
+#define UIKeyboardTypeASCIICapableNumberPad RCTPlatformKeyboardTypeASCIICapableNumberPad
 
-typedef NS_ENUM(NSInteger, UIReturnKeyType) {
-  UIReturnKeyDefault = 0,
-  UIReturnKeyGo,
-  UIReturnKeyGoogle,
-  UIReturnKeyJoin,
-  UIReturnKeyNext,
-  UIReturnKeyRoute,
-  UIReturnKeySearch,
-  UIReturnKeySend,
-  UIReturnKeyYahoo,
-  UIReturnKeyDone,
-  UIReturnKeyEmergencyCall,
-  UIReturnKeyContinue,
-};
+typedef RCTPlatformReturnKeyType UIReturnKeyType;
+#define UIReturnKeyDefault RCTPlatformReturnKeyDefault
+#define UIReturnKeyGo RCTPlatformReturnKeyGo
+#define UIReturnKeyGoogle RCTPlatformReturnKeyGoogle
+#define UIReturnKeyJoin RCTPlatformReturnKeyJoin
+#define UIReturnKeyNext RCTPlatformReturnKeyNext
+#define UIReturnKeyRoute RCTPlatformReturnKeyRoute
+#define UIReturnKeySearch RCTPlatformReturnKeySearch
+#define UIReturnKeySend RCTPlatformReturnKeySend
+#define UIReturnKeyYahoo RCTPlatformReturnKeyYahoo
+#define UIReturnKeyDone RCTPlatformReturnKeyDone
+#define UIReturnKeyEmergencyCall RCTPlatformReturnKeyEmergencyCall
+#define UIReturnKeyContinue RCTPlatformReturnKeyContinue
 
-typedef NS_ENUM(NSInteger, UITextFieldViewMode) {
-  UITextFieldViewModeNever = 0,
-  UITextFieldViewModeWhileEditing,
-  UITextFieldViewModeUnlessEditing,
-  UITextFieldViewModeAlways,
-};
+typedef RCTPlatformTextFieldViewMode UITextFieldViewMode;
+#define UITextFieldViewModeNever RCTPlatformTextFieldViewModeNever
+#define UITextFieldViewModeWhileEditing RCTPlatformTextFieldViewModeWhileEditing
+#define UITextFieldViewModeUnlessEditing RCTPlatformTextFieldViewModeUnlessEditing
+#define UITextFieldViewModeAlways RCTPlatformTextFieldViewModeAlways
 
-typedef NS_OPTIONS(NSUInteger, UIDataDetectorTypes) {
-  UIDataDetectorTypeNone = 0,
-  UIDataDetectorTypePhoneNumber = 1 << 0,
-  UIDataDetectorTypeLink = 1 << 1,
-  UIDataDetectorTypeAddress = 1 << 2,
-  UIDataDetectorTypeCalendarEvent = 1 << 3,
-  UIDataDetectorTypeShipmentTrackingNumber = 1 << 4,
-  UIDataDetectorTypeFlightNumber = 1 << 5,
-  UIDataDetectorTypeLookupSuggestion = 1 << 6,
-  UIDataDetectorTypeMoney = 1 << 7,
-  UIDataDetectorTypePhysicalValue = 1 << 8,
-  UIDataDetectorTypeAll = NSUIntegerMax,
-};
+typedef RCTPlatformDataDetectorTypes UIDataDetectorTypes;
+#define UIDataDetectorTypeNone RCTPlatformDataDetectorTypeNone
+#define UIDataDetectorTypePhoneNumber RCTPlatformDataDetectorTypePhoneNumber
+#define UIDataDetectorTypeLink RCTPlatformDataDetectorTypeLink
+#define UIDataDetectorTypeAddress RCTPlatformDataDetectorTypeAddress
+#define UIDataDetectorTypeCalendarEvent RCTPlatformDataDetectorTypeCalendarEvent
+#define UIDataDetectorTypeShipmentTrackingNumber RCTPlatformDataDetectorTypeShipmentTrackingNumber
+#define UIDataDetectorTypeFlightNumber RCTPlatformDataDetectorTypeFlightNumber
+#define UIDataDetectorTypeLookupSuggestion RCTPlatformDataDetectorTypeLookupSuggestion
+#define UIDataDetectorTypeMoney RCTPlatformDataDetectorTypeMoney
+#define UIDataDetectorTypePhysicalValue RCTPlatformDataDetectorTypePhysicalValue
+#define UIDataDetectorTypeAll RCTPlatformDataDetectorTypeAll
 
 typedef NS_OPTIONS(NSUInteger, UIControlState) {
   UIControlStateNormal = 0,
@@ -415,13 +405,12 @@ typedef NS_OPTIONS(NSUInteger, UIControlEvents) {
   UIControlEventAllEditingEvents = 0x000F0000,
 };
 
-typedef NS_ENUM(NSInteger, UIModalPresentationStyle) {
-  UIModalPresentationFullScreen = 0,
-  UIModalPresentationPageSheet = 1,
-  UIModalPresentationFormSheet = 2,
-  UIModalPresentationOverFullScreen = 5,
-  UIModalPresentationPopover = 7,
-};
+typedef RCTPlatformModalPresentationStyle UIModalPresentationStyle;
+#define UIModalPresentationFullScreen RCTPlatformModalPresentationFullScreen
+#define UIModalPresentationPageSheet RCTPlatformModalPresentationPageSheet
+#define UIModalPresentationFormSheet RCTPlatformModalPresentationFormSheet
+#define UIModalPresentationOverFullScreen RCTPlatformModalPresentationOverFullScreen
+#define UIModalPresentationPopover RCTPlatformModalPresentationPopover
 
 #define UIKeyModifierCommand NSEventModifierFlagCommand
 #define UIKeyModifierShift NSEventModifierFlagShift

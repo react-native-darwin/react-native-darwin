@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTAccessibilityElement : UIAccessibilityElement
+@interface RCTAccessibilityElement : RCTPlatformAccessibilityElement
 
 /*
  * Frame of the accessibility element in parent coordinate system.

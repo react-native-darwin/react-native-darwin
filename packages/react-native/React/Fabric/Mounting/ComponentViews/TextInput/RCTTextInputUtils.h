@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <optional>
@@ -15,34 +16,34 @@
 NS_ASSUME_NONNULL_BEGIN
 
 void RCTCopyBackedTextInput(
-    UIView<RCTBackedTextInputViewProtocol> *fromTextInput,
-    UIView<RCTBackedTextInputViewProtocol> *toTextInput);
+    RCTPlatformView<RCTBackedTextInputViewProtocol> *fromTextInput,
+    RCTPlatformView<RCTBackedTextInputViewProtocol> *toTextInput);
 
-UITextAutocorrectionType RCTUITextAutocorrectionTypeFromOptionalBool(std::optional<bool> autoCorrect);
+RCTPlatformTextAutocorrectionType RCTUITextAutocorrectionTypeFromOptionalBool(std::optional<bool> autoCorrect);
 
-UITextAutocapitalizationType RCTUITextAutocapitalizationTypeFromAutocapitalizationType(
+RCTPlatformTextAutocapitalizationType RCTUITextAutocapitalizationTypeFromAutocapitalizationType(
     facebook::react::AutocapitalizationType autocapitalizationType);
 
-UIKeyboardAppearance RCTUIKeyboardAppearanceFromKeyboardAppearance(
+RCTPlatformKeyboardAppearance RCTUIKeyboardAppearanceFromKeyboardAppearance(
     facebook::react::KeyboardAppearance keyboardAppearance);
 
-UITextSpellCheckingType RCTUITextSpellCheckingTypeFromOptionalBool(std::optional<bool> spellCheck);
+RCTPlatformTextSpellCheckingType RCTUITextSpellCheckingTypeFromOptionalBool(std::optional<bool> spellCheck);
 
-UITextFieldViewMode RCTUITextFieldViewModeFromTextInputAccessoryVisibilityMode(
+RCTPlatformTextFieldViewMode RCTUITextFieldViewModeFromTextInputAccessoryVisibilityMode(
     facebook::react::TextInputAccessoryVisibilityMode mode);
 
-UIKeyboardType RCTUIKeyboardTypeFromKeyboardType(facebook::react::KeyboardType keyboardType);
+RCTPlatformKeyboardType RCTUIKeyboardTypeFromKeyboardType(facebook::react::KeyboardType keyboardType);
 
-UIReturnKeyType RCTUIReturnKeyTypeFromReturnKeyType(facebook::react::ReturnKeyType returnKeyType);
+RCTPlatformReturnKeyType RCTUIReturnKeyTypeFromReturnKeyType(facebook::react::ReturnKeyType returnKeyType);
 
 UITextContentType RCTUITextContentTypeFromString(const std::string &contentType);
 
-UITextInputPasswordRules *RCTUITextInputPasswordRulesFromString(const std::string &passwordRules);
+RCTPlatformTextInputPasswordRules *RCTUITextInputPasswordRulesFromString(const std::string &passwordRules);
 
-UITextSmartInsertDeleteType RCTUITextSmartInsertDeleteTypeFromOptionalBool(std::optional<bool> smartInsertDelete);
+RCTPlatformTextSmartInsertDeleteType RCTUITextSmartInsertDeleteTypeFromOptionalBool(std::optional<bool> smartInsertDelete);
 
 #if !TARGET_OS_TV
-UIDataDetectorTypes RCTUITextViewDataDetectorTypesFromStringVector(const std::vector<std::string> &dataDetectorTypes);
+RCTPlatformDataDetectorTypes RCTUITextViewDataDetectorTypesFromStringVector(const std::vector<std::string> &dataDetectorTypes);
 #endif
 
 NS_ASSUME_NONNULL_END

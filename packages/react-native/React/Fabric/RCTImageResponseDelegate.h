@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol RCTImageResponseDelegate <NSObject>
 
-- (void)didReceiveImage:(UIImage *)image metadata:(id)metadata fromObserver:(const void *)observer;
+- (void)didReceiveImage:(RCTPlatformImage *)image metadata:(id)metadata fromObserver:(const void *)observer;
 - (void)didReceiveProgress:(float)progress
                     loaded:(int64_t)loaded
                      total:(int64_t)total
