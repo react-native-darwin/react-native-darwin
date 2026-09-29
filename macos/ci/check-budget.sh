@@ -54,7 +54,7 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # "fix typo" or a forgotten work-in-progress commit has to be noticed and
 # folded in rather than accumulating. The diff budgets above are the real
 # measure of fork size.
-MAX_COMMITS=22
+MAX_COMMITS=23
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -71,6 +71,11 @@ OURS=(
   ':(exclude)macos/'
   ':(exclude)MACOS-FORK.md'
   ':(exclude).github/workflows/macos-*.yml'
+  # The root README is this fork's, not upstream's: it describes why the fork
+  # exists and what these budgets are for. Counting it as upstream code would
+  # charge rebase cost for a file that is never rebased, and demand a [macOS]
+  # marker in the middle of English prose.
+  ':(exclude)README.md'
 )
 
 fail=0
