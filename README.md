@@ -147,6 +147,7 @@ applies. This repository documents only what is macOS-specific:
 - `MACOS-FORK.md` — the contract: what may be changed, and the budgets
 - `macos/ROADMAP.md` — what works, what does not, what was measured
 - `macos/PLAN-drop-uikit-aliases.md` — why the compatibility layer is split the way it is
+- `macos/PLAN-upstream.md` — which changes belong upstream, ranked by what they would remove
 
 ## License
 
