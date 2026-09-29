@@ -40,6 +40,16 @@ for f in AppDelegate.h AppDelegate.mm main.m Info.plist; do
 done
 echo "    ok: HelloWorld matches the template"
 
+echo "==> Building the input probe"
+# Compiled, not run: driving a window needs a live app, which this suite does
+# not start. Building it keeps the tool from rotting -- it is how every macOS
+# defect in this fork was actually found, and it was rewritten from memory in
+# /tmp several times before it was committed.
+clang -framework Foundation -framework CoreGraphics -Wall -Werror \
+  -mmacosx-version-min=14.0 \
+  -o "$(dirname "$OUT")/uiprobe" macos/tests/uiprobe/uiprobe.m
+echo "    ok: macos/tests/uiprobe/uiprobe.m compiles"
+
 echo "==> Checking for recursive category methods"
 python3 macos/tests/check-no-self-recursion.py
 

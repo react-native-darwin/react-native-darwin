@@ -45,16 +45,13 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # Modal. The cap exists to keep review burden down, not to force unrelated
 # work into one commit, so new topics get their own commit and the diff
 # budgets above stay the real measure of fork size.
-# One commit per topic, and parity work keeps adding topics: the alias
-# migration, the macOS TextInput props, the multiline scrolling fixes. Expect
-# this number to move.
-#
-# It is worth being clear about what it is for, now that it moves routinely.
-# It is not a budget -- it is a tripwire for commit sprawl, so that a stray
-# "fix typo" or a forgotten work-in-progress commit has to be noticed and
-# folded in rather than accumulating. The diff budgets above are the real
-# measure of fork size.
-MAX_COMMITS=22
+# Twelve, one per topic, after squashing the twenty-four this fork was built
+# in. The cap is not a budget in the sense the two above are -- it is a
+# tripwire for commit sprawl, so that a stray "fix typo" or a forgotten
+# work-in-progress commit has to be noticed and folded in rather than
+# accumulating. Raising it should mean a genuinely new topic; the diff budgets
+# above are the real measure of fork size.
+MAX_COMMITS=12
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -71,6 +68,11 @@ OURS=(
   ':(exclude)macos/'
   ':(exclude)MACOS-FORK.md'
   ':(exclude).github/workflows/macos-*.yml'
+  # The root README is this fork's, not upstream's: it describes why the fork
+  # exists and what these budgets are for. Counting it as upstream code would
+  # charge rebase cost for a file that is never rebased, and demand a [macOS]
+  # marker in the middle of English prose.
+  ':(exclude)README.md'
 )
 
 fail=0

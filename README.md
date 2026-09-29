@@ -1,105 +1,153 @@
+<h1 align="center">React Native for macOS</h1>
+
 <p align="center">
-   <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://reactnative.dev/react-native-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="https://reactnative.dev/react-native-light.svg">
-      <img alt="React Native logo" src="https://reactnative.dev/react-native-light.svg" height="80">
-    </picture>
+  <strong>AppKit support for React Native, as a fork that stays small enough to rebase.</strong>
 </p>
 
 <p align="center">
-  <strong>Learn once, write anywhere:</strong><br>
-  Create native apps for Android, iOS, and more using React
+  <a href="https://www.npmjs.org/package/react-native-darwin">
+    <img src="https://img.shields.io/npm/v/react-native-darwin?color=brightgreen&label=npm%20package" alt="Current npm package version." />
+  </a>
+  <a href="https://github.com/react-native-darwin/react-native-darwin/blob/HEAD/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT licensed." />
+  </a>
 </p>
 
-<p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license" /></a>
-  <a href="https://www.npmjs.com/package/react-native"><img src="https://img.shields.io/npm/v/react-native.svg?color=blue" alt="Current npm package version" /></a>
-  <a href="https://www.npmjs.com/package/react-native"><img src="https://img.shields.io/npm/dm/react-native.svg" alt="Monthly npm downloads" /></a>
-  <a href="https://twitter.com/intent/follow?screen_name=reactnative"><img src="https://img.shields.io/badge/Follow_@reactnative-black?logo=x&logoColor=white" alt="Follow @reactnative on X" /></a>
-</p>
+---
 
-<h4 align="center">
-  <a href="https://reactnative.dev/docs/environment-setup">Getting Started</a>
-  <span> · </span>
-  <a href="https://reactnative.dev/docs/tutorial">Learn the Basics</a>
-  <span> · </span>
-  <a href="https://reactnative.dev/showcase">Showcase</a>
-  <span> · </span>
-  <a href="https://reactnative.dev/docs/contributing">Contribute</a>
-  <span> · </span>
-  <a href="https://reactnative.dev/help">Community</a>
-  <span> · </span>
-  <a href="./.github/SUPPORT.md">Support</a>
-</h4>
+This is a fork of [facebook/react-native](https://github.com/facebook/react-native) that
+runs on macOS, drawing with AppKit. It is published to npm as **`react-native-darwin`** and
+installed under the **`react-native-macos`** alias, so an app can keep upstream
+`react-native` for iOS and Android and add this one for the Mac.
 
-# React Native
+## Why this exists
 
-React Native lets you build native apps using [React](https://react.dev/). Written
-in JavaScript, rendered with native code.
+React Native has no macOS target. The established answer,
+[microsoft/react-native-macos](https://github.com/microsoft/react-native-macos), works — and
+this project owes it a great deal — but it carries a large, permanent diff against upstream:
+it renames React Native's platform types (`UIView` to `RCTPlatformView` and so on) throughout
+the tree, which means touching around 500 upstream files and re-resolving them on every
+rebase.
 
-- **Native UI.** React Native primitives render to native platform UI, meaning your app
-  uses the same native platform APIs other apps do. Gestures, text scaling, and
-  accessibility behave the way users expect on each OS.
-- **React, everywhere.** Declarative UI, components, hooks, and Suspense, reused
-  across Android, iOS, and [other platforms](https://reactnative.dev/docs/out-of-tree-platforms).
-- **Developer Velocity.** See local changes in seconds. Changes to JavaScript code are applied with Fast Refresh, without rebuilding the native app.
-- **Extend it yourself.** Native Modules let you call platform code directly from JavaScript, synchronously and type-safe — or reach for [thousands of existing libraries](https://reactnative.directory/).
+This fork takes the other route. The macOS SDK ships no `UIKit.framework`, so `UIView`,
+`UIColor` and the rest are free identifiers on this platform. A compatibility layer defines
+them as AppKit types from a header directory named `UIKit`, which means React Native's own
+implementation files compile unchanged — no rename, no diff.
 
-React Native is developed and supported by many companies and individual core contributors. Find out more on the [React Foundation website](https://react.foundation/).
+The result is measured, not asserted. Against the upstream release each forks:
 
-## Building your first React Native app
+| | react-native-darwin | react-native-macos |
+|---|---|---|
+| Upstream files modified | **189** | **500** |
+| Lines added | **2,850** | **14,876** |
+| Lines removed | **439** | **2,053** |
 
-Follow the [Getting Started guide](https://reactnative.dev/docs/environment-setup) for a new app, or [Integration with Existing Apps](https://reactnative.dev/docs/integration-with-existing-apps) to adopt React Native incrementally.
+Two things that table does not say, and should:
 
-### Using a Framework
+- A meaningful part of the gap is **coverage, not elegance**. Splitting those diffs by what
+  the changes actually do, react-native-macos has 326 files of real macOS work to this
+  fork's 73. It has been maintained for years and supports more surface.
+- The comparison is against different base versions — 0.87 here, 0.81 there — because
+  react-native-macos has not shipped 0.87 yet. Upstream patch-to-patch churn in the same
+  directories is about 16 files, so it does not move the conclusion.
 
-We believe that the best way to experience React Native is through a Framework, a toolbox with all the necessary APIs to let you build production ready apps. [Expo](https://docs.expo.dev/get-started/set-up-your-environment/) is a production-grade React Native Framework, with file-based routing, a standard library of native modules, and much more.
+## A dependency must not claim global names
 
-To create a new Expo project, run the following in your terminal:
+Defining `UIView` has an obvious hazard: any other library that defines it too stops
+compiling, and `@compatibility_alias` is a hard error on redeclaration even when both
+declarations name the same class. `expo-modules-core`, `react-native-reanimated`,
+`react-native-safe-area-context` and `react-native-screens` all declare those names, for the
+same reason and just as legitimately.
 
-    npx create-expo-app@latest
+So the compatibility layer is split in two, along a line that is not obvious but is exact:
 
-Then follow the rest of [Expo's getting started guide](https://docs.expo.dev/get-started/set-up-your-environment/) to start building.
+- Only `@compatibility_alias`, a class `@interface`, a `@protocol` and an `NS_ENUM` are
+  errors on *re*declaration. Those are **private** to this fork's own pods.
+- A `typedef`, a `#define`, an inline function and a category can all be declared twice, as
+  long as the declarations match. Those are **public**, and every pod gets them.
 
-### Without a Framework
+Installed headers are written in a neutral vocabulary — `RCTPlatformView`, `RCTUIColor` —
+which is the same vocabulary react-native-macos uses, so third-party code written against
+that fork compiles here unchanged. A library that declares its own `UIView` compiles too.
+`macos/ci/check-budget.sh` fails the build if that line is ever crossed.
 
-You can also use React Native without a Framework, however we've found that most developers benefit from one — navigation, native dependencies, and platform tooling are problems the ecosystem has already solved. If a Framework doesn't suit your app, follow [Getting Started Without a Framework](https://reactnative.dev/docs/getting-started-without-a-framework).
+## Always in sync with React Native core
+
+This fork tracks upstream React Native release for release. That is the whole point of
+keeping the diff small: a fork that touches 189 files can be rebased onto a new upstream
+version; one that touches 2,000 cannot, and drifts.
+
+The discipline is enforced mechanically rather than promised. Every change must pass
+`macos/ci/check-budget.sh`, which fails the build when:
+
+- more upstream files are modified than the budget allows;
+- more upstream lines are removed than the budget allows;
+- any hunk in an upstream file lacks a `[macOS]` marker explaining it;
+- the shim registers a UIKit name with the Objective-C runtime;
+- any header outside the private shim makes a declaration a third party could not repeat.
+
+The budgets are written down with the reasoning for every number, and raising one is a
+deliberate, reviewed act rather than a side effect. `MACOS-FORK.md` is the contract;
+`macos/ROADMAP.md` records what works, what does not, and what was measured.
+
+Nothing here is automated yet: syncing is a rebase a human or agent runs, not a scheduled
+job. If you want it to be continuous rather than intentional, that is a CI workflow waiting
+to be written.
+
+## AI-maintained
+
+This fork is written and maintained by an AI agent, working from the contract in
+`MACOS-FORK.md` and the budgets in `macos/ci/check-budget.sh`.
+
+That is a statement of fact rather than a selling point, and it is why the guardrails in this
+repository are unusually explicit. An agent is good at mechanical breadth — renaming a
+vocabulary across 135 headers, or driving a real app with synthetic mouse and key events to
+find out whether a component actually works — and bad at noticing that it has quietly
+widened the thing it was meant to keep narrow. The linter exists to make that failure mode
+loud. Judgement calls, and the reasoning behind them, are written into the commit messages
+and the documents above rather than left implicit.
+
+Read the code with that in mind, and please report anything that looks wrong.
+
+## Getting started
+
+```sh
+npm install --save-dev react-native-macos@npm:react-native-darwin@next
+npx react-native-darwin-init
+cd macos && RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=0 pod install
+```
+
+Those two `pod install` variables matter: without them CocoaPods resolves the prebuilt React
+Core, which is published for iOS only, and the install fails on a platform mismatch.
+
+`react-native-darwin-init` writes a `macos/` directory and a `metro.config.js` that points
+the macOS bundle at this package while iOS and Android keep using `react-native`. See
+`macos/template/README.md` for what it generates.
+
+## What works
+
+Core components, `Text`, `Image`, `TextInput` (both single and multi-line, with the macOS
+props: `submitKeyEvents`, `onPaste`, `pastedTypes`, `grammarCheck`, `clearTextOnSubmit`,
+`hideVerticalScrollIndicator` and the three checking-toggle events), `ScrollView`,
+`FlatList`, `SectionList`, `Modal`, `Alert` including `promptMacOS`, `Switch`,
+`ActivityIndicator`, `Pressable` and the Touchables, `Animated` with the native driver,
+`PlatformColor`, `AccessibilityInfo`, key events, mouse events, and drag and drop.
+
+Third-party native modules autolink, build and run — `react-native-safe-area-context` is
+verified end to end, unmodified.
+
+`macos/ROADMAP.md` is the current, measured state, including what is still unverified.
 
 ## Documentation
 
-The full documentation for React Native can be found on our [website](https://reactnative.dev/docs/getting-started).
+For React Native itself — components, APIs, guides — use the
+[upstream documentation](https://reactnative.dev/docs/getting-started). Everything there
+applies. This repository documents only what is macOS-specific:
 
-- [Introduction](https://reactnative.dev/docs/getting-started)
-- [Getting Started](https://reactnative.dev/docs/environment-setup)
-- [Learn the Basics](https://reactnative.dev/docs/tutorial)
-- [Components and APIs](https://reactnative.dev/docs/components-and-apis)
-- [UI & Interaction](https://reactnative.dev/docs/style)
-- [Native Modules](https://reactnative.dev/docs/native-platform)
-- [Debugging](https://reactnative.dev/docs/debugging)
-- [Upgrading](https://reactnative.dev/docs/upgrading)
-- [Architecture](https://reactnative.dev/architecture/overview)
-
-The source for the React Native docs and website is hosted on a separate repository, [**react/react-native-website**](https://github.com/react/react-native-website).
-
-## Contributing
-
-The main purpose of this repository is to continue evolving React Native core. We want to make contributing to this project as easy and transparent as possible, and we are grateful to the community for contributing bug fixes and improvements. Read below to learn how you can take part in improving React Native.
-
-### [Code of Conduct](https://code.fb.com/codeofconduct/)
-
-Meta has adopted a Code of Conduct that we expect project participants to adhere to.
-Please read the [full text](https://code.fb.com/codeofconduct/) so that you can understand what actions will and will not be tolerated.
-
-### [Contributing Guide](https://reactnative.dev/docs/contributing)
-
-Read our [**Contributing Guide**](https://reactnative.dev/docs/contributing) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React Native.
-
-### Discussions
-
-Larger discussions and proposals are discussed in [**react-native-community/discussions-and-proposals**](https://github.com/react-native-community/discussions-and-proposals).
-
-React Native releases are discussed in [**reactwg/react-native-releases**](https://github.com/reactwg/react-native-releases/discussions).
+- `MACOS-FORK.md` — the contract: what may be changed, and the budgets
+- `macos/ROADMAP.md` — what works, what does not, what was measured
+- `macos/PLAN-drop-uikit-aliases.md` — why the compatibility layer is split the way it is
 
 ## License
 
-React Native is MIT licensed, as found in the [LICENSE](./LICENSE) file.
+React Native, and this fork, are MIT licensed. See [LICENSE](./LICENSE).
