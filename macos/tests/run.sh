@@ -76,6 +76,43 @@ if [ -d "$PODS" ]; then
   for dir in "$PODS"/*/; do
     includes="$includes -I $dir"
   done
+  # Every installed header, compiled the way a third-party pod sees it.
+  #
+  # The hand-written probe below proves the aliases do not collide. This proves
+  # the other half: that nothing an installed header needs is missing. Three
+  # bugs of exactly that shape shipped before this existed -- UIViewController
+  # for expo-modules-core, RCTPlatformDisplayLink and RCTScrollView for
+  # react-native-worklets -- each found by a user rather than by CI, and each
+  # the same mistake: a public header reaching for something only this fork's
+  # own pods can see.
+  echo "==> Compiling every installed header as a third-party pod sees it"
+  sweep_inc=""
+  for dir in "$PODS"/*/; do
+    sweep_inc="$sweep_inc -I $dir"
+  done
+  sweep_tmp="$(mktemp -d)"
+  cat > "$sweep_tmp/one.sh" <<SWEEP
+#!/bin/bash
+printf '#import <AppKit/AppKit.h>\\n#import "%s"\\n' "\$1" > "$sweep_tmp/\$\$.mm"
+err=\$(clang -fsyntax-only -fobjc-arc -x objective-c++ -std=c++20 -mmacosx-version-min=14.0 \\
+  -I "$PODS" $sweep_inc -I macos/UIKitCompat/Public "$sweep_tmp/\$\$.mm" 2>&1 \\
+  | grep -E "error:.*(unknown type name|expected a type|undeclared identifier)" | head -1)
+rm -f "$sweep_tmp/\$\$.mm"
+[ -n "\$err" ] && echo "\${1#$PODS/} :: \$err"
+exit 0
+SWEEP
+  chmod +x "$sweep_tmp/one.sh"
+  # Parallel: 1,400 clang invocations in series takes minutes.
+  sweep_out=$(find "$PODS" -name '*.h' -not -path '*React-UIKitCompat*' \
+    | xargs -P 8 -n 1 "$sweep_tmp/one.sh" 2>/dev/null)
+  rm -rf "$sweep_tmp"
+  if [ -n "$sweep_out" ]; then
+    echo "error: an installed header needs something only this fork's pods can see:" >&2
+    echo "$sweep_out" | head -10 >&2
+    exit 1
+  fi
+  echo "    ok: every installed header compiles standalone"
+
   if clang -fsyntax-only -fobjc-arc -x objective-c++ -std=c++20 -Werror \
       -mmacosx-version-min=14.0 \
       -I "$PODS" $includes \

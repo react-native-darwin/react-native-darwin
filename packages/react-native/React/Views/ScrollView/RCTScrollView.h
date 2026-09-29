@@ -5,4 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h> // [macOS] an installed header must not name a shim header
+#import <RCTPlatformTypes/RCTPlatformTypes.h> // [macOS] the public half, which
+// declares the platform vocabulary. Importing <UIKit/UIKit.h> here would reach the shim
+// inside this fork and an empty header everywhere else, so a third-party pod
+// got nothing -- which is how react-native-worklets failed to build.

@@ -475,6 +475,28 @@ static const RCTPlatformAccessibilityTraits RCTPlatformAccessibilityTraitSwitch 
 
 @end
 
+
+// A vsync-bound timer. CADisplayLink exists on macOS only from 14.0 and with a
+// different initialiser, so the compatibility layer supplies one under the name
+// react-native-macos uses. Public because a library that imports
+// <React/RCTPlatformDisplayLink.h> expects the type, not a forward reference:
+// react-native-worklets does exactly that.
+@interface RCTPlatformDisplayLink : NSObject
+
++ (instancetype)displayLinkWithTarget:(id)target selector:(SEL)selector;
+
+- (void)addToRunLoop:(NSRunLoop *)runloop forMode:(NSRunLoopMode)mode;
+- (void)removeFromRunLoop:(NSRunLoop *)runloop forMode:(NSRunLoopMode)mode;
+- (void)invalidate;
+
+@property (nonatomic, getter=isPaused) BOOL paused;
+@property (nonatomic, readonly) CFTimeInterval timestamp;
+@property (nonatomic, readonly) CFTimeInterval duration;
+@property (nonatomic, readonly) CFTimeInterval targetTimestamp;
+@property (nonatomic, assign) NSInteger preferredFramesPerSecond;
+
+@end
+
 NS_ASSUME_NONNULL_END
 
 #else

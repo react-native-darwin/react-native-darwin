@@ -52,6 +52,8 @@
 #import <React/RCTRootView.h>
 #import <React/RCTScrollView.h>
 #import <React/UIView+React.h>
+#import <React/RCTPlatformDisplayLink.h>
+#import <React/RCTScrollView.h>
 
 @interface ThirdPartyProbe : NSObject
 @property (nonatomic, strong) UIView *ownView;         // its own alias
@@ -62,7 +64,15 @@
 // EXReactDelegateWrapper.h fails on exactly this line without them.
 - (UIViewController *)createRootViewController;
 @property (nonatomic, strong) UIFont *font;
+
+// react-native-worklets does exactly this, and it failed: our header imported
+// the shim rather than declaring the type, so a third-party pod -- which gets
+// the empty public <UIKit/UIKit.h> -- had nothing.
+@property (nonatomic, strong) RCTPlatformDisplayLink *displayLink;
 @end
 @implementation ThirdPartyProbe
 - (UIViewController *)createRootViewController { return nil; }
 @end
+
+// The exact construct from react-native-worklets' WorkletsDisplayLink.h.
+typedef RCTPlatformDisplayLink WorkletsDisplayLink;
