@@ -121,29 +121,11 @@ typedef NS_ENUM(NSInteger, UIButtonType) {
 
 #pragma mark - Tier 2: geometry
 
-typedef NSEdgeInsets UIEdgeInsets;
-
-#define UIEdgeInsetsZero NSEdgeInsetsZero
-#define UIViewNoIntrinsicMetric NSViewNoIntrinsicMetric
-
-NS_INLINE UIEdgeInsets UIEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right)
-{
-  return NSEdgeInsetsMake(top, left, bottom, right);
-}
-
-NS_INLINE CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets)
-{
-  rect.origin.x += insets.left;
-  rect.origin.y += insets.top;
-  rect.size.width -= (insets.left + insets.right);
-  rect.size.height -= (insets.top + insets.bottom);
-  return rect;
-}
-
-NS_INLINE BOOL UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsets a, UIEdgeInsets b)
-{
-  return NSEdgeInsetsEqual(a, b);
-}
+// The geometry names moved to RCTPlatformTypes.h, the public half. They are
+// typedefs, macros and inline functions rather than @compatibility_alias, so
+// a library declaring the same ones is not a conflict -- which means they can
+// be given to everybody, and libraries written against react-native-macos
+// stop needing a macOS-specific spelling for them.
 
 NS_INLINE NSString *NSStringFromCGSize(CGSize size)
 {
