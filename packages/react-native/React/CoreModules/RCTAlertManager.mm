@@ -105,6 +105,9 @@ RCT_EXPORT_MODULE()
                                                                         preferredStyle:UIAlertControllerStyleAlert];
 
     alertController.overrideUserInterfaceStyle = userInterfaceStyle;
+#if TARGET_OS_OSX // [macOS]
+    alertController.uikitCompat_critical = args.critical().value_or(false);
+#endif // [macOS]
 
     switch (type) {
       case RCTAlertViewStylePlainTextInput: {

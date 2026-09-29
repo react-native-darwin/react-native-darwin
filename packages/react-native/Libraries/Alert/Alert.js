@@ -40,6 +40,9 @@ export type AlertOptions = {
   userInterfaceStyle?: 'unspecified' | 'light' | 'dark',
   /** @platform android */
   onDismiss?: ?() => void,
+  // [macOS] Draw the alert in NSAlert's critical style, the one with the
+  // caution badge. No UIKit equivalent.
+  critical?: boolean,
   ...
 };
 
@@ -97,7 +100,9 @@ class Alert {
     buttons?: AlertButtons,
     options?: AlertOptions,
   ): void {
-    if (Platform.OS === 'ios') {
+    // [macOS] macOS goes through the same AlertManager as iOS; the
+    // compatibility layer turns UIAlertController into an NSAlert.
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       Alert.prompt(
         title,
         message,
@@ -185,7 +190,8 @@ class Alert {
     keyboardType?: string,
     options?: AlertOptions,
   ): void {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' || Platform.OS === 'macos') {
+      // [macOS] see Alert.alert above
       let callbacks: Array<?any> = [];
       const buttons = [];
       let cancelButtonKey;
@@ -224,6 +230,7 @@ class Alert {
           preferredButtonKey,
           keyboardType,
           userInterfaceStyle: options?.userInterfaceStyle || undefined,
+          critical: options?.critical || undefined, // [macOS]
         },
         (id, value) => {
           const cb = callbacks[id];
@@ -232,6 +239,31 @@ class Alert {
       );
     }
   }
+
+  // [macOS
+  /**
+   * Create and display a prompt to enter text, in NSAlert's critical style
+   * when `critical` is set.
+   *
+   * The name matches microsoft/react-native-macos, so code written against
+   * that fork works unchanged. `Alert.prompt` also works here; this exists for
+   * the `critical` argument, which has no UIKit equivalent.
+   *
+   * @platform macos
+   */
+  static promptMacOS(
+    title: ?string,
+    message?: ?string,
+    callbackOrButtons?: ?(((text: string) => void) | AlertButtons),
+    type?: ?AlertType = 'plain-text',
+    defaultValue?: string,
+    critical?: boolean,
+  ): void {
+    Alert.prompt(title, message, callbackOrButtons, type, defaultValue, undefined, {
+      critical,
+    });
+  }
+  // macOS]
 }
 
 export default Alert;

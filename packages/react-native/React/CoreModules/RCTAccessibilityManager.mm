@@ -99,9 +99,28 @@ RCT_EXPORT_MODULE()
     _isDarkerSystemColorsEnabled = UIAccessibilityDarkerSystemColorsEnabled();
     _isReduceTransparencyEnabled = UIAccessibilityIsReduceTransparencyEnabled();
     _isVoiceOverEnabled = UIAccessibilityIsVoiceOverRunning();
+#if TARGET_OS_OSX // [macOS]
+    _isHighContrastEnabled = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
+    // AppKit reports every accessibility display option through one
+    // notification on the workspace's own centre, not the default one.
+    [NSWorkspace.sharedWorkspace.notificationCenter
+        addObserver:self
+           selector:@selector(highContrastDidChange:)
+               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+             object:nil];
+#endif // [macOS]
   }
   return self;
 }
+
+#if TARGET_OS_OSX // [macOS]
+- (void)dealloc
+{
+  // The workspace's notification centre is not the default one, and an
+  // observer left on it after this module goes away is a dangling pointer.
+  [NSWorkspace.sharedWorkspace.notificationCenter removeObserver:self];
+}
+#endif // [macOS]
 
 - (void)didReceiveNewContentSizeCategory:(NSNotification *)note
 {
@@ -148,6 +167,21 @@ RCT_EXPORT_MODULE()
 #pragma clang diagnostic pop
   }
 }
+
+#if TARGET_OS_OSX // [macOS]
+- (void)highContrastDidChange:(__unused NSNotification *)notification
+{
+  BOOL newHighContrastEnabled = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
+  if (_isHighContrastEnabled != newHighContrastEnabled) {
+    _isHighContrastEnabled = newHighContrastEnabled;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"highContrastChanged"
+                                                                          body:@(_isHighContrastEnabled)];
+#pragma clang diagnostic pop
+  }
+}
+#endif // [macOS]
 
 - (void)invertColorsStatusDidChange:(__unused NSNotification *)notification
 {
@@ -378,6 +412,14 @@ static void setMultipliers(
 {
   onSuccess(@[ @(_isInvertColorsEnabled) ]);
 }
+
+// [macOS
+- (void)getCurrentHighContrastState:(RCTResponseSenderBlock)onSuccess
+                            onError:(__unused RCTResponseSenderBlock)onError
+{
+  onSuccess(@[ @(_isHighContrastEnabled) ]);
+}
+// macOS]
 
 - (void)getCurrentReduceMotionState:(RCTResponseSenderBlock)onSuccess onError:(__unused RCTResponseSenderBlock)onError
 {

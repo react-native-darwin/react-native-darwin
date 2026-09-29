@@ -26,6 +26,12 @@ export interface Spec extends TurboModule {
     onSuccess: (isInvertColorsEnabled: boolean) => void,
     onError: (error: UnsafeObject) => void,
   ) => void;
+  // [macOS] "Increase contrast" in System Settings. Optional, because only
+  // macOS implements it.
+  readonly getCurrentHighContrastState?: (
+    onSuccess: (isHighContrastEnabled: boolean) => void,
+    onError: (error: Object) => void,
+  ) => void;
   readonly getCurrentReduceMotionState: (
     onSuccess: (isReduceMotionEnabled: boolean) => void,
     onError: (error: UnsafeObject) => void,
