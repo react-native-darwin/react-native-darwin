@@ -33,6 +33,7 @@
 #import <React/RCTNetworkPlugins.h>
 #import <React/RCTSettingsPlugins.h>
 #import <React/RCTVibrationPlugins.h>
+#import <React/RCTComponentViewFactory.h>
 #import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
 #import <React-RCTAppDelegate/RCTAppSetupUtils.h>
 #import <ReactCommon/RCTHost.h>
@@ -41,7 +42,7 @@
 #import <react/featureflags/ReactNativeFeatureFlagsOverridesOSSStable.h>
 #import <react/nativemodule/defaults/DefaultTurboModules.h>
 
-@interface AppDelegate () <RCTHostDelegate, RCTTurboModuleManagerDelegate>
+@interface AppDelegate () <RCTHostDelegate, RCTTurboModuleManagerDelegate, RCTComponentViewFactoryComponentProvider>
 @property (nonatomic, readonly) RCTAppDependencyProvider *dependencyProvider;
 @end
 
@@ -110,6 +111,13 @@ static NSMenu *RCTBuildMainMenu(void)
 - (void)applicationDidFinishLaunching:(__unused NSNotification *)notification
 {
   NSApp.mainMenu = RCTBuildMainMenu();
+
+  // Autolinked Fabric components -- anything a third-party library registers
+  // -- are reached through this, and a dependency provider alone is not
+  // enough: that one covers turbo modules. Without it a library's views are
+  // linked into the binary and still unknown to JavaScript, which fails with
+  // "Cannot read property 'bubblingEventTypes' of undefined".
+  [RCTComponentViewFactory currentComponentViewFactory].thirdPartyFabricComponentsProvider = self;
 
   // Route every RCTLog -- including JS console output and redbox-worthy errors
   // -- to stderr. Without this a JS exception is invisible: there is no redbox
@@ -237,6 +245,13 @@ static NSMenu *RCTBuildMainMenu(void)
   // RCTNetworking and RCTImageLoader ask it for. Constructing the module
   // without it is what leaves it half-wired.
   return RCTAppSetupDefaultModuleFromClass(moduleClass, self.dependencyProvider);
+}
+
+#pragma mark - RCTComponentViewFactoryComponentProvider
+
+- (NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *)thirdPartyFabricComponents
+{
+  return self.dependencyProvider.thirdPartyFabricComponents;
 }
 
 - (RCTAppDependencyProvider *)dependencyProvider

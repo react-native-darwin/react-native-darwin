@@ -434,6 +434,47 @@ static const RCTPlatformAccessibilityTraits RCTPlatformAccessibilityTraitSwitch 
 
 @end
 
+
+// The UIKit-shaped surface React Native's own code -- and code written against
+// react-native-macos -- calls on a view. Public for the same reason the
+// geometry above is: a category is not an alias, so a second library
+// declaring these is not a conflict. The implementation ships in the shim.
+@interface NSView (RCTPlatformCompat)
+
+@property (nonatomic, assign, getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
+@property (nonatomic, assign) CGFloat alpha;
+@property (nonatomic, copy, nullable) RCTUIColor *backgroundColor;
+@property (nonatomic, assign) CGAffineTransform transform;
+@property (nonatomic, assign) CATransform3D transform3D;
+@property (nonatomic, assign) CGPoint center;
+@property (nonatomic, assign) RCTPlatformViewContentMode contentMode;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets safeAreaInsets;
+@property (nonatomic, copy, nullable) NSArray *accessibilityElements;
+
+@property (nonatomic, readonly) BOOL canBecomeFirstResponder;
+@property (nonatomic, readonly) BOOL isFirstResponder;
+- (BOOL)becomeFirstResponder;
+
+// UIKit spells these without an argument. NSView's -setNeedsDisplay: and
+// -setNeedsLayout: take a BOOL, so these are distinct selectors, not overrides.
+- (void)setNeedsDisplay;
+- (void)setNeedsLayout;
+- (void)layoutIfNeeded;
+- (void)layoutSubviews;
+
+- (void)insertSubview:(NSView *)view atIndex:(NSInteger)index;
+- (void)bringSubviewToFront:(NSView *)view;
+- (void)sendSubviewToBack:(NSView *)view;
+- (BOOL)isDescendantOfView:(NSView *)view;
+
+- (nullable NSView *)hitTest:(CGPoint)point withEvent:(nullable RCTPlatformEvent *)event;
+- (BOOL)pointInside:(CGPoint)point withEvent:(nullable RCTPlatformEvent *)event;
+
+- (void)didMoveToWindow;
+- (void)didMoveToSuperview;
+
+@end
+
 NS_ASSUME_NONNULL_END
 
 #else

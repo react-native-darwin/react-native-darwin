@@ -107,7 +107,7 @@ Measured since:
 | `Modal` | **works** -- presents as a sheet, `onShow` fires |
 | `Alert` | **works** -- presents as an `NSAlert` sheet |
 | `TextInput` | **works** -- both kinds, all nine macOS props, paste, scrolling |
-| Third-party native module | **partly** -- autolinks and links; see below |
+| Third-party native module | **works** -- safe-area-context autolinks, builds and runs |
 
 `Slider` and `Picker` used to be listed here. They are not part of React
 Native any more -- both were extracted to community packages years before
@@ -145,21 +145,43 @@ UIKit geometry vocabulary -- `UIEdgeInsets` and its helpers -- is now in the
 *public* half, where a library that declares the same names is not a conflict.
 The private half keeps only what genuinely cannot repeat.
 
-### What is still missing
+`react-native-safe-area-context` now **builds and links** unmodified, and the
+native component registry reports both of its Fabric components as known.
 
-`react-native-safe-area-context` gets further but does not yet build: it calls
-`layoutSubviews` on an `RCTView`. Code written against react-native-macos
-expects React Native to hand it the UIKit *method* surface on views, and this
-fork deliberately does not -- that surface is in the private shim.
+Two more things were needed to get there:
 
-Those are category methods on `NSView`, so unlike a class alias they could be
-declared publicly without conflicting. Whether to do that is the open
-question: it is the line between "no library has to change" and "the shim
-stays small", and it should be decided deliberately rather than one missing
-selector at a time. The dependency provider landed in rc.12 is what makes
-autolinked modules reachable at all, and no actual module has been through it
-yet. `react-native-safe-area-context` is the obvious first one: BareExpo
-already links it.
+  - **The UIKit view surface went public.** The library calls `layoutSubviews`
+    on an `RCTView`, as code written against react-native-macos does. Those
+    are category methods on `NSView`, and a category is not an alias -- a
+    second library declaring the same selectors is not an error -- so the
+    whole category moved to the public half under neutral signatures. This is
+    the line between "no library has to change" and "the shim stays small",
+    and it is drawn deliberately at: anything that can be declared twice is
+    public, anything that cannot is private.
+
+  - **Third-party Fabric components were never registered.** The app template
+    built a dependency provider, which covers turbo modules, but never handed
+    a components provider to `RCTComponentViewFactory`. A library's views were
+    linked into the binary and unknown to JavaScript.
+
+### Verified end to end
+
+`react-native-safe-area-context` autolinks, builds, links and **runs**
+unmodified: `useSafeAreaInsets()` returns real values and the app renders.
+
+Getting there took one more correction, to the test rather than the fork. The
+package has to be installed the way a user installs it -- a real npm tarball
+under the `react-native-macos` alias -- because the Metro redirect takes its
+target from the install directory's name. A `file:` install is a symlink, and
+Node resolves `__dirname` through it, so the name comes back as
+`react-native` and the redirect becomes a no-op: the bundle then contains
+upstream React Native, which has no macOS view configs, and every third-party
+component fails with `Cannot read property 'bubblingEventTypes' of undefined`.
+
+That is worth knowing beyond this test. Anyone pointing an app at a local
+checkout of this fork will hit it, and the symptom names neither the cause nor
+the fix. `macos/scripts/publish.sh` without `--publish` builds exactly the
+tarball to install.
 
 ## P2 — parity with react-native-macos
 

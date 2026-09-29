@@ -33,41 +33,11 @@ NS_ASSUME_NONNULL_BEGIN
  * Storage-backed properties here use associated objects. The UIView subclass
  * overrides the hot ones with real ivars.
  */
-@interface NSView (UIKitCompat)
-
-@property (nonatomic, assign, getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
-@property (nonatomic, assign) CGFloat alpha;
-@property (nonatomic, copy, nullable) UIColor *backgroundColor;
-@property (nonatomic, assign) CGAffineTransform transform;
-@property (nonatomic, assign) CATransform3D transform3D;
-@property (nonatomic, assign) CGPoint center;
-@property (nonatomic, assign) UIViewContentMode contentMode;
-@property (nonatomic, readonly) UIEdgeInsets safeAreaInsets;
-@property (nonatomic, copy, nullable) NSArray *accessibilityElements;
-
-@property (nonatomic, readonly) BOOL canBecomeFirstResponder;
-@property (nonatomic, readonly) BOOL isFirstResponder;
-- (BOOL)becomeFirstResponder;
-
-// UIKit spells these without an argument. NSView's -setNeedsDisplay: and
-// -setNeedsLayout: take a BOOL, so these are distinct selectors, not overrides.
-- (void)setNeedsDisplay;
-- (void)setNeedsLayout;
-- (void)layoutIfNeeded;
-- (void)layoutSubviews;
-
-- (void)insertSubview:(NSView *)view atIndex:(NSInteger)index;
-- (void)bringSubviewToFront:(NSView *)view;
-- (void)sendSubviewToBack:(NSView *)view;
-- (BOOL)isDescendantOfView:(NSView *)view;
-
-- (nullable NSView *)hitTest:(CGPoint)point withEvent:(nullable UIEvent *)event;
-- (BOOL)pointInside:(CGPoint)point withEvent:(nullable UIEvent *)event;
-
-- (void)didMoveToWindow;
-- (void)didMoveToSuperview;
-
-@end
+// NSView's UIKit-shaped surface moved to RCTPlatformTypes.h, the public half.
+// Category methods are not @compatibility_alias: a second library declaring
+// the same ones is not an error, so these can be given to everybody -- and
+// third-party code written against react-native-macos calls them directly.
+// The implementation stays in UIView.m.
 
 /**
  * UIView is an alias for NSView, not a subclass.
