@@ -16,6 +16,8 @@
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/core/propsConversions.h>
 #include <react/renderer/imagemanager/primitives.h>
+#include <optional> // [macOS] for the tri-state grammarCheck prop
+#include <string>
 #include <vector>
 
 namespace facebook::react {
@@ -38,6 +40,28 @@ class TextInputProps final : public BaseTextInputProps {
 
   bool onKeyPressSync{false};
   bool onChangeSync{false};
+
+  // [macOS
+  // macOS-only props, matching microsoft/react-native-macos.
+  //
+  // They live on this class rather than on TextInputTraits because traits are
+  // shared with Android, which has no equivalent for any of them.
+
+  // Clear the field after the user submits, rather than leaving the text in
+  // place. AppKit has no equivalent; NSTextField keeps whatever was typed.
+  bool clearTextOnSubmit{false};
+
+  // Grammar checking, independent of spell checking. Unset means "leave
+  // AppKit's default alone", which is why it is optional rather than a bool.
+  std::optional<bool> grammarCheck{};
+
+  // Multiline only: keep the text scrollable but draw no vertical scroller.
+  bool hideVerticalScrollIndicator{false};
+
+  // The pasteboard types onPaste should fire for. Empty means none, so a
+  // component that does not ask for paste pays nothing.
+  std::vector<std::string> pastedTypes{};
+  // macOS]
 };
 
 } // namespace facebook::react

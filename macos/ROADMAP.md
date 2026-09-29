@@ -58,6 +58,24 @@ not the lookup.
 **Verify.** A `<Button>` taps; `Animated` with `useNativeDriver: true` runs to
 completion; a `console.warn` renders LogBox instead of blanking the app.
 
+## P0d - multiline TextInput does not scroll
+
+Found while adding `hideVerticalScrollIndicator`, which turned out to be a
+no-op: the text view's `enclosingScrollView` is nil.
+
+On iOS `UITextView` *is* a `UIScrollView`. The compatibility layer backs it
+with a bare `NSTextView`, which is not in a scroll view and is not one, so
+`scrollEnabled`, `contentOffset` and `contentSize` all degrade to nothing --
+and a multiline field taller than its frame simply clips.
+
+Reproduced: a `multiline` TextInput with twenty lines in a 90pt box, twelve
+wheel events over it, screenshots before and after are byte-identical.
+
+The fix is to give the shim's `RCTUIKitCompatTextView` a real `NSScrollView`,
+which is how AppKit expects an `NSTextView` to be used. That is a change to
+the view hierarchy the shim hands back, so it needs care: React Native sets
+frames on the text view directly.
+
 ## P1 — the component surface nobody has exercised
 
 These were never reached: the probe crashed on `<Button>` before rendering

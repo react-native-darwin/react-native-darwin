@@ -20,6 +20,8 @@
   NSArray<UIBarButtonItemGroup *> *_initialValueLeadingBarButtonGroups;
   NSArray<UIBarButtonItemGroup *> *_initialValueTrailingBarButtonGroups;
   NSArray<NSString *> *_acceptDragAndDropTypes;
+  NSInteger _grammarCheck; // [macOS]
+  BOOL _hideVerticalScrollIndicator; // [macOS]
   BOOL _disableKeyboardShortcuts;
 }
 
@@ -37,6 +39,7 @@ static UIColor *defaultPlaceholderColor(void)
 - (instancetype)initWithFrame:(CGRect)frame
 {
   if (self = [super initWithFrame:frame]) {
+    _grammarCheck = -1; // [macOS] negative means the prop was never set
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(textDidChange)
                                                  name:UITextViewTextDidChangeNotification
@@ -114,6 +117,57 @@ static UIColor *defaultPlaceholderColor(void)
 {
   return _acceptDragAndDropTypes;
 }
+
+// [macOS
+- (void)setGrammarCheck:(NSInteger)grammarCheck
+{
+  _grammarCheck = grammarCheck;
+#if TARGET_OS_OSX
+  // Negative means the prop was not set, so AppKit's own default stands.
+  if (grammarCheck >= 0) {
+    self.grammarCheckingEnabled = grammarCheck != 0;
+  }
+#endif
+}
+
+- (NSInteger)grammarCheck
+{
+  return _grammarCheck;
+}
+
+- (void)setHideVerticalScrollIndicator:(BOOL)hideVerticalScrollIndicator
+{
+  _hideVerticalScrollIndicator = hideVerticalScrollIndicator;
+  [self _applyHideVerticalScrollIndicator];
+}
+
+- (void)_applyHideVerticalScrollIndicator
+{
+#if TARGET_OS_OSX
+  // The text stays scrollable; only the scroller is taken away. An NSTextView
+  // is the document view of an NSScrollView, which is what draws it.
+  //
+  // There may be no scroll view yet -- or at all: the compatibility layer
+  // backs UITextView with a bare NSTextView, which is not in one. Applying
+  // this again whenever the view is re-parented keeps it correct once that
+  // changes, and costs nothing until then.
+  self.enclosingScrollView.hasVerticalScroller = !_hideVerticalScrollIndicator;
+#endif
+}
+
+#if TARGET_OS_OSX // [macOS]
+- (void)viewDidMoveToSuperview
+{
+  [super viewDidMoveToSuperview];
+  [self _applyHideVerticalScrollIndicator];
+}
+#endif // [macOS]
+
+- (BOOL)hideVerticalScrollIndicator
+{
+  return _hideVerticalScrollIndicator;
+}
+// macOS]
 
 - (void)setPlaceholder:(NSString *)placeholder
 {

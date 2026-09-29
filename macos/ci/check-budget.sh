@@ -44,10 +44,12 @@ MAX_UPSTREAM_LINES_REMOVED=450
 # Modal. The cap exists to keep review burden down, not to force unrelated
 # work into one commit, so new topics get their own commit and the diff
 # budgets above stay the real measure of fork size.
-# 15 admits the alias migration as one commit. It stays one commit -- each
-# wave of the migration amends it rather than appending -- so this number
-# should not need to move again for that work.
-MAX_COMMITS=15
+# One commit per topic. 15 was the alias migration, which stays a single commit
+# because each of its waves amended rather than appended; 16 is the macOS-only
+# TextInput props. Parity work will keep adding topics, so expect this to move
+# -- the diff budgets above are the real measure of fork size, and they are
+# what should be defended.
+MAX_COMMITS=16
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2

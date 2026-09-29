@@ -79,6 +79,50 @@ type TargetEvent = Readonly<{
   ...
 }>;
 
+// [macOS
+export type PastedTypes = 'fileUrl' | 'image' | 'string';
+
+type PasteEventData = Readonly<{
+  target: number,
+  dataTransfer: Readonly<{
+    files: $ReadOnlyArray<
+      Readonly<{
+        height: number,
+        size: number,
+        type: string,
+        uri: string,
+        width: number,
+      }>,
+    >,
+    items: $ReadOnlyArray<Readonly<{kind: string, type: string}>>,
+    types: $ReadOnlyArray<string>,
+  }>,
+}>;
+
+export type PasteEvent = NativeSyntheticEvent<PasteEventData>;
+
+type SettingChangeEventData = Readonly<{
+  target: number,
+  enabled: boolean,
+}>;
+
+export type SettingChangeEvent = NativeSyntheticEvent<SettingChangeEventData>;
+
+/**
+ * A key combination that submits the field. `key` is a `KeyboardEvent.key`
+ * value; the modifiers default to false, so `{key: 'Enter'}` means Enter with
+ * no modifiers held.
+ */
+export type SubmitKeyEvent = Readonly<{
+  key: string,
+  altKey?: ?boolean,
+  ctrlKey?: ?boolean,
+  metaKey?: ?boolean,
+  shiftKey?: ?boolean,
+  functionKey?: ?boolean,
+}>;
+// macOS]
+
 export type Selection = Readonly<{
   start: number,
   end: number,
@@ -286,6 +330,66 @@ export type TextInputIOSProps = Readonly<{
    * @platform ios
    */
   clearTextOnFocus?: ?boolean,
+
+  // [macOS
+  /**
+   * If `true`, clears the text field when the user submits.
+   * The default value is `false`.
+   * @platform macos
+   */
+  clearTextOnSubmit?: ?boolean,
+
+  /**
+   * If `false`, disables grammar checking. Grammar checking is independent of
+   * spell checking, which `spellCheck` controls.
+   * @platform macos
+   */
+  grammarCheck?: ?boolean,
+
+  /**
+   * If `true`, the vertical scroller is not drawn. The text still scrolls.
+   * Only valid if `multiline={true}`.
+   * @platform macos
+   */
+  hideVerticalScrollIndicator?: ?boolean,
+
+  /**
+   * The pasteboard types `onPaste` reports. Anything not listed is pasted by
+   * the system without notifying JavaScript.
+   * @platform macos
+   */
+  pastedTypes?: ?(PastedTypes | $ReadOnlyArray<PastedTypes>),
+
+  /**
+   * Called when the user pastes one of `pastedTypes` into the field.
+   * @platform macos
+   */
+  onPaste?: ?(e: PasteEvent) => mixed,
+
+  /**
+   * Called when the user toggles autocorrect from the context menu.
+   * @platform macos
+   */
+  onAutoCorrectChange?: ?(e: SettingChangeEvent) => mixed,
+
+  /**
+   * Called when the user toggles spell checking from the context menu.
+   * @platform macos
+   */
+  onSpellCheckChange?: ?(e: SettingChangeEvent) => mixed,
+
+  /**
+   * Called when the user toggles grammar checking from the context menu.
+   * @platform macos
+   */
+  onGrammarCheckChange?: ?(e: SettingChangeEvent) => mixed,
+
+  /**
+   * The key events that submit the field, in addition to Enter.
+   * @platform macos
+   */
+  submitKeyEvents?: ?$ReadOnlyArray<SubmitKeyEvent>,
+  // macOS]
 
   /**
    * Determines the types of data converted to clickable URLs in the text input.

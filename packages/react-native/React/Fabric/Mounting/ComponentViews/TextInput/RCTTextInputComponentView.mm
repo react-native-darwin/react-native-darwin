@@ -215,6 +215,18 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     _backedTextInputView.editable = newTextInputProps.traits.editable;
   }
 
+  // [macOS
+  if (newTextInputProps.grammarCheck != oldTextInputProps.grammarCheck) {
+    // -1 stands for "unset", so the platform default is left alone.
+    _backedTextInputView.grammarCheck =
+        newTextInputProps.grammarCheck.has_value() ? (*newTextInputProps.grammarCheck ? 1 : 0) : -1;
+  }
+
+  if (newTextInputProps.hideVerticalScrollIndicator != oldTextInputProps.hideVerticalScrollIndicator) {
+    _backedTextInputView.hideVerticalScrollIndicator = newTextInputProps.hideVerticalScrollIndicator;
+  }
+  // macOS]
+
 #if !TARGET_OS_TV
   if (newTextInputProps.multiline &&
       newTextInputProps.traits.dataDetectorTypes != oldTextInputProps.traits.dataDetectorTypes) {
@@ -430,6 +442,14 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   if (_eventEmitter && shouldSubmit) {
     static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSubmitEditing([self _textInputMetrics]);
   }
+
+  // [macOS] Clearing happens after the event, so onSubmitEditing still carries
+  // the text the user submitted.
+  if (shouldSubmit && static_cast<const TextInputProps &>(*_props).clearTextOnSubmit) {
+    [self _setAttributedString:[NSAttributedString new]];
+    [self textInputDidChange];
+  }
+
   return shouldSubmit;
 }
 
