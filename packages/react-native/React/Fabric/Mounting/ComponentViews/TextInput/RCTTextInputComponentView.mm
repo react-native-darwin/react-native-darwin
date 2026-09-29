@@ -80,6 +80,9 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
 
   BOOL _hasInputAccessoryView;
   CGSize _previousContentSize;
+#if TARGET_OS_OSX // [macOS]
+  NSScrollView *_textScrollView;
+#endif // [macOS]
 }
 
 #pragma mark - UIView overrides
@@ -98,12 +101,20 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     _originalTypingAttributes = [_backedTextInputView.typingAttributes copy];
     _previousContentSize = CGSizeZero;
 
-    [self addSubview:_backedTextInputView];
+    [self _attachBackedTextInputView]; // [macOS]
     [self initializeReturnKeyType];
   }
 
   return self;
 }
+
+#if TARGET_OS_OSX // [macOS]
+- (void)dealloc
+{
+  // The clip view observer is selector-based, so it does not zero itself.
+  [NSNotificationCenter.defaultCenter removeObserver:self name:NSViewBoundsDidChangeNotification object:nil];
+}
+#endif // [macOS]
 
 - (void)updateEventEmitter:(const EventEmitter::Shared &)eventEmitter
 {
@@ -214,6 +225,18 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   if (newTextInputProps.traits.editable != oldTextInputProps.traits.editable) {
     _backedTextInputView.editable = newTextInputProps.traits.editable;
   }
+
+  // [macOS
+  if (newTextInputProps.grammarCheck != oldTextInputProps.grammarCheck) {
+    // -1 stands for "unset", so the platform default is left alone.
+    _backedTextInputView.grammarCheck =
+        newTextInputProps.grammarCheck.has_value() ? (*newTextInputProps.grammarCheck ? 1 : 0) : -1;
+  }
+
+  if (newTextInputProps.hideVerticalScrollIndicator != oldTextInputProps.hideVerticalScrollIndicator) {
+    _backedTextInputView.hideVerticalScrollIndicator = newTextInputProps.hideVerticalScrollIndicator;
+  }
+  // macOS]
 
 #if !TARGET_OS_TV
   if (newTextInputProps.multiline &&
@@ -363,8 +386,20 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
 {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
-  _backedTextInputView.frame =
-      UIEdgeInsetsInsetRect(self.bounds, RCTUIEdgeInsetsFromEdgeInsets(layoutMetrics.borderWidth));
+  CGRect textInputFrame = UIEdgeInsetsInsetRect(self.bounds, RCTUIEdgeInsetsFromEdgeInsets(layoutMetrics.borderWidth));
+#if TARGET_OS_OSX // [macOS]
+  if (_textScrollView != nil) {
+    // The scroll view takes the layout box; the text view is its document and
+    // sizes itself to the text, which is what makes the overflow reachable.
+    _textScrollView.frame = textInputFrame;
+    CGFloat contentWidth = _textScrollView.contentSize.width;
+    _backedTextInputView.frame = CGRectMake(0, 0, contentWidth, NSHeight(_backedTextInputView.frame));
+  } else {
+    _backedTextInputView.frame = textInputFrame;
+  }
+#else // [macOS]
+  _backedTextInputView.frame = textInputFrame;
+#endif // [macOS]
   _backedTextInputView.textContainerInset =
       RCTUIEdgeInsetsFromEdgeInsets(layoutMetrics.contentInsets - layoutMetrics.borderWidth);
 
@@ -430,6 +465,14 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   if (_eventEmitter && shouldSubmit) {
     static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSubmitEditing([self _textInputMetrics]);
   }
+
+  // [macOS] Clearing happens after the event, so onSubmitEditing still carries
+  // the text the user submitted.
+  if (shouldSubmit && static_cast<const TextInputProps &>(*_props).clearTextOnSubmit) {
+    [self _setAttributedString:[NSAttributedString new]];
+    [self textInputDidChange];
+  }
+
   return shouldSubmit;
 }
 
@@ -515,10 +558,22 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   [self _updateTypingAttributes];
 
   const auto &props = static_cast<const TextInputProps &>(*_props);
+#if !TARGET_OS_OSX // [macOS]
   if (props.multiline && ![_lastStringStateWasUpdatedWith isEqual:_backedTextInputView.attributedText]) {
     [self textInputDidChange];
     _ignoreNextTextInputCall = YES;
   }
+#else // [macOS]
+  // NSTextView funnels every edit -- typing, paste, drops, undo -- through
+  // -didChangeText, which the compatibility layer bridges to
+  // -textInputDidChange. A selection change is therefore never the only
+  // notice that the text changed, and the workaround above is not just
+  // redundant here but wrong: clicking into a multiline field moves the
+  // selection while _lastStringStateWasUpdatedWith is still nil, so it fires
+  // a change carrying the pre-edit text and arms _ignoreNextTextInputCall --
+  // which then swallows the first keystroke the user types.
+  (void)props;
+#endif // [macOS]
 
   if (_eventEmitter) {
     static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSelectionChange([self _textInputMetrics]);
@@ -823,13 +878,68 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
 
 - (void)_setMultiline:(BOOL)multiline
 {
-  [_backedTextInputView removeFromSuperview];
+  [self _detachBackedTextInputView]; // [macOS]
   UIView<RCTBackedTextInputViewProtocol> *backedTextInputView = multiline ? [RCTUITextView new] : [RCTUITextField new];
   backedTextInputView.frame = _backedTextInputView.frame;
   RCTCopyBackedTextInput(_backedTextInputView, backedTextInputView);
   _backedTextInputView = backedTextInputView;
+  [self _attachBackedTextInputView]; // [macOS]
+}
+
+// [macOS
+// On iOS a UITextView *is* a UIScrollView, so a multiline field scrolls for
+// free. The compatibility layer backs it with an NSTextView, which is neither
+// in a scroll view nor one itself -- so without this a multiline field taller
+// than its frame clips its text with no way to reach the rest.
+//
+// A single-line field needs none of it: an NSTextField scrolls its own
+// content horizontally through its cell.
+- (void)_textScrollViewBoundsDidChange:(__unused NSNotification *)notification
+{
+  [self scrollViewDidScroll:(UIScrollView *)_backedTextInputView];
+}
+
+- (void)_detachBackedTextInputView
+{
+#if TARGET_OS_OSX
+  if (_textScrollView != nil) {
+    [NSNotificationCenter.defaultCenter removeObserver:self
+                                                  name:NSViewBoundsDidChangeNotification
+                                                object:_textScrollView.contentView];
+    _textScrollView.documentView = nil;
+    [_textScrollView removeFromSuperview];
+    _textScrollView = nil;
+  }
+#endif
+  [_backedTextInputView removeFromSuperview];
+}
+
+- (void)_attachBackedTextInputView
+{
+#if TARGET_OS_OSX
+  if ([_backedTextInputView isKindOfClass:[RCTUITextView class]]) {
+    _textScrollView = [[NSScrollView alloc] initWithFrame:_backedTextInputView.frame];
+    _textScrollView.drawsBackground = NO;
+    _textScrollView.borderType = NSNoBorder;
+    _textScrollView.hasVerticalScroller = !_backedTextInputView.hideVerticalScrollIndicator;
+    _textScrollView.hasHorizontalScroller = NO;
+    _textScrollView.autohidesScrollers = YES;
+    _textScrollView.documentView = _backedTextInputView;
+    [self addSubview:_textScrollView];
+
+    // AppKit reports scrolling as a bounds change on the clip view, not
+    // through a delegate, so onScroll has to be driven from here.
+    _textScrollView.contentView.postsBoundsChangedNotifications = YES;
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(_textScrollViewBoundsDidChange:)
+                                               name:NSViewBoundsDidChangeNotification
+                                             object:_textScrollView.contentView];
+    return;
+  }
+#endif
   [self addSubview:_backedTextInputView];
 }
+// macOS]
 
 - (void)_setShowSoftInputOnFocus:(BOOL)showSoftInputOnFocus
 {

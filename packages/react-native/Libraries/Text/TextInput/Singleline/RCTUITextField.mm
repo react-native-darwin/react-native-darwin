@@ -17,6 +17,7 @@
   NSArray<UIBarButtonItemGroup *> *_initialValueLeadingBarButtonGroups;
   NSArray<UIBarButtonItemGroup *> *_initialValueTrailingBarButtonGroups;
   NSArray<NSString *> *_acceptDragAndDropTypes;
+  NSInteger _grammarCheck; // [macOS]
 }
 
 // This should not be needed but internal build were failing without it.
@@ -26,6 +27,7 @@
 - (instancetype)initWithFrame:(CGRect)frame
 {
   if (self = [super initWithFrame:frame]) {
+    _grammarCheck = -1; // [macOS] negative means the prop was never set
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(_textDidChange)
                                                  name:UITextFieldTextDidChangeNotification
@@ -56,6 +58,38 @@
 }
 
 #pragma mark - Properties
+
+// [macOS
+- (void)setGrammarCheck:(NSInteger)grammarCheck
+{
+  _grammarCheck = grammarCheck;
+#if TARGET_OS_OSX
+  // An NSTextField does not check grammar itself: editing happens in the
+  // window's shared field editor, which is where the setting has to land. It
+  // is shared, so it is set while this field owns it and on every re-entry.
+  NSText *editor = [self.window fieldEditor:NO forObject:self];
+  if (grammarCheck >= 0 && [editor isKindOfClass:[NSTextView class]]) {
+    ((NSTextView *)editor).grammarCheckingEnabled = grammarCheck != 0;
+  }
+#endif
+}
+
+- (NSInteger)grammarCheck
+{
+  return _grammarCheck;
+}
+
+// A single-line field never scrolls vertically, so there is no scroller to
+// hide. The property exists to satisfy the protocol.
+- (void)setHideVerticalScrollIndicator:(__unused BOOL)hideVerticalScrollIndicator
+{
+}
+
+- (BOOL)hideVerticalScrollIndicator
+{
+  return NO;
+}
+// macOS]
 
 - (void)setAcceptDragAndDropTypes:(NSArray<NSString *> *)acceptDragAndDropTypes
 {

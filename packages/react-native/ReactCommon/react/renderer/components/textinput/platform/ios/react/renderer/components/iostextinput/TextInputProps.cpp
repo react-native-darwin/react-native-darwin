@@ -50,6 +50,33 @@ TextInputProps::TextInputProps(
           rawProps,
           "onChangeSync",
           sourceProps.onChangeSync,
-          {})) {};
+          {})),
+      // [macOS
+      clearTextOnSubmit(convertRawProp(
+          context,
+          rawProps,
+          "clearTextOnSubmit",
+          sourceProps.clearTextOnSubmit,
+          {})),
+      grammarCheck(convertRawProp(
+          context,
+          rawProps,
+          "grammarCheck",
+          sourceProps.grammarCheck,
+          {})),
+      hideVerticalScrollIndicator(convertRawProp(
+          context,
+          rawProps,
+          "hideVerticalScrollIndicator",
+          sourceProps.hideVerticalScrollIndicator,
+          {})),
+      pastedTypes(convertRawProp(
+          context,
+          rawProps,
+          "pastedTypes",
+          sourceProps.pastedTypes,
+          {}))
+      // macOS]
+      {};
 
 } // namespace facebook::react

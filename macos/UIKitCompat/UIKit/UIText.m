@@ -736,11 +736,18 @@ UIKIT_COMPAT_TEXT_INPUT_GEOMETRY
   self.allowsUndo = YES;
   self.minSize = NSMakeSize(0, 0);
   self.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
-  self.verticallyResizable = NO;
+  // Grow downwards with the text and wrap at the view's width. On iOS a
+  // UITextView is a UIScrollView and does this for itself; here the view is
+  // the document view of an NSScrollView, which does the scrolling, and this
+  // is the half of the arrangement the text view owns. Pinning the height
+  // instead -- which is what this did -- means text past the bottom of the
+  // frame is simply clipped, with no way to reach it.
+  self.verticallyResizable = YES;
   self.horizontallyResizable = NO;
-  self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+  self.autoresizingMask = NSViewWidthSizable;
   self.textContainer.widthTracksTextView = YES;
-  self.textContainer.heightTracksTextView = YES;
+  self.textContainer.heightTracksTextView = NO;
+  self.textContainer.containerSize = NSMakeSize(NSWidth(self.frame), CGFLOAT_MAX);
   self.textContainer.lineFragmentPadding = 0;
 }
 
