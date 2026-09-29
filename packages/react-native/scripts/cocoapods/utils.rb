@@ -57,11 +57,25 @@ class ReactNativePodsUtils
         # declares UIView and forty-odd more names. Everybody else gets the
         # public <UIKit/UIKit.h>, which satisfies the import and declares
         # nothing, so a library is free to declare those names itself.
+        # Realpaths on both sides. A package installed from a local path is a
+        # symlink, so the podspec's path runs through node_modules while
+        # fork_root is the checkout it points at -- and a plain prefix test
+        # then decides none of our own pods are ours, which leaves them
+        # without the prelude and fails the build on the first `UIView`.
+        real = ->(path) { File.exist?(path) ? File.realpath(path) : File.expand_path(path) }
+        fork_root = real.call(fork_root)
+        macos_root = real.call(macos_root)
+
         ours = {}
         installer.pod_targets.each do |pod_target|
-            spec_file = pod_target.root_spec.defined_in_file.to_s
-            ours[pod_target.name] = spec_file.start_with?(fork_root) ||
-                spec_file.start_with?(macos_root)
+            # Where the pod's *sources* are, not where its podspec is.
+            # CocoaPods copies every local podspec into Pods/Local Podspecs and
+            # points `defined_in_file` at the copy, so asking the spec where it
+            # came from answers "inside this app" for every pod alike.
+            root = pod_target.file_accessors.map { |accessor| accessor.path_list&.root&.to_s }.compact.first
+            root ||= pod_target.root_spec.defined_in_file.to_s
+            root = real.call(root)
+            ours[pod_target.name] = root.start_with?(fork_root) || root.start_with?(macos_root)
         end
 
         installer.pods_project.targets.each do |target|

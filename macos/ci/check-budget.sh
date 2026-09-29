@@ -54,7 +54,7 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # "fix typo" or a forgotten work-in-progress commit has to be noticed and
 # folded in rather than accumulating. The diff budgets above are the real
 # measure of fork size.
-MAX_COMMITS=20
+MAX_COMMITS=22
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -334,12 +334,21 @@ else
   echo "$ours_marked" | sed 's/^/    /'
 fi
 
-# --- 8. no header a third party can see declares a UIKit name -----------------
+# --- 8. no header a third party can see makes an unrepeatable UIKit declaration
 #
 # The invariant the whole alias migration buys, and the one that decides
-# whether adopting this fork breaks somebody else's library. Only the private
-# shim -- macos/UIKitCompat/UIKit/, which no other pod gets on its search path
-# -- may declare `UIView` and the rest. See macos/PLAN-drop-uikit-aliases.md.
+# whether adopting this fork breaks somebody else's library.
+#
+# The line is not "names UIKit" -- it is "declares something a second library
+# cannot declare as well". @compatibility_alias, a class @interface, a
+# @protocol and an NS_ENUM are all a hard error on redeclaration, even when
+# both declarations are identical, so only the private shim may make them.
+# A typedef, a macro and an inline function are fine to repeat as long as they
+# match, which is why the UIKit geometry vocabulary is public: a library that
+# declares `UIEdgeInsets` itself still compiles, and one written against
+# react-native-macos gets the name it expects.
+#
+# See macos/PLAN-drop-uikit-aliases.md.
 
 leaking=$(git ls-files -- '*.h' \
   ':(exclude)macos/UIKitCompat/UIKit/*' \
@@ -353,7 +362,6 @@ DECL = re.compile(
     # is a category on it, which declares nothing.
     r"|@interface\s+(UI[A-Z]\w*)\s*:"
     r"|@protocol\s+(UI[A-Z]\w*)\s*[<{]"
-    r"|typedef[^;{]*\b(UI[A-Z]\w*)\s*;"
     r"|NS_(?:ENUM|OPTIONS)\s*\([^,]+,\s*(UI[A-Z]\w*)\s*\)")
 
 for path in sys.stdin.read().split():

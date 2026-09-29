@@ -40,7 +40,7 @@ typedef struct CG_BOXABLE RCTLayoutContext RCTLayoutContext;
 static inline BOOL RCTLayoutMetricsEqualToLayoutMetrics(RCTLayoutMetrics a, RCTLayoutMetrics b)
 {
   return CGRectEqualToRect(a.frame, b.frame) && CGRectEqualToRect(a.contentFrame, b.contentFrame) &&
-      UIEdgeInsetsEqualToEdgeInsets(a.borderWidth, b.borderWidth) && a.displayType == b.displayType &&
+      RCTPlatformEdgeInsetsEqualToEdgeInsets(a.borderWidth, b.borderWidth) && a.displayType == b.displayType &&
       a.layoutDirection == b.layoutDirection;
 }
 

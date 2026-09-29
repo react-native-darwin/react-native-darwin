@@ -95,6 +95,41 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef uint64_t RCTPlatformAccessibilityTraits;
 typedef NSEdgeInsets RCTPlatformEdgeInsets;
+// Not every UIKit name in an installed header is a type. This one is a
+// function, and a third-party pod compiling our headers has no more access to
+// it than to UIView.
+#define RCTPlatformEdgeInsetsEqualToEdgeInsets NSEdgeInsetsEqual
+
+// The UIKit geometry vocabulary, given to everybody.
+//
+// Only @compatibility_alias and @protocol cannot be declared twice; a typedef,
+// a macro and an inline function all can, as long as the declarations match.
+// So the names below are safe to put on every pod's search path even though
+// they are UIKit's, and third-party code written against react-native-macos --
+// which expects React Native to provide them -- compiles unchanged.
+typedef NSEdgeInsets UIEdgeInsets;
+
+#define UIEdgeInsetsZero NSEdgeInsetsZero
+#define UIViewNoIntrinsicMetric NSViewNoIntrinsicMetric
+
+NS_INLINE UIEdgeInsets UIEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right)
+{
+  return NSEdgeInsetsMake(top, left, bottom, right);
+}
+
+NS_INLINE CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets)
+{
+  rect.origin.x += insets.left;
+  rect.origin.y += insets.top;
+  rect.size.width -= (insets.left + insets.right);
+  rect.size.height -= (insets.top + insets.bottom);
+  return rect;
+}
+
+NS_INLINE BOOL UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsets a, UIEdgeInsets b)
+{
+  return NSEdgeInsetsEqual(a, b);
+}
 typedef NSFontWeight RCTPlatformFontWeight;
 typedef NSEventModifierFlags RCTPlatformKeyModifierFlags;
 typedef NSUserInterfaceLayoutDirection RCTPlatformUserInterfaceLayoutDirection;
@@ -399,6 +434,47 @@ static const RCTPlatformAccessibilityTraits RCTPlatformAccessibilityTraitSwitch 
 
 @end
 
+
+// The UIKit-shaped surface React Native's own code -- and code written against
+// react-native-macos -- calls on a view. Public for the same reason the
+// geometry above is: a category is not an alias, so a second library
+// declaring these is not a conflict. The implementation ships in the shim.
+@interface NSView (RCTPlatformCompat)
+
+@property (nonatomic, assign, getter=isUserInteractionEnabled) BOOL userInteractionEnabled;
+@property (nonatomic, assign) CGFloat alpha;
+@property (nonatomic, copy, nullable) RCTUIColor *backgroundColor;
+@property (nonatomic, assign) CGAffineTransform transform;
+@property (nonatomic, assign) CATransform3D transform3D;
+@property (nonatomic, assign) CGPoint center;
+@property (nonatomic, assign) RCTPlatformViewContentMode contentMode;
+@property (nonatomic, readonly) RCTPlatformEdgeInsets safeAreaInsets;
+@property (nonatomic, copy, nullable) NSArray *accessibilityElements;
+
+@property (nonatomic, readonly) BOOL canBecomeFirstResponder;
+@property (nonatomic, readonly) BOOL isFirstResponder;
+- (BOOL)becomeFirstResponder;
+
+// UIKit spells these without an argument. NSView's -setNeedsDisplay: and
+// -setNeedsLayout: take a BOOL, so these are distinct selectors, not overrides.
+- (void)setNeedsDisplay;
+- (void)setNeedsLayout;
+- (void)layoutIfNeeded;
+- (void)layoutSubviews;
+
+- (void)insertSubview:(NSView *)view atIndex:(NSInteger)index;
+- (void)bringSubviewToFront:(NSView *)view;
+- (void)sendSubviewToBack:(NSView *)view;
+- (BOOL)isDescendantOfView:(NSView *)view;
+
+- (nullable NSView *)hitTest:(CGPoint)point withEvent:(nullable RCTPlatformEvent *)event;
+- (BOOL)pointInside:(CGPoint)point withEvent:(nullable RCTPlatformEvent *)event;
+
+- (void)didMoveToWindow;
+- (void)didMoveToSuperview;
+
+@end
+
 NS_ASSUME_NONNULL_END
 
 #else
@@ -445,6 +521,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef uint64_t RCTPlatformAccessibilityTraits;
 typedef UIEdgeInsets RCTPlatformEdgeInsets;
+#define RCTPlatformEdgeInsetsEqualToEdgeInsets UIEdgeInsetsEqualToEdgeInsets
 typedef UIFontWeight RCTPlatformFontWeight;
 typedef UIKeyModifierFlags RCTPlatformKeyModifierFlags;
 typedef UIUserInterfaceLayoutDirection RCTPlatformUserInterfaceLayoutDirection;
