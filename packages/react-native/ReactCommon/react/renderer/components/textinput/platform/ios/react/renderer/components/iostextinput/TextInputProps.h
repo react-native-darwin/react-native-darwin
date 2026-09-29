@@ -12,6 +12,7 @@
 #include <react/renderer/components/iostextinput/conversions.h>
 #include <react/renderer/components/iostextinput/primitives.h>
 #include <react/renderer/components/textinput/BaseTextInputProps.h>
+#include <react/renderer/components/view/KeyEvent.h> // [macOS] for submitKeyEvents
 #include <react/renderer/core/Props.h>
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/core/propsConversions.h>
@@ -61,6 +62,10 @@ class TextInputProps final : public BaseTextInputProps {
   // The pasteboard types onPaste should fire for. Empty means none, so a
   // component that does not ask for paste pays nothing.
   std::vector<std::string> pastedTypes{};
+
+  // Key combinations that submit the field, in addition to Return. Reuses the
+  // same descriptor as keyDownEvents so the two are described identically.
+  std::vector<HandledKey> submitKeyEvents{};
   // macOS]
 };
 

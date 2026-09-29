@@ -7,6 +7,8 @@
 
 #import "RCTTextInputComponentView.h"
 
+#import <algorithm> // [macOS] std::find, for matching a press against submitKeyEvents
+
 #import <react/featureflags/ReactNativeFeatureFlags.h>
 #import <react/renderer/components/iostextinput/TextInputComponentDescriptor.h>
 #import <react/renderer/textlayoutmanager/RCTAttributedTextUtils.h>
@@ -460,6 +462,22 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   }
 }
 
+// [macOS
+- (void)_submit
+{
+  if (_eventEmitter) {
+    static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSubmitEditing([self _textInputMetrics]);
+  }
+
+  // Clearing happens after the event, so onSubmitEditing still carries the
+  // text the user submitted.
+  if (static_cast<const TextInputProps &>(*_props).clearTextOnSubmit) {
+    [self _setAttributedString:[NSAttributedString new]];
+    [self textInputDidChange];
+  }
+}
+// macOS]
+
 - (BOOL)textInputShouldSubmitOnReturn
 {
   const SubmitBehavior submitBehavior = [self getSubmitBehavior];
@@ -470,15 +488,8 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   // (the blue key on onscreen keyboard) did pressed
   // (no connection to any specific "submitting" process).
 
-  if (_eventEmitter && shouldSubmit) {
-    static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSubmitEditing([self _textInputMetrics]);
-  }
-
-  // [macOS] Clearing happens after the event, so onSubmitEditing still carries
-  // the text the user submitted.
-  if (shouldSubmit && static_cast<const TextInputProps &>(*_props).clearTextOnSubmit) {
-    [self _setAttributedString:[NSAttributedString new]];
-    [self textInputDidChange];
+  if (shouldSubmit) {
+    [self _submit]; // [macOS]
   }
 
   return shouldSubmit;
@@ -590,6 +601,28 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
 
 // [macOS
 #if TARGET_OS_OSX
+// A key press that submits the field. Checked before the base class, which
+// would otherwise only ask whether the view claims the key, and before the
+// text system sees it, so the character is not inserted as well.
+- (BOOL)handleKeyboardEvent:(NSEvent *)event
+{
+  if (event.type == NSEventTypeKeyDown) {
+    const auto &props = static_cast<const TextInputProps &>(*_props);
+    const auto &submitKeys = props.submitKeyEvents;
+    if (!submitKeys.empty()) {
+      KeyEvent keyEvent = RCTKeyEventFromNSEvent(event);
+      if (std::find(submitKeys.cbegin(), submitKeys.cend(), keyEvent) != submitKeys.cend()) {
+        // Unconditionally, unlike Return: a key listed here is a submit key by
+        // definition, so submitBehavior -- which is "newline" for a multiline
+        // field -- does not get a say.
+        [self _submit];
+        return YES;
+      }
+    }
+  }
+  return [super handleKeyboardEvent:event];
+}
+
 - (void)textInputDidPaste:(NSArray<NSDictionary<NSString *, id> *> *)items
 {
   if (!_eventEmitter) {

@@ -179,6 +179,7 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
     grammarCheck: true,
     hideVerticalScrollIndicator: true,
     pastedTypes: true,
+    submitKeyEvents: true,
     // macOS]
     ...ConditionallyIgnoredEventHandlers({
       onChange: true,

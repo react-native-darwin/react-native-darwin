@@ -126,7 +126,7 @@ already links it.
 
 Real gaps, none of which stop an app working.
 
-  - **TextInput, nine props.** `submitKeyEvents`, `onPaste` -- done, `pastedTypes` -- done,
+  - **TextInput, nine props.** `submitKeyEvents` -- done, `onPaste` -- done, `pastedTypes` -- done,
     `grammarCheck`, `clearTextOnSubmit`, `hideVerticalScrollIndicator`,
     `onAutoCorrectChange` -- done, `onSpellCheckChange` -- done, `onGrammarCheckChange` -- done.
     `onPaste` and `pastedTypes` can reuse the `DataTransfer` plumbing already

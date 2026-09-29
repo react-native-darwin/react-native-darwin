@@ -75,6 +75,12 @@ TextInputProps::TextInputProps(
           rawProps,
           "pastedTypes",
           sourceProps.pastedTypes,
+          {})),
+      submitKeyEvents(convertRawProp(
+          context,
+          rawProps,
+          "submitKeyEvents",
+          sourceProps.submitKeyEvents,
           {}))
       // macOS]
       {};

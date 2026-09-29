@@ -12,6 +12,9 @@
 #import <React/RCTConstants.h>
 #import <React/RCTTouchableComponentViewProtocol.h>
 #import <React/UIView+ComponentViewProtocol.h>
+#if TARGET_OS_OSX // [macOS]
+#import <react/renderer/components/view/KeyEvent.h>
+#endif // [macOS]
 #import <react/renderer/components/view/ViewEventEmitter.h>
 #import <react/renderer/components/view/ViewProps.h>
 #import <react/renderer/core/EventEmitter.h>
@@ -19,6 +22,16 @@
 #import <react/renderer/core/Props.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+#if TARGET_OS_OSX // [macOS]
+/**
+ * Describe an AppKit key press the way the renderer does.
+ *
+ * Shared rather than duplicated: RCTTextInputComponentView needs the same
+ * description to match a press against `submitKeyEvents`.
+ */
+facebook::react::KeyEvent RCTKeyEventFromNSEvent(NSEvent *event);
+#endif // [macOS]
 
 /**
  * UIView class for <View> component.

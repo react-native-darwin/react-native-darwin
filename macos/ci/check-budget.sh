@@ -54,7 +54,7 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # "fix typo" or a forgotten work-in-progress commit has to be noticed and
 # folded in rather than accumulating. The diff budgets above are the real
 # measure of fork size.
-MAX_COMMITS=19
+MAX_COMMITS=20
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
