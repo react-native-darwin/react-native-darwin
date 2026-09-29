@@ -162,7 +162,10 @@ against that fork compiles here unchanged. `check-budget.sh` rule 8 fails the
 build if the line is crossed, and `macos/tests/` compiles a stand-in for
 `expo-modules-core`'s `Platform.h` on every run to prove it.
 
-See `macos/PLAN-drop-uikit-aliases.md` for how it was done.
+See `macos/PLAN-drop-uikit-aliases.md` for how it was done, and
+`macos/PLAN-upstream.md` for which of these changes belong upstream instead —
+the rename is 60% of this fork's modified files, and it exists only because
+React Native's public headers spell `UIView` directly.
 
 ## Traps worth not rediscovering
 
