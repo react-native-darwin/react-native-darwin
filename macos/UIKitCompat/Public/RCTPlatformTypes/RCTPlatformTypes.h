@@ -95,6 +95,41 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef uint64_t RCTPlatformAccessibilityTraits;
 typedef NSEdgeInsets RCTPlatformEdgeInsets;
+// Not every UIKit name in an installed header is a type. This one is a
+// function, and a third-party pod compiling our headers has no more access to
+// it than to UIView.
+#define RCTPlatformEdgeInsetsEqualToEdgeInsets NSEdgeInsetsEqual
+
+// The UIKit geometry vocabulary, given to everybody.
+//
+// Only @compatibility_alias and @protocol cannot be declared twice; a typedef,
+// a macro and an inline function all can, as long as the declarations match.
+// So the names below are safe to put on every pod's search path even though
+// they are UIKit's, and third-party code written against react-native-macos --
+// which expects React Native to provide them -- compiles unchanged.
+typedef NSEdgeInsets UIEdgeInsets;
+
+#define UIEdgeInsetsZero NSEdgeInsetsZero
+#define UIViewNoIntrinsicMetric NSViewNoIntrinsicMetric
+
+NS_INLINE UIEdgeInsets UIEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right)
+{
+  return NSEdgeInsetsMake(top, left, bottom, right);
+}
+
+NS_INLINE CGRect UIEdgeInsetsInsetRect(CGRect rect, UIEdgeInsets insets)
+{
+  rect.origin.x += insets.left;
+  rect.origin.y += insets.top;
+  rect.size.width -= (insets.left + insets.right);
+  rect.size.height -= (insets.top + insets.bottom);
+  return rect;
+}
+
+NS_INLINE BOOL UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsets a, UIEdgeInsets b)
+{
+  return NSEdgeInsetsEqual(a, b);
+}
 typedef NSFontWeight RCTPlatformFontWeight;
 typedef NSEventModifierFlags RCTPlatformKeyModifierFlags;
 typedef NSUserInterfaceLayoutDirection RCTPlatformUserInterfaceLayoutDirection;
@@ -445,6 +480,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef uint64_t RCTPlatformAccessibilityTraits;
 typedef UIEdgeInsets RCTPlatformEdgeInsets;
+#define RCTPlatformEdgeInsetsEqualToEdgeInsets UIEdgeInsetsEqualToEdgeInsets
 typedef UIFontWeight RCTPlatformFontWeight;
 typedef UIKeyModifierFlags RCTPlatformKeyModifierFlags;
 typedef UIUserInterfaceLayoutDirection RCTPlatformUserInterfaceLayoutDirection;

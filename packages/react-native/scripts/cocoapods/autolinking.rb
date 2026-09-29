@@ -58,7 +58,15 @@ def list_native_modules!(config_command)
   found_pods = []
 
   packages.each do |package_name, package|
-    next unless package_config = package["platforms"][autolinking_platform] # [macOS] was hardcoded "ios"
+    # [macOS] The per-package fallback matters as much as the project one
+    # above. @react-native-community/cli has no macOS platform plugin, so it
+    # files every package under "ios" even when the package's podspec declares
+    # :osx -- and without this every native module is silently skipped. It is
+    # the same podspec either way, and the platform check a few lines down
+    # rejects the ones that really do not support macOS, so the fallback costs
+    # nothing and is what makes autolinking work at all here.
+    package_config = package["platforms"][autolinking_platform] || package["platforms"]["ios"]
+    next unless package_config
 
     name = package["name"]
     podspec_path = package_config["podspecPath"]

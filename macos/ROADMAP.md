@@ -103,21 +103,60 @@ Measured since:
 |---|---|
 | `Switch` | **works** -- toggles, reports `onValueChange` |
 | `ActivityIndicator` | renders; whether it animates is unverified |
-| `ScrollView`, `FlatList` | render with scrollbars, then **crash on scroll** (P0a) |
-| `Modal` | **does not open**. No error; the press registers and nothing appears |
-| `Slider`, `Picker` | still unverified |
-| Third-party native module | still unverified |
+| `ScrollView`, `FlatList` | **work** -- scroll without crashing since P0a |
+| `Modal` | **works** -- presents as a sheet, `onShow` fires |
+| `Alert` | **works** -- presents as an `NSAlert` sheet |
+| `TextInput` | **works** -- both kinds, all nine macOS props, paste, scrolling |
+| Third-party native module | **partly** -- autolinks and links; see below |
 
-`Modal` is its own gap: RN mounts it through `RCTModalHostView`, which on iOS
-presents a `UIViewController` modally. There is no such thing on AppKit -- it
-needs either a child `NSWindow` or an overlay view in the same window, and
-which one it should be is a design decision, not a port.
+`Slider` and `Picker` used to be listed here. They are not part of React
+Native any more -- both were extracted to community packages years before
+0.87 -- so there is nothing in this fork to verify. Whether
+`@react-native-community/slider` works is the third-party question below,
+not a separate one.
 
-The third-party module check still matters most of the rest. The dependency
-provider landed in rc.12 is what makes autolinked modules reachable at all, and
-no actual module has been through it.
+## P1a - third-party native modules
 
-The last matters most. The dependency provider landed in rc.12 is what makes
+Tested by scaffolding an app with `react-native-darwin-init` and adding
+`react-native-safe-area-context`, which declares macOS support. Three real
+bugs fell out, all fixed:
+
+  - **Autolinking never worked at all.** `@react-native-community/cli` has no
+    macOS platform plugin, so it files every package under `ios` -- and the
+    per-package lookup had no fallback, so every native module was silently
+    skipped. It is the same podspec either way, and the platform check below
+    it rejects the ones that genuinely do not support macOS.
+
+  - **The compatibility layer reached nothing.** Which pods are ours was
+    decided by where their podspec sits, but CocoaPods copies every local
+    podspec into `Pods/Local Podspecs` and points `defined_in_file` at the
+    copy -- so the answer was "none of them". Ownership now comes from the
+    pod's source root. This was broken for HelloWorld too and only went
+    unnoticed because its Pods project still carried settings from before.
+
+  - **A UIKit function leaked through a public header.** `RCTLayout.h` called
+    `UIEdgeInsetsEqualToEdgeInsets`. The audit that drove the alias migration
+    looked for *types*, and missed that not every UIKit name is one.
+
+That last one turned up something better than a fix. Only
+`@compatibility_alias` and `@protocol` cannot be declared twice; a typedef, a
+macro and an inline function can, as long as the declarations match. So the
+UIKit geometry vocabulary -- `UIEdgeInsets` and its helpers -- is now in the
+*public* half, where a library that declares the same names is not a conflict.
+The private half keeps only what genuinely cannot repeat.
+
+### What is still missing
+
+`react-native-safe-area-context` gets further but does not yet build: it calls
+`layoutSubviews` on an `RCTView`. Code written against react-native-macos
+expects React Native to hand it the UIKit *method* surface on views, and this
+fork deliberately does not -- that surface is in the private shim.
+
+Those are category methods on `NSView`, so unlike a class alias they could be
+declared publicly without conflicting. Whether to do that is the open
+question: it is the line between "no library has to change" and "the shim
+stays small", and it should be decided deliberately rather than one missing
+selector at a time. The dependency provider landed in rc.12 is what makes
 autolinked modules reachable at all, and no actual module has been through it
 yet. `react-native-safe-area-context` is the obvious first one: BareExpo
 already links it.
