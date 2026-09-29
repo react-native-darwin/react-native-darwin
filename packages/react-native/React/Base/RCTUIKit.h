@@ -44,6 +44,71 @@
 // the concrete subclass carrying the UIKit method surface. See MACOS-FORK.md
 // section 4.5.
 
+// [macOS
+// The UIKit names react-native-macos declares on macOS, and that libraries
+// written against it expect React Native to provide.
+//
+// This is not a retreat from the split between the public and private halves.
+// The split is about names two parties might *both* declare; this is the set
+// the ecosystem has already agreed belongs to React Native. The proof is that
+// it is disjoint from what libraries declare for themselves --
+// expo-modules-core declares UIView, UIColor, UIImage, UIWindow, UIResponder,
+// UIImageView and UIHostingController, none of which appear below, and guards
+// the single overlap (UIApplication, a macro) with #ifndef.
+//
+// Without these, a library that declares its own UIView still fails on the
+// first `UIViewController *` in its headers, because nothing defines it. That
+// is exactly how expo-modules-core failed against this fork.
+//
+// Suppressed inside this fork's own pods, which already have the full shim.
+#ifndef RCT_UIKIT_COMPAT_SHIM
+
+#define UIApplicationDidBecomeActiveNotification NSApplicationDidBecomeActiveNotification
+#define UIApplicationDidEnterBackgroundNotification NSApplicationDidHideNotification
+#define UIApplicationDidFinishLaunchingNotification NSApplicationDidFinishLaunchingNotification
+#define UIApplicationWillResignActiveNotification NSApplicationWillResignActiveNotification
+#define UIApplicationWillEnterForegroundNotification NSApplicationWillUnhideNotification
+#define UIFontDescriptorFamilyAttribute NSFontFamilyAttribute
+#define UIFontDescriptorNameAttribute NSFontNameAttribute
+#define UIFontDescriptorSizeAttribute NSFontSizeAttribute
+#define UIFontDescriptorTraitsAttribute NSFontTraitsAttribute
+#define UIFontDescriptorFeatureSettingsAttribute NSFontFeatureSettingsAttribute
+#define UIFontSymbolicTrait NSFontSymbolicTrait
+#define UIFontWeightTrait NSFontWeightTrait
+#define UIFontFeatureTypeIdentifierKey NSFontFeatureTypeIdentifierKey
+#define UIFontFeatureSelectorIdentifierKey NSFontFeatureSelectorIdentifierKey
+#define UIFontWeightUltraLight NSFontWeightUltraLight
+#define UIFontWeightThin NSFontWeightThin
+#define UIFontWeightLight NSFontWeightLight
+#define UIFontWeightRegular NSFontWeightRegular
+#define UIFontWeightMedium NSFontWeightMedium
+#define UIFontWeightSemibold NSFontWeightSemibold
+#define UIFontWeightBold NSFontWeightBold
+#define UIFontWeightHeavy NSFontWeightHeavy
+#define UIFontWeightBlack NSFontWeightBlack
+#define UIFontDescriptorSystemDesign NSFontDescriptorSystemDesign
+#define UIFontDescriptorSystemDesignDefault NSFontDescriptorSystemDesignDefault
+#define UIFontDescriptorSystemDesignSerif NSFontDescriptorSystemDesignSerif
+#define UIFontDescriptorSystemDesignRounded NSFontDescriptorSystemDesignRounded
+#define UIFontDescriptorSystemDesignMonospaced NSFontDescriptorSystemDesignMonospaced
+#define UIActivityIndicatorView NSProgressIndicator
+#define UIUserInterfaceLayoutDirection NSUserInterfaceLayoutDirection
+@compatibility_alias UIAccessibilityCustomAction NSAccessibilityCustomAction;
+@compatibility_alias UIFont NSFont;
+@compatibility_alias UIViewController NSViewController;
+@compatibility_alias UIFontDescriptor NSFontDescriptor;
+#define UIEvent NSEvent
+#define UITouchType NSTouchType
+#define UIEventButtonMask NSEventButtonMask
+#define UIKeyModifierFlags NSEventModifierFlags
+#define UIGestureRecognizer NSGestureRecognizer
+#define UIGestureRecognizerDelegate NSGestureRecognizerDelegate
+#define UIApplication NSApplication
+@compatibility_alias UIBezierPath NSBezierPath;
+
+#endif // RCT_UIKIT_COMPAT_SHIM
+// macOS]
+
 // The rest of the RCTUI* vocabulary, renamed from the neutral names.
 @compatibility_alias RCTUIScrollView RCTPlatformScrollView;
 @compatibility_alias RCTUISlider RCTPlatformSlider;

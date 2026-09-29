@@ -21,6 +21,17 @@
 
 #pragma once
 
+/**
+ * Set whenever the real shim is in the translation unit.
+ *
+ * React Native's own <React/RCTUIKit.h> declares a subset of these names for
+ * third-party code that expects React Native to provide them, the way
+ * react-native-macos does. Inside this fork's pods both headers are present,
+ * and a name declared twice by @compatibility_alias is a hard error -- so the
+ * public copy stands down when it sees this.
+ */
+#define RCT_UIKIT_COMPAT_SHIM 1
+
 #include <TargetConditionals.h>
 
 #if !TARGET_OS_OSX
