@@ -38,6 +38,17 @@
   }
 }
 
+#if TARGET_OS_OSX // [macOS]
+- (void)viewDidLayout
+{
+  [super viewDidLayout];
+  // AppKit's post-layout hook. UIKit calls -viewDidLayoutSubviews instead,
+  // and that is where the modal reports its bounds back to Fabric. Without
+  // this bridge the modal's content is laid out at zero size.
+  [self viewDidLayoutSubviews];
+}
+#endif // [macOS]
+
 - (void)loadView
 {
   self.view = [RCTUIView new];  // [macOS] needs a flipped, layer-backed view

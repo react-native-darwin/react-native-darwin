@@ -15,7 +15,12 @@ function shouldUseTurboAnimatedModule(): boolean {
   if (ReactNativeFeatureFlags.cxxNativeAnimatedEnabled()) {
     return false;
   } else {
-    return Platform.OS === 'ios' && global.RN$Bridgeless === true;
+    // [macOS] macOS registers NativeAnimatedTurboModule, not the legacy
+    // NativeAnimatedModule, exactly as iOS does.
+    return (
+      (Platform.OS === 'ios' || Platform.OS === 'macos') &&
+      global.RN$Bridgeless === true
+    );
   }
 }
 

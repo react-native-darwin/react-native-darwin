@@ -855,7 +855,14 @@ UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
                      animated:(__unused BOOL)animated
                    completion:(void (^)(void))completion
 {
-  // AppKit's nearest equivalent is a sheet.
+  // AppKit's nearest equivalent is a sheet. UIKit sizes a presented
+  // controller's view to the screen; AppKit takes the sheet size from the
+  // view's own frame, which is empty for a freshly loaded controller, so the
+  // sheet would come up invisible. Match the presenter's bounds.
+  NSSize presentedSize = viewController.view.frame.size;
+  if (presentedSize.width < 1 || presentedSize.height < 1) {
+    viewController.view.frame = self.view.bounds;
+  }
   [self presentViewControllerAsSheet:viewController];
   objc_setAssociatedObject(
       self, @selector(presentedViewController), viewController, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -870,6 +877,13 @@ UIKIT_COMPAT_BOOL_PROP(scalesLargeContentImage, setScalesLargeContentImage)
   if (presented != nil) {
     [self dismissViewController:presented];
     objc_setAssociatedObject(self, @selector(presentedViewController), nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  } else if (self.presentingViewController != nil) {
+    // UIKit accepts this message on the presented controller itself, which is
+    // how RCTModalHostViewComponentView dismisses. AppKit only dismisses
+    // through the presenter, so forward it there.
+    NSViewController *presenter = self.presentingViewController;
+    [presenter dismissViewController:self];
+    objc_setAssociatedObject(presenter, @selector(presentedViewController), nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   }
   if (completion) {
     completion();
