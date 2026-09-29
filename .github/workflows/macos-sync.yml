@@ -1,0 +1,184 @@
+# [macOS] Rebase this fork onto a new upstream React Native release.
+#
+# The fork's whole premise is that its diff stays small enough to move forward.
+# This is what turns that from an intention into something observable: it
+# fetches the upstream tag, replays the macOS commits onto it, and runs the
+# budget and the shim tests against the result.
+#
+# What it deliberately does not do is push to the working branch. A rebase that
+# conflicts needs a person or an agent to decide what the macOS change was for,
+# and the `[macOS]` markers on every hunk exist precisely to make that decision
+# possible. So the job opens a branch and a pull request, or fails loudly, and
+# stops there.
+#
+# See MACOS-FORK.md section 7 for the procedure this automates, and section 2.4
+# for UPSTREAM_TAG, which is the fork's record of where it currently sits.
+
+name: '[macOS] Sync with upstream'
+
+on:
+  schedule:
+    # Weekly. React Native ships a patch every week or two, and a stale fork is
+    # cheaper to notice on a Monday than at release time.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: 'Upstream tag to rebase onto. Empty = the newest stable release.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Rebase onto upstream and check the budget
+    # The shim compiles against the real macOS SDK and the tests assert that
+    # UIKit.framework is absent from it. Neither is checkable on Linux.
+    runs-on: macos-15
+    permissions:
+      # Enough to push the sync branch and open the pull request. Nothing here
+      # touches the working branch.
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The rebase needs the full history and the upstream tags, and
+          # check-budget.sh diffs against the tag named in MACOS-FORK.md.
+          fetch-depth: 0
+
+      - name: Identify the current and target upstream tags
+        id: tags
+        run: |
+          set -euo pipefail
+
+          git remote add upstream https://github.com/facebook/react-native.git 2>/dev/null || true
+          git fetch --tags --quiet upstream
+
+          current="$(sed -n 's/^UPSTREAM_TAG = //p' MACOS-FORK.md | head -1)"
+          [ -n "$current" ] || { echo "::error::MACOS-FORK.md has no UPSTREAM_TAG"; exit 1; }
+
+          target='${{ inputs.upstream_tag }}'
+          if [ -z "$target" ]; then
+            # Newest stable release tag: vN.N.N with no prerelease suffix.
+            target="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V | tail -1)"
+          fi
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "target=$target"   >> "$GITHUB_OUTPUT"
+          echo "Currently on $current; newest upstream is $target."
+
+          if [ "$current" = "$target" ]; then
+            echo "uptodate=true" >> "$GITHUB_OUTPUT"
+            echo "Already current. Nothing to do."
+          else
+            echo "uptodate=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebase the macOS commits onto the new tag
+        id: rebase
+        if: steps.tags.outputs.uptodate == 'false'
+        run: |
+          set -euo pipefail
+          current='${{ steps.tags.outputs.current }}'
+          target='${{ steps.tags.outputs.target }}'
+
+          # Author the rebase as the fork, not as whoever triggered it.
+          git config user.name  'react-native-darwin sync'
+          git config user.email 'sync@react-native-darwin.invalid'
+
+          git checkout -b "sync/$target"
+
+          # This is MACOS-FORK.md section 7 step 2. A conflict is the expected
+          # interesting outcome, not an error in the workflow -- so say which
+          # commit stopped and leave the branch where it is.
+          if ! git rebase --onto "$target" "$current"; then
+            echo "conflicted=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Rebase onto \`$target\` conflicted"
+              echo
+              echo "Stopped at:"
+              echo
+              echo '```'
+              git --no-pager log -1 --format='%h %s' REBASE_HEAD 2>/dev/null || true
+              echo '```'
+              echo
+              echo "Conflicting paths:"
+              echo
+              echo '```'
+              git --no-pager diff --name-only --diff-filter=U
+              echo '```'
+              echo
+              echo "Every hunk in an upstream file carries a \`[macOS]\` marker"
+              echo "saying what it was for. Resolve against those, then run"
+              echo "\`macos/ci/check-budget.sh\` and \`macos/tests/run.sh\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            git rebase --abort || true
+            exit 1
+          fi
+
+          echo "conflicted=false" >> "$GITHUB_OUTPUT"
+
+      - name: Point the budget at the new tag
+        if: steps.tags.outputs.uptodate == 'false'
+        run: |
+          set -euo pipefail
+          current='${{ steps.tags.outputs.current }}'
+          target='${{ steps.tags.outputs.target }}'
+
+          # check-budget.sh reads the tag from here, so the budget would
+          # otherwise be measured against the version we just left.
+          sed -i '' "s|^UPSTREAM_TAG = .*|UPSTREAM_TAG = $target|" MACOS-FORK.md
+          git add MACOS-FORK.md
+          git commit -F - <<COMMIT
+          chore(macos): track upstream $target
+
+          Rebased from $current. Written by the sync workflow; the diff budgets
+          in macos/ci/check-budget.sh are what decide whether the result is
+          acceptable.
+          COMMIT
+
+      - name: Budget
+        if: steps.tags.outputs.uptodate == 'false'
+        run: ./macos/ci/check-budget.sh
+
+      - name: Shim tests
+        if: steps.tags.outputs.uptodate == 'false'
+        run: ./macos/tests/run.sh
+
+      - name: Open a pull request
+        if: steps.tags.outputs.uptodate == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          target='${{ steps.tags.outputs.target }}'
+          current='${{ steps.tags.outputs.current }}'
+
+          git push --force-with-lease origin "sync/$target"
+
+          # The gates passing means the diff still fits the budget and the shim
+          # still behaves. It does not mean the app runs: nothing in CI drives a
+          # window yet, and every macOS bug this fork has found was found that
+          # way. The PR body says so rather than implying otherwise.
+          cat > /tmp/pr-body.md <<BODY
+          Rebases the macOS commits from \`$current\` onto \`$target\`.
+
+          The budget linter and the shim tests pass, which means the diff still
+          fits and the compatibility layer still behaves.
+
+          **It does not mean the app runs.** Nothing in CI drives a window, and
+          every macOS defect this fork has found was found by driving one. Build
+          \`macos/HelloWorld\` and exercise it before merging.
+          BODY
+
+          gh pr create \
+            --base "${{ github.ref_name }}" \
+            --head "sync/$target" \
+            --title "Sync with upstream $target" \
+            --body-file /tmp/pr-body.md \
+            || echo "A pull request for sync/$target already exists."
