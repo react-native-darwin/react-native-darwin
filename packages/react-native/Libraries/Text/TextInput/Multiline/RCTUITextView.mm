@@ -22,6 +22,7 @@
   NSArray<NSString *> *_acceptDragAndDropTypes;
   NSInteger _grammarCheck; // [macOS]
   BOOL _hideVerticalScrollIndicator; // [macOS]
+  NSArray<NSString *> *_pastedTypes; // [macOS]
   BOOL _disableKeyboardShortcuts;
 }
 
@@ -119,6 +120,72 @@ static UIColor *defaultPlaceholderColor(void)
 }
 
 // [macOS
+#if TARGET_OS_OSX
+// An RCTUITextView *is* an NSTextView, so it receives these directly -- no
+// field editor in the way, unlike the single-line case.
+- (void)toggleAutomaticSpellingCorrection:(id)sender
+{
+  [super toggleAutomaticSpellingCorrection:sender];
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeAutoCorrect:)]) {
+    [delegate textInputDidChangeAutoCorrect:self.isAutomaticSpellingCorrectionEnabled];
+  }
+}
+
+- (void)toggleContinuousSpellChecking:(id)sender
+{
+  [super toggleContinuousSpellChecking:sender];
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeSpellCheck:)]) {
+    [delegate textInputDidChangeSpellCheck:self.isContinuousSpellCheckingEnabled];
+  }
+}
+
+- (void)toggleGrammarChecking:(id)sender
+{
+  [super toggleGrammarChecking:sender];
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeGrammarCheck:)]) {
+    [delegate textInputDidChangeGrammarCheck:self.isGrammarCheckingEnabled];
+  }
+}
+#endif
+
+#if TARGET_OS_OSX
+// A text view advertises what it can read, and AppKit disables Paste
+// entirely when the pasteboard holds nothing on that list -- which is why an
+// image cannot be pasted into a text field by default. Declaring the types
+// the component asked for is what makes onPaste reachable for them.
+- (NSArray<NSPasteboardType> *)readablePasteboardTypes
+{
+  NSMutableArray<NSPasteboardType> *types = [[super readablePasteboardTypes] mutableCopy] ?: [NSMutableArray new];
+  for (NSString *pastedType in _pastedTypes) {
+    if ([pastedType isEqualToString:@"image"]) {
+      for (NSPasteboardType type in @[ NSPasteboardTypePNG, NSPasteboardTypeTIFF ]) {
+        if (![types containsObject:type]) {
+          [types addObject:type];
+        }
+      }
+    } else if ([pastedType isEqualToString:@"fileUrl"]) {
+      if (![types containsObject:NSPasteboardTypeFileURL]) {
+        [types addObject:NSPasteboardTypeFileURL];
+      }
+    }
+  }
+  return types;
+}
+
+- (void)setPastedTypes:(NSArray<NSString *> *)pastedTypes
+{
+  _pastedTypes = [pastedTypes copy];
+}
+
+- (NSArray<NSString *> *)pastedTypes
+{
+  return _pastedTypes;
+}
+#endif
+
 - (void)setGrammarCheck:(NSInteger)grammarCheck
 {
   _grammarCheck = grammarCheck;
@@ -271,6 +338,12 @@ static UIColor *defaultPlaceholderColor(void)
 {
   _textWasPasted = YES;
   [super paste:sender];
+#if TARGET_OS_OSX // [macOS]
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidPaste:)]) {
+    [delegate textInputDidPaste:RCTUIKitCompatPastedItems(NSPasteboard.generalPasteboard)];
+  }
+#endif // [macOS]
 }
 
 // Turn off scroll animation to fix flaky scrolling.

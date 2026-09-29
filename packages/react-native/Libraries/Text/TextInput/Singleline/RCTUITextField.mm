@@ -11,6 +11,13 @@
 #import <React/RCTUtils.h>
 #import <React/UIView+React.h>
 
+#if TARGET_OS_OSX // [macOS]
+// Declared here rather than in the header: the protocol belongs to the
+// private compatibility layer, and an installed header must not name it.
+@interface RCTUITextField () <RCTUIKitCompatTextEditingObserver>
+@end
+#endif // [macOS]
+
 @implementation RCTUITextField {
   RCTBackedTextFieldDelegateAdapter *_textInputDelegateAdapter;
   NSDictionary<NSAttributedStringKey, id> *_defaultTextAttributes;
@@ -18,6 +25,7 @@
   NSArray<UIBarButtonItemGroup *> *_initialValueTrailingBarButtonGroups;
   NSArray<NSString *> *_acceptDragAndDropTypes;
   NSInteger _grammarCheck; // [macOS]
+  NSArray<NSString *> *_pastedTypes; // [macOS]
 }
 
 // This should not be needed but internal build were failing without it.
@@ -60,6 +68,62 @@
 #pragma mark - Properties
 
 // [macOS
+#if TARGET_OS_OSX
+// Forwarded from the window's shared field editor, which is what actually
+// receives these -- an NSTextField does not edit its own text.
+- (void)uikitCompat_didPasteItems:(NSArray<NSDictionary<NSString *, id> *> *)items
+{
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidPaste:)]) {
+    [delegate textInputDidPaste:items];
+  }
+}
+
+- (void)uikitCompat_didToggleAutoCorrect:(BOOL)enabled
+{
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeAutoCorrect:)]) {
+    [delegate textInputDidChangeAutoCorrect:enabled];
+  }
+}
+
+- (void)uikitCompat_didToggleSpellCheck:(BOOL)enabled
+{
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeSpellCheck:)]) {
+    [delegate textInputDidChangeSpellCheck:enabled];
+  }
+}
+
+- (void)uikitCompat_didToggleGrammarCheck:(BOOL)enabled
+{
+  id<RCTBackedTextInputDelegate> delegate = self.textInputDelegate;
+  if ([delegate respondsToSelector:@selector(textInputDidChangeGrammarCheck:)]) {
+    [delegate textInputDidChangeGrammarCheck:enabled];
+  }
+}
+#endif
+
+#if TARGET_OS_OSX
+// An NSTextField cannot declare what it will accept: editing happens in the
+// window's shared field editor, and that is the text view AppKit asks. The
+// editor calls back here for the list.
+- (NSArray<NSString *> *)uikitCompat_pastedTypes
+{
+  return _pastedTypes;
+}
+
+- (void)setPastedTypes:(NSArray<NSString *> *)pastedTypes
+{
+  _pastedTypes = [pastedTypes copy];
+}
+
+- (NSArray<NSString *> *)pastedTypes
+{
+  return _pastedTypes;
+}
+#endif
+
 - (void)setGrammarCheck:(NSInteger)grammarCheck
 {
   _grammarCheck = grammarCheck;

@@ -236,6 +236,14 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
   if (newTextInputProps.hideVerticalScrollIndicator != oldTextInputProps.hideVerticalScrollIndicator) {
     _backedTextInputView.hideVerticalScrollIndicator = newTextInputProps.hideVerticalScrollIndicator;
   }
+
+  if (newTextInputProps.pastedTypes != oldTextInputProps.pastedTypes) {
+    NSMutableArray<NSString *> *pastedTypes = [NSMutableArray arrayWithCapacity:newTextInputProps.pastedTypes.size()];
+    for (const auto &pastedType : newTextInputProps.pastedTypes) {
+      [pastedTypes addObject:RCTNSStringFromString(pastedType)];
+    }
+    _backedTextInputView.pastedTypes = pastedTypes;
+  }
   // macOS]
 
 #if !TARGET_OS_TV
@@ -579,6 +587,51 @@ static NSSet<NSNumber *> *returnKeyTypesSet;
     static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSelectionChange([self _textInputMetrics]);
   }
 }
+
+// [macOS
+#if TARGET_OS_OSX
+- (void)textInputDidPaste:(NSArray<NSDictionary<NSString *, id> *> *)items
+{
+  if (!_eventEmitter) {
+    return;
+  }
+  TextInputEventEmitter::PasteMetrics metrics;
+  metrics.items.reserve(items.count);
+  for (NSDictionary<NSString *, id> *item in items) {
+    TextInputEventEmitter::PastedItem pastedItem;
+    pastedItem.kind = RCTStringFromNSString(item[@"kind"]);
+    pastedItem.type = RCTStringFromNSString(item[@"type"]);
+    pastedItem.uri = RCTStringFromNSString(item[@"uri"]);
+    pastedItem.width = [item[@"width"] doubleValue];
+    pastedItem.height = [item[@"height"] doubleValue];
+    pastedItem.size = [item[@"size"] intValue];
+    metrics.items.push_back(pastedItem);
+  }
+  static_cast<const TextInputEventEmitter &>(*_eventEmitter).onPaste(metrics);
+}
+
+- (void)textInputDidChangeAutoCorrect:(BOOL)enabled
+{
+  if (_eventEmitter) {
+    static_cast<const TextInputEventEmitter &>(*_eventEmitter).onAutoCorrectChange({.enabled = (bool)enabled});
+  }
+}
+
+- (void)textInputDidChangeSpellCheck:(BOOL)enabled
+{
+  if (_eventEmitter) {
+    static_cast<const TextInputEventEmitter &>(*_eventEmitter).onSpellCheckChange({.enabled = (bool)enabled});
+  }
+}
+
+- (void)textInputDidChangeGrammarCheck:(BOOL)enabled
+{
+  if (_eventEmitter) {
+    static_cast<const TextInputEventEmitter &>(*_eventEmitter).onGrammarCheckChange({.enabled = (bool)enabled});
+  }
+}
+#endif
+// macOS]
 
 #pragma mark - RCTBackedTextInputDelegate (UIScrollViewDelegate)
 
