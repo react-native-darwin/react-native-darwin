@@ -52,8 +52,65 @@
   RCTSurfaceHostingView *_surfaceHostingView;
 }
 
+// A Mac app's keyboard shortcuts are its main menu: Cmd+V is not a keystroke
+// the text system handles, it is a key equivalent that AppKit matches against
+// the menu and turns into -paste:. An app with no menu cannot cut, copy,
+// paste, undo or select all from the keyboard at all -- so this is the
+// minimum, not decoration.
+static NSMenu *RCTBuildMainMenu(void)
+{
+  NSString *appName = NSProcessInfo.processInfo.processName;
+  NSMenu *mainMenu = [NSMenu new];
+
+  NSMenuItem *appMenuItem = [NSMenuItem new];
+  NSMenu *appMenu = [NSMenu new];
+  [appMenu addItemWithTitle:[NSString stringWithFormat:@"About %@", appName]
+                     action:@selector(orderFrontStandardAboutPanel:)
+              keyEquivalent:@""];
+  [appMenu addItem:[NSMenuItem separatorItem]];
+  [appMenu addItemWithTitle:[NSString stringWithFormat:@"Hide %@", appName]
+                     action:@selector(hide:)
+              keyEquivalent:@"h"];
+  NSMenuItem *hideOthers = [appMenu addItemWithTitle:@"Hide Others"
+                                              action:@selector(hideOtherApplications:)
+                                       keyEquivalent:@"h"];
+  hideOthers.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
+  [appMenu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
+  [appMenu addItem:[NSMenuItem separatorItem]];
+  [appMenu addItemWithTitle:[NSString stringWithFormat:@"Quit %@", appName]
+                     action:@selector(terminate:)
+              keyEquivalent:@"q"];
+  appMenuItem.submenu = appMenu;
+  [mainMenu addItem:appMenuItem];
+
+  NSMenuItem *editMenuItem = [NSMenuItem new];
+  NSMenu *editMenu = [[NSMenu alloc] initWithTitle:@"Edit"];
+  [editMenu addItemWithTitle:@"Undo" action:@selector(undo:) keyEquivalent:@"z"];
+  NSMenuItem *redo = [editMenu addItemWithTitle:@"Redo" action:@selector(redo:) keyEquivalent:@"z"];
+  redo.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+  [editMenu addItem:[NSMenuItem separatorItem]];
+  [editMenu addItemWithTitle:@"Cut" action:@selector(cut:) keyEquivalent:@"x"];
+  [editMenu addItemWithTitle:@"Copy" action:@selector(copy:) keyEquivalent:@"c"];
+  [editMenu addItemWithTitle:@"Paste" action:@selector(paste:) keyEquivalent:@"v"];
+  [editMenu addItemWithTitle:@"Delete" action:@selector(delete:) keyEquivalent:@""];
+  [editMenu addItemWithTitle:@"Select All" action:@selector(selectAll:) keyEquivalent:@"a"];
+  editMenuItem.submenu = editMenu;
+  [mainMenu addItem:editMenuItem];
+
+  NSMenuItem *windowMenuItem = [NSMenuItem new];
+  NSMenu *windowMenu = [[NSMenu alloc] initWithTitle:@"Window"];
+  [windowMenu addItemWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@"m"];
+  [windowMenu addItemWithTitle:@"Zoom" action:@selector(performZoom:) keyEquivalent:@""];
+  windowMenuItem.submenu = windowMenu;
+  [mainMenu addItem:windowMenuItem];
+
+  return mainMenu;
+}
+
 - (void)applicationDidFinishLaunching:(__unused NSNotification *)notification
 {
+  NSApp.mainMenu = RCTBuildMainMenu();
+
   // Route every RCTLog -- including JS console output and redbox-worthy errors
   // -- to stderr. Without this a JS exception is invisible: there is no redbox
   // window on macOS yet, and the bare Metro server has no /logs middleware.

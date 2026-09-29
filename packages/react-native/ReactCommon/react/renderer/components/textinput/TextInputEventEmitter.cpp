@@ -178,6 +178,81 @@ void TextInputEventEmitter::onScroll(const Metrics& textInputMetrics) const {
   });
 }
 
+// [macOS
+static jsi::Value settingChangePayload(
+    jsi::Runtime& runtime,
+    const TextInputEventEmitter::SettingChangeMetrics& metrics) {
+  auto payload = jsi::Object(runtime);
+  payload.setProperty(runtime, "enabled", metrics.enabled);
+  return payload;
+}
+
+// Shaped like a DOM ClipboardEvent's dataTransfer, which is what
+// react-native-macos reports and what a web-shaped handler expects.
+static jsi::Value pastePayload(
+    jsi::Runtime& runtime,
+    const TextInputEventEmitter::PasteMetrics& pasteMetrics) {
+  auto files = jsi::Array(runtime, pasteMetrics.items.size());
+  auto items = jsi::Array(runtime, pasteMetrics.items.size());
+  auto types = jsi::Array(runtime, pasteMetrics.items.size());
+
+  for (size_t i = 0; i < pasteMetrics.items.size(); i++) {
+    const auto& pastedItem = pasteMetrics.items[i];
+
+    auto file = jsi::Object(runtime);
+    file.setProperty(runtime, "uri", pastedItem.uri);
+    file.setProperty(runtime, "type", pastedItem.type);
+    file.setProperty(runtime, "width", pastedItem.width);
+    file.setProperty(runtime, "height", pastedItem.height);
+    file.setProperty(runtime, "size", pastedItem.size);
+    files.setValueAtIndex(runtime, i, file);
+
+    auto item = jsi::Object(runtime);
+    item.setProperty(runtime, "kind", pastedItem.kind);
+    item.setProperty(runtime, "type", pastedItem.type);
+    items.setValueAtIndex(runtime, i, item);
+
+    types.setValueAtIndex(runtime, i, jsi::String::createFromUtf8(runtime, pastedItem.type));
+  }
+
+  auto dataTransfer = jsi::Object(runtime);
+  dataTransfer.setProperty(runtime, "files", files);
+  dataTransfer.setProperty(runtime, "items", items);
+  dataTransfer.setProperty(runtime, "types", types);
+
+  auto payload = jsi::Object(runtime);
+  payload.setProperty(runtime, "dataTransfer", dataTransfer);
+  return payload;
+}
+
+void TextInputEventEmitter::onPaste(const PasteMetrics& pasteMetrics) const {
+  dispatchEvent("paste", [pasteMetrics](jsi::Runtime& runtime) {
+    return pastePayload(runtime, pasteMetrics);
+  });
+}
+
+void TextInputEventEmitter::onAutoCorrectChange(
+    const SettingChangeMetrics& metrics) const {
+  dispatchEvent("autoCorrectChange", [metrics](jsi::Runtime& runtime) {
+    return settingChangePayload(runtime, metrics);
+  });
+}
+
+void TextInputEventEmitter::onSpellCheckChange(
+    const SettingChangeMetrics& metrics) const {
+  dispatchEvent("spellCheckChange", [metrics](jsi::Runtime& runtime) {
+    return settingChangePayload(runtime, metrics);
+  });
+}
+
+void TextInputEventEmitter::onGrammarCheckChange(
+    const SettingChangeMetrics& metrics) const {
+  dispatchEvent("grammarCheckChange", [metrics](jsi::Runtime& runtime) {
+    return settingChangePayload(runtime, metrics);
+  });
+}
+// macOS]
+
 void TextInputEventEmitter::dispatchTextInputEvent(
     const std::string& name,
     const Metrics& textInputMetrics,

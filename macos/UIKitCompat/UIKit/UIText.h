@@ -275,4 +275,39 @@ typedef RCTPlatformKeyboardAppearance UIKeyboardAppearance;
 #define UITextViewTextDidBeginEditingNotification NSTextDidBeginEditingNotification
 #define UITextViewTextDidEndEditingNotification NSTextDidEndEditingNotification
 
+/**
+ * What a text field wants to hear from the window's field editor.
+ *
+ * An NSTextField does not edit its own text: the window hands it a shared
+ * field editor, an NSTextView, and that is what receives -paste: and the
+ * context menu's checking toggles. The editor forwards them here so the field
+ * -- which is the view React Native knows about -- can react.
+ *
+ * A multiline field needs none of this. An RCTUIKitCompatTextView is itself
+ * an NSTextView, so it receives those messages directly.
+ */
+@protocol RCTUIKitCompatTextEditingObserver <NSObject>
+@optional
+- (void)uikitCompat_didPasteItems:(NSArray<NSDictionary<NSString *, id> *> *)items;
+- (void)uikitCompat_didToggleAutoCorrect:(BOOL)enabled;
+- (void)uikitCompat_didToggleSpellCheck:(BOOL)enabled;
+- (void)uikitCompat_didToggleGrammarCheck:(BOOL)enabled;
+// Which pasteboard types the field will accept. AppKit disables Paste when
+// the pasteboard holds nothing the text view says it can read, so without
+// this an image cannot reach a text field at all.
+- (NSArray<NSString *> *)uikitCompat_pastedTypes;
+@end
+
+/**
+ * Describe what is on a pasteboard, one dictionary per object.
+ *
+ * Each has `kind` ("file" or "string") and `type` (a MIME type). A file also
+ * has `uri`, `width`, `height` and `size`. Images that arrive as raw data
+ * rather than as a file are written to a temporary file so that JavaScript has
+ * a uri to work with, which is what react-native-macos reports too.
+ */
+// FOUNDATION_EXTERN, not extern: the definition is compiled as Objective-C,
+// and ObjC++ callers would otherwise look for a C++-mangled symbol.
+FOUNDATION_EXTERN NSArray<NSDictionary<NSString *, id> *> *RCTUIKitCompatPastedItems(NSPasteboard *pasteboard);
+
 NS_ASSUME_NONNULL_END

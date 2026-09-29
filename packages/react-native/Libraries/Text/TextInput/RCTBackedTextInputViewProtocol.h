@@ -46,6 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) NSInteger grammarCheck;
 // Multiline only: keep the text scrollable but draw no vertical scroller.
 @property (nonatomic, assign) BOOL hideVerticalScrollIndicator;
+// Which pasteboard types onPaste reports: "string", "image", "fileUrl".
+// A text view will not accept an image at all unless it says it can read one,
+// so this also decides what the field will take.
+@property (nonatomic, copy, nullable) NSArray<NSString *> *pastedTypes;
 // macOS]
 
 // This protocol disallows direct access to `selectedTextRange` property because
