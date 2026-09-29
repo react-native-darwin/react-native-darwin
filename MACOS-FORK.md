@@ -745,8 +745,11 @@ Commits:                 n / 13
 
 1. Fetch the new tag.
 2. `git rebase --onto upstream/<new-tag> upstream/<old-tag> macos/<old-tag>`
-3. Commits 1 to 3 replay with no conflict. They only add files.
-4. Resolve conflicts in commits 4 to 10. The `[macOS]` markers show exactly what each hunk was for.
+3. Commits 3 and 12 replay with no conflict: they only touch files this fork owns.
+4. Resolve conflicts in the rest. Two carry most of the risk -- commit 5, which
+   wires the pod graph and the host app, and commit 7, the alias migration --
+   because they are the two that touch upstream headers in bulk. The `[macOS]`
+   markers show exactly what each hunk was for.
 5. Build for macOS. Run the budget linter.
 6. Update `UPSTREAM_TAG` and `UPSTREAM_SHA` in §2.4.
 7. Update the real line counts in §5.2.

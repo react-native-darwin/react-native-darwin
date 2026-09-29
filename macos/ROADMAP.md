@@ -1,253 +1,184 @@
-# What is missing, and in what order
+# What works, what does not, and what is next
 
-Everything below was measured on 2026-09-27 against `0.87.1-rc.12`, by running
-the code rather than by reading it. Where something is listed as unverified, it
-means exactly that: not that it works.
+Everything below was measured on 2026-09-29 against `0.87.1`, by running the
+code rather than by reading it — driving a real app with synthetic mouse, wheel
+and key events and looking at the window. Where something is listed as
+unverified it means exactly that: not that it works.
 
-The ordering is by what stops an ordinary app from working, not by how close it
-gets us to react-native-macos feature-for-feature. Those are different lists,
-and the first one matters more.
+Every gap ever recorded on this page was found by running an app. None would
+have been caught by the build passing.
 
-## P0a — scrolling crashes the app
+## What works
 
-Scrolling a `ScrollView` or a `FlatList` with the trackpad kills the process.
-Reproducible, immediate, and **silent**: no exception, no log line, no crash
-report. Both render correctly and show scrollbars right up until the first
-scroll event.
-
-Lists are most of what an app is, so this outranks everything below it.
-
-**Where to start.** The mouse-to-touch translation added for presses handles
-`mouseDown`/`mouseDragged`/`mouseUp` but nothing routes `scrollWheel:`. The
-crash is likely in the scroll event path rather than in the translation, since
-no touch is involved -- but that is a guess, and the first job is a stack, not
-a fix. Run under a debugger rather than from a terminal; the process dies
-without unwinding.
-
-## P0b — `<Button>` and `TouchableOpacity` do not work
-
-`NativeAnimatedModule` never reaches JS. Every `Animated` value with
-`useNativeDriver: true` throws `Invariant Violation: Native animated module is
-not available`, and that takes down whatever rendered it.
-
-The blast radius is much wider than `Animated`:
-
-  - `TouchableOpacity` and `TouchableHighlight` animate opacity natively.
-  - `<Button>` wraps `TouchableOpacity`, so a single `<Button>` blanks the app.
-  - **LogBox** animates too. So *any* warning is fatal: the warning renders
-    LogBox, LogBox throws, and the screen goes white. Several blank screens
-    chased during this work were this, not the thing being tested.
-
-`Pressable` is unaffected -- it does not use `Animated` -- which is why presses
-looked fine until a `<Button>` appeared.
-
-**Partly addressed, still broken.** The host used to ask only
-`RCTCoreModulesClassProvider`, so the class was never even found;
-`RCTNativeAnimatedModule` is vended by `RCTAnimationClassProvider` in
-React-RCTAnimation. The host now asks every pod's provider in turn, which fixed
-`<Image>` and networking for the same reason -- and the animated class does now
-resolve, confirmed by logging `NativeAnimatedModule -> RCTNativeAnimatedModule`.
-
-JS still reports it missing. So the class is found and the *instance* never
-reaches JS. Declining the legacy name to force the `NativeAnimatedTurboModule`
-path does not help: JS never asks for that name either. The next step is the
-instantiation path -- `RCTAppSetupDefaultModuleFromClass` and what
-`RCTNativeAnimatedModule` needs from a surface presenter under bridgeless --
-not the lookup.
-
-**Verify.** A `<Button>` taps; `Animated` with `useNativeDriver: true` runs to
-completion; a `console.warn` renders LogBox instead of blanking the app.
-
-## P0d - multiline TextInput does not scroll -- FIXED
-
-Found while adding `hideVerticalScrollIndicator`, which turned out to be a
-no-op: the text view's `enclosingScrollView` was nil.
-
-On iOS `UITextView` *is* a `UIScrollView`. The compatibility layer backs it
-with a bare `NSTextView`, which is neither in a scroll view nor one itself, so
-`scrollEnabled`, `contentOffset` and `contentSize` all degraded to nothing and
-a multiline field taller than its frame simply clipped.
-
-`RCTTextInputComponentView` now hosts a multiline field in a real
-`NSScrollView` with the text view as its document view, and the text view is
-vertically resizable so it grows with its text. `onScroll` is driven from the
-clip view's bounds-change notification, which is how AppKit reports scrolling.
-
-Verified: 25 lines in a 120pt box, wheel events move the text and `onScroll`
-fires with a rising offset; `hideVerticalScrollIndicator` removes the scroller.
-
-## P0e - the first keystroke in a multiline field was swallowed -- FIXED
-
-Found while regression-testing P0d, and not caused by it -- it reproduced
-before that change too.
-
-`textInputDidChangeSelection` carries an iOS workaround: for multiline, a
-selection change whose text differs from the last state is treated as a text
-change, and `_ignoreNextTextInputCall` is armed. On AppKit, clicking into a
-field moves the selection while that last state is still nil, so it fired a
-change carrying the *pre-edit* text -- and the armed flag then swallowed the
-first real keystroke. `onChangeText` reported `""`, then `"pq"`, then `"pqr"`.
-
-The workaround is unnecessary here: `NSTextView` funnels every edit, including
-paste, drops and undo, through `-didChangeText`, which the compatibility layer
-bridges. It is now gated out on macOS.
-
-## P1 — the component surface nobody has exercised
-
-These were never reached: the probe crashed on `<Button>` before rendering
-them. Unknown, not broken.
-
-Measured since:
-
-| Component | State |
+| Area | State |
 |---|---|
-| `Switch` | **works** -- toggles, reports `onValueChange` |
-| `ActivityIndicator` | renders; whether it animates is unverified |
-| `ScrollView`, `FlatList` | **work** -- scroll without crashing since P0a |
-| `Modal` | **works** -- presents as a sheet, `onShow` fires |
-| `Alert` | **works** -- presents as an `NSAlert` sheet |
-| `TextInput` | **works** -- both kinds, all nine macOS props, paste, scrolling |
-| Third-party native module | **works** -- safe-area-context autolinks, builds and runs |
+| `View`, `Text`, `Image`, `PlatformColor` | render, including remote images |
+| `TextInput` | both kinds, all nine macOS props, paste, scrolling, focus/blur |
+| `ScrollView`, `FlatList`, `SectionList` | scroll with the wheel, `onScroll` fires |
+| `Modal` | presents as a sheet, `onShow` fires |
+| `Alert`, `Alert.promptMacOS` | present as an `NSAlert` sheet |
+| `Button`, `Pressable`, all four Touchables | press and report |
+| `Animated` with `useNativeDriver` | runs |
+| `Switch` | toggles, reports `onValueChange` |
+| `ActivityIndicator` | renders **and animates** |
+| `AccessibilityInfo.isHighContrastEnabled` | reads `NSWorkspace` |
+| Key events, mouse events, drag and drop | deliver |
+| Third-party native modules | autolink, build and **run** |
 
-`Slider` and `Picker` used to be listed here. They are not part of React
-Native any more -- both were extracted to community packages years before
-0.87 -- so there is nothing in this fork to verify. Whether
-`@react-native-community/slider` works is the third-party question below,
-not a separate one.
+`react-native-safe-area-context` is the third-party case, verified end to end
+and unmodified: it autolinks, builds, links, and `useSafeAreaInsets()` returns
+real values in a running app.
 
-## P1a - third-party native modules
+`Slider` and `Picker` are not on this list because they are not part of React
+Native any more — both were extracted to community packages years before 0.87.
+Whether `@react-native-community/slider` works is the third-party question, not
+a separate one.
 
-Tested by scaffolding an app with `react-native-darwin-init` and adding
-`react-native-safe-area-context`, which declares macOS support. Three real
-bugs fell out, all fixed:
+## What is left
 
-  - **Autolinking never worked at all.** `@react-native-community/cli` has no
-    macOS platform plugin, so it files every package under `ios` -- and the
-    per-package lookup had no fallback, so every native module was silently
-    skipped. It is the same podspec either way, and the platform check below
-    it rejects the ones that genuinely do not support macOS.
+Nothing on this list stops an ordinary app from working.
 
-  - **The compatibility layer reached nothing.** Which pods are ours was
-    decided by where their podspec sits, but CocoaPods copies every local
-    podspec into `Pods/Local Podspecs` and points `defined_in_file` at the
-    copy -- so the answer was "none of them". Ownership now comes from the
-    pod's source root. This was broken for HelloWorld too and only went
-    unnoticed because its Pods project still carried settings from before.
+### A conflicting sync still needs a person
 
-  - **A UIKit function leaked through a public header.** `RCTLayout.h` called
-    `UIEdgeInsetsEqualToEdgeInsets`. The audit that drove the alias migration
-    looked for *types*, and missed that not every UIKit name is one.
+`.github/workflows/macos-sync.yml` runs weekly: it finds the newest upstream
+release, rebases the macOS commits onto it, runs the budget and the shim tests,
+and opens a pull request. What it cannot do is decide what a macOS change was
+*for* when the rebase conflicts, which is the only case that matters — so it
+reports which commit stopped and which paths conflicted, and gets out of the
+way. The platform marker on every upstream hunk exists to make that decision
+possible. A red sync run is the signal to look, not a failure of the workflow.
 
-That last one turned up something better than a fix. Only
-`@compatibility_alias` and `@protocol` cannot be declared twice; a typedef, a
-macro and an inline function can, as long as the declarations match. So the
-UIKit geometry vocabulary -- `UIEdgeInsets` and its helpers -- is now in the
-*public* half, where a library that declares the same names is not a conflict.
-The private half keeps only what genuinely cannot repeat.
+### `Text` background colour
 
-`react-native-safe-area-context` now **builds and links** unmodified, and the
-native component registry reports both of its Fabric components as known.
+react-native-macos carries a workaround for a background colour bleeding past
+the frame when there is no border radius. **Reproduce it here before porting
+it** — the drawing path has changed enough that it may not apply.
 
-Two more things were needed to get there:
+### Driving a window in CI
 
-  - **The UIKit view surface went public.** The library calls `layoutSubviews`
-    on an `RCTView`, as code written against react-native-macos does. Those
-    are category methods on `NSView`, and a category is not an alias -- a
-    second library declaring the same selectors is not an error -- so the
-    whole category moved to the public half under neutral signatures. This is
-    the line between "no library has to change" and "the shim stays small",
-    and it is drawn deliberately at: anything that can be declared twice is
-    public, anything that cannot is private.
+The build passing has never once predicted that the app works. Every P0 on this
+page was found by driving a window with real input events.
 
-  - **Third-party Fabric components were never registered.** The app template
-    built a dependency provider, which covers turbo modules, but never handed
-    a components provider to `RCTComponentViewFactory`. A library's views were
-    linked into the binary and unknown to JavaScript.
+The tool for that is now committed as `macos/tests/uiprobe/uiprobe.m` — click,
+scroll, type and key-with-modifiers, posted through `CGEventPost`, which needs
+no Accessibility permission and so runs unattended. `macos/tests/run.sh`
+compiles it on every run.
 
-### Verified end to end
+What is still missing is the other half: a CI job that launches HelloWorld,
+drives it, and asserts on what the app logged. Compiling the tool keeps it from
+rotting; it does not yet catch anything.
 
-`react-native-safe-area-context` autolinks, builds, links and **runs**
-unmodified: `useSafeAreaInsets()` returns real values and the app renders.
+### Explicitly not gaps
 
-Getting there took one more correction, to the test rather than the fork. The
-package has to be installed the way a user installs it -- a real npm tarball
-under the `react-native-macos` alias -- because the Metro redirect takes its
-target from the install directory's name. A `file:` install is a symlink, and
-Node resolves `__dirname` through it, so the name comes back as
-`react-native` and the redirect becomes a no-op: the bundle then contains
-upstream React Native, which has no macOS view configs, and every third-party
-component fails with `Cannot read property 'bubblingEventTypes' of undefined`.
+ScrollView's `inverted` and `onPreferredScrollerStyleDidChange` exist only in
+the old architecture. This fork is Fabric-only, and react-native-macos has no
+native reader for either under Fabric.
 
-That is worth knowing beyond this test. Anyone pointing an app at a local
-checkout of this fork will hit it, and the symptom names neither the cause nor
-the fix. `macos/scripts/publish.sh` without `--publish` builds exactly the
-tarball to install.
+## What was fixed, and what it taught
 
-## P2 — parity with react-native-macos
+Kept because the reasoning is worth more than the changelog: every one of these
+was a wrong assumption, not a missing line.
 
-Real gaps, none of which stop an app working.
+**Scrolling killed the process.** An unconstrained `NSClipView` —
+`constrainBoundsRect:` returning the proposal untouched — lets AppKit's
+momentum scroller advance the bounds origin with no limit until
+`_NSViewValidateGeometry` traps and the process dies without unwinding. The
+constraint is now lifted only for a programmatic `setContentOffset:`, which
+UIKit honours past the content bounds and AppKit otherwise clamps.
 
-  - **TextInput, nine props.** `submitKeyEvents` -- done, `onPaste` -- done, `pastedTypes` -- done,
-    `grammarCheck`, `clearTextOnSubmit`, `hideVerticalScrollIndicator`,
-    `onAutoCorrectChange` -- done, `onSpellCheckChange` -- done, `onGrammarCheckChange` -- done.
-    `onPaste` and `pastedTypes` can reuse the `DataTransfer` plumbing already
-    written for drag and drop.
-  - **`Alert.promptMacOS`.** An NSAlert with accessory text fields.
-  - **`AccessibilityInfo.isHighContrastEnabled`.**
-  - **`Text`**: react-native-macos carries a workaround for a background colour
-    bleeding past the frame without a border radius. Reproduce it here before
-    porting it -- it may not apply.
+**`<Button>` blanked the app.** `shouldUseTurboAnimatedModule()` gated on
+`Platform.OS === 'ios'`, so macOS asked for the legacy `NativeAnimatedModule`
+name while the native side registers `NativeAnimatedTurboModule`. Everything
+touching `Animated` threw — including LogBox, which made *any* warning fatal
+and sent several debugging sessions chasing the wrong thing.
 
-Explicitly *not* gaps, though they look like ones: ScrollView's `inverted` and
-`onPreferredScrollerStyleDidChange` exist only in the old architecture. This
-fork is Fabric-only, and react-native-macos has no native reader for either
-under Fabric.
+**`Modal` never opened**, for three reasons at once: AppKit does not link a
+view to its superview through `-nextResponder`, so `-reactViewController`
+walked an empty chain; the template assigned the surface straight to
+`contentView`, so there was no `NSViewController` to find; and the presented
+controller's view had an empty frame with `-viewDidLayout` never bridged to
+`-viewDidLayoutSubviews`.
 
-## P3 — release and upkeep
+**`Alert` did nothing at all**, also for three: the JS was gated to iOS; the
+controller built a throwaway `UIWindow` to present into, which on AppKit puts
+up an empty window; and the shim's factory allocated its own class rather than
+`[self alloc]`, so React Native's subclass was never instantiated.
 
-  - Promote a stable `0.87.1` off `next` once P0a and P0b are clear. Not
-    before: an app that crashes when scrolled is not a release.
-  - Upstream the three Expo-side patches that `fix-macos-env.sh` re-applies.
-  - Put a probe app in CI. Every gap on this page was found by running one and
-    looking at the window; none would have been caught by the build passing.
+**Multiline `TextInput` could not scroll**, because `UITextView` *is* a
+`UIScrollView` on iOS and the compatibility layer backs it with a bare
+`NSTextView`. It is now the document view of a real `NSScrollView`.
 
-## Interop — Expo needs a one-line change
+**The first keystroke in a multiline field was swallowed.** An iOS workaround
+in `textInputDidChangeSelection` treats a selection change as a text change;
+on AppKit, clicking into a field moves the selection before any edit, so it
+fired a change carrying the pre-edit text and armed the flag that then ate the
+first real keystroke.
 
-`expo-modules-core` declares the UIKit names itself for macOS, in
-`ios/Platform/Platform.h`:
+**The app had no menu.** On a Mac the menu *is* the keyboard shortcuts: Cmd+V
+is a key equivalent AppKit matches against the main menu and turns into
+`-paste:`. Without one, nothing built from the template could cut, copy, paste,
+undo or select all from the keyboard.
 
-```objc
-@compatibility_alias UIView NSView;
-@compatibility_alias UIResponder NSResponder;
-...
-```
+**Autolinking never worked.** `@react-native-community/cli` has no macOS
+platform plugin, so it files every package under `ios`, and the per-package
+lookup had no fallback. Every third-party native module was silently skipped.
 
-So does this fork, and `@compatibility_alias` is a hard error on redefinition
-even when both declarations name the same class. The build fails with
-`conflicting types for alias 'UIView'` while compiling the ExpoModulesCore
-clang module, and takes whatever was being built with it down too -- usually
-RNReanimated, with an unhelpful `Command Libtool failed`.
+**The compatibility layer reached no pod.** Ownership was decided from the
+podspec's path, but CocoaPods copies every local podspec into
+`Pods/Local Podspecs` and points `defined_in_file` at the copy — so the answer
+was "none of them". It now comes from the pod's source root.
 
-Nothing can be done from this side: there is no way to ask the preprocessor
-whether a `@compatibility_alias` already exists. Expo has to defer when a real
-UIKit header set is present, which is correct for it independently of this
-fork:
+**Third-party Fabric components were never registered.** The template built a
+dependency provider, which covers turbo modules, but never handed a components
+provider to `RCTComponentViewFactory`. A library's views were linked into the
+binary and unknown to JavaScript.
 
-```objc
-#if __has_include(<UIKit/UIKit.h>)
-#import <UIKit/UIKit.h>
-#else
-@compatibility_alias UIView NSView;
-...
-#endif
-```
+## The alias migration
 
-Until that lands upstream, an app using both needs the patch applied to its own
-`node_modules/expo-modules-core` -- `patch-package` is the usual way.
+This used to be the largest item on the page, under a heading saying Expo
+needed a one-line patch. It does not any more, and that section has been
+deleted rather than amended, because it described the opposite of the current
+arrangement.
 
-That is a workaround, not the answer. Requiring a patch to somebody else's
-package is not a shipping story, and the real fix is for this fork to stop
-declaring the names at all: see `macos/PLAN-drop-uikit-aliases.md`. Treat that
-as ranking above everything else here except the scroll crash -- a fork that
-breaks the libraries it is meant to work with has a correctness problem, not
-just a missing feature.
+`expo-modules-core`, `react-native-reanimated`, `react-native-safe-area-context`
+and `react-native-screens` all declare the UIKit names themselves on macOS, for
+the same reason this fork used to and just as legitimately. Two
+`@compatibility_alias` declarations of the same name are a hard error even when
+both name the same class, and the preprocessor cannot be asked whether one
+already exists — so for a while an app using both needed a patch applied to
+somebody else's package.
+
+That is fixed. The compatibility layer is split along a line that is not
+obvious but is exact:
+
+- `@compatibility_alias`, a class `@interface`, a `@protocol` and an `NS_ENUM`
+  are errors on *re*declaration. **Private** to this fork's own pods.
+- A `typedef`, a `#define`, an inline function and a category can all be
+  declared twice as long as they match. **Public**, and every pod gets them.
+
+Installed headers use the neutral vocabulary — `RCTPlatformView`, `RCTUIColor`
+— which is what react-native-macos uses too, so third-party code written
+against that fork compiles here unchanged. `check-budget.sh` rule 8 fails the
+build if the line is crossed, and `macos/tests/` compiles a stand-in for
+`expo-modules-core`'s `Platform.h` on every run to prove it.
+
+See `macos/PLAN-drop-uikit-aliases.md` for how it was done.
+
+## Traps worth not rediscovering
+
+**Install the tarball, not a `file:` path.** npm makes a `file:` dependency a
+symlink, Node resolves `__dirname` through it, and the Metro redirect takes its
+target from the install directory's *name* — so it silently becomes a no-op,
+the bundle gets upstream React Native, which has no macOS view configs, and
+every third-party component dies with `Cannot read property 'bubblingEventTypes'
+of undefined`. The symptom names neither the cause nor the fix.
+`macos/scripts/publish.sh` without `--publish` builds exactly the tarball to
+install.
+
+**Never register a UIKit name with the Objective-C runtime.** Apple frameworks
+probe `NSClassFromString(@"UITextField")` to decide a process is Catalyst;
+macOS AutoFill then `dlopen`s a `UIKit.framework` that does not exist and takes
+the process down — from nothing more than clicking into a text field.
+
+**Check which Metro you are talking to.** More than one can be running; a
+bundle served by the wrong one looks like a code change that did not take.
