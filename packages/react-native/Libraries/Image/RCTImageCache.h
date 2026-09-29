@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTResizeMode.h>
 
-@interface UIImage (React)
+@interface RCTPlatformImage (React)
 
 /**
  * Memory bytes of the image with the default calculation of static image or GIF. Custom calculations of decoded bytes
@@ -25,9 +26,9 @@
  */
 @protocol RCTImageCache <NSObject>
 
-- (UIImage *)imageForUrl:(NSString *)url size:(CGSize)size scale:(CGFloat)scale resizeMode:(RCTResizeMode)resizeMode;
+- (RCTPlatformImage *)imageForUrl:(NSString *)url size:(CGSize)size scale:(CGFloat)scale resizeMode:(RCTResizeMode)resizeMode;
 
-- (void)addImageToCache:(UIImage *)image
+- (void)addImageToCache:(RCTPlatformImage *)image
                     URL:(NSString *)url
                    size:(CGSize)size
                   scale:(CGFloat)scale

@@ -37,20 +37,54 @@ class ReactNativePodsUtils
         compat_root = File.expand_path(compat_root)
         prelude = File.join(compat_root, 'RCTPlatformViewCompat.h')
 
+        public_root = Helpers::Constants.public_uikit_dir
+        public_root = File.expand_path(public_root) unless public_root.nil?
+        fork_root = Helpers::Constants.fork_package_root
+        macos_root = File.expand_path(File.join(compat_root, '..'))
+
+        # Which pods are ours. Only those get the real shim -- the one that
+        # declares UIView and forty-odd more names. Everybody else gets the
+        # public <UIKit/UIKit.h>, which satisfies the import and declares
+        # nothing, so a library is free to declare those names itself.
+        ours = {}
+        installer.pod_targets.each do |pod_target|
+            spec_file = pod_target.root_spec.defined_in_file.to_s
+            ours[pod_target.name] = spec_file.start_with?(fork_root) ||
+                spec_file.start_with?(macos_root)
+        end
+
         installer.pods_project.targets.each do |target|
+            is_ours = ours.fetch(target.name, false)
+
             target.build_configurations.each do |config|
                 next unless config.build_settings['SDKROOT'].to_s.include?('macosx') ||
                     config.build_settings['SUPPORTED_PLATFORMS'].to_s.include?('macosx') ||
                     config.build_settings['MACOSX_DEPLOYMENT_TARGET']
 
-                flags = Array(config.build_settings['OTHER_CFLAGS'] || ['$(inherited)'])
-                include_flag = "-include \"#{prelude}\""
-                flags << include_flag unless flags.include?(include_flag)
-                config.build_settings['OTHER_CFLAGS'] = flags
-
                 paths = Array(config.build_settings['HEADER_SEARCH_PATHS'] || ['$(inherited)'])
-                compat_path = "\"#{compat_root}\""
-                paths << compat_path unless paths.include?(compat_path)
+
+                # Everybody gets the public half: the neutral vocabulary the
+                # installed headers are written in, and a <UIKit/UIKit.h> that
+                # declares nothing.
+                unless public_root.nil?
+                    public_path = "\"#{public_root}\""
+                    paths << public_path unless paths.include?(public_path)
+                end
+
+                # Only our own pods get the real shim, and they reach it
+                # through the prelude rather than the search path -- the
+                # prelude imports it with quotes, so it cannot be shadowed by
+                # the public <UIKit/UIKit.h> above.
+                if is_ours
+                    flags = Array(config.build_settings['OTHER_CFLAGS'] || ['$(inherited)'])
+                    include_flag = "-include \"#{prelude}\""
+                    flags << include_flag unless flags.include?(include_flag)
+                    config.build_settings['OTHER_CFLAGS'] = flags
+
+                    compat_path = "\"#{compat_root}\""
+                    paths << compat_path unless paths.include?(compat_path)
+                end
+
                 config.build_settings['HEADER_SEARCH_PATHS'] = paths
             end
         end

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTBridgeDelegate.h>
 #import <React/RCTConvert.h>
 #import <UIKit/UIKit.h>
@@ -62,14 +63,14 @@ typedef NS_ENUM(NSInteger, RCTReleaseLevel) { Canary, Experimental, Stable };
 
 - (instancetype)initWithDelegate:(id<RCTReactNativeFactoryDelegate>)delegate releaseLevel:(RCTReleaseLevel)releaseLevel;
 
-- (void)startReactNativeWithModuleName:(NSString *)moduleName inWindow:(UIWindow *_Nullable)window;
+- (void)startReactNativeWithModuleName:(NSString *)moduleName inWindow:(RCTPlatformWindow *_Nullable)window;
 
 - (void)startReactNativeWithModuleName:(NSString *)moduleName
-                              inWindow:(UIWindow *_Nullable)window
+                              inWindow:(RCTPlatformWindow *_Nullable)window
                          launchOptions:(NSDictionary *_Nullable)launchOptions;
 
 - (void)startReactNativeWithModuleName:(NSString *)moduleName
-                              inWindow:(UIWindow *_Nullable)window
+                              inWindow:(RCTPlatformWindow *_Nullable)window
                      initialProperties:(NSDictionary *_Nullable)initialProperties
                          launchOptions:(NSDictionary *_Nullable)launchOptions;
 

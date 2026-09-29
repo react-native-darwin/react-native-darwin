@@ -26,39 +26,19 @@ target 'HelloWorld' do
 end
 
 post_install do |installer|
+  # This wires the UIKit compatibility layer in for you -- the header search
+  # path, the -include prelude, and taking two frameworks that do not exist on
+  # macOS off the link line. Nothing else is needed here.
+  #
+  # It deliberately does not give third-party pods the shim: those get the
+  # public <UIKit/UIKit.h>, which satisfies the import and declares nothing, so
+  # a library that declares `UIView` itself still compiles. Re-adding the
+  # prelude for every target here would undo that.
   react_native_post_install(installer, '../../packages/react-native')
-
-  compat_root = File.expand_path('../UIKitCompat', __dir__)
-  prelude = File.join(compat_root, 'RCTPlatformViewCompat.h')
 
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = min_macos_version_supported
-
-      # Every Objective-C translation unit sees the compatibility layer, whether
-      # or not it imports UIKit itself. See RCTPlatformViewCompat.h.
-      flags = Array(config.build_settings['OTHER_CFLAGS'] || ['$(inherited)'])
-      flags << "-include \"#{prelude}\""
-      config.build_settings['OTHER_CFLAGS'] = flags
-
-      paths = Array(config.build_settings['HEADER_SEARCH_PATHS'] || ['$(inherited)'])
-      paths << "\"#{compat_root}\""
-      config.build_settings['HEADER_SEARCH_PATHS'] = paths
     end
-  end
-
-  # The podspecs link two frameworks that do not exist on macOS.
-  #
-  # UIKit is satisfied at compile time by the header shim, but there is no
-  # library to link -- and nothing to link, since the shim's code is compiled
-  # into React-UIKitCompat. MobileCoreServices' declarations live in
-  # CoreServices here, which the MobileCoreServices header directory forwards
-  # to, so CoreServices is what the linker needs.
-  Dir.glob(File.join(Pod::Config.instance.installation_root, 'Pods/Target Support Files/**/*.xcconfig')).each do |xcconfig|
-    contents = File.read(xcconfig)
-    updated = contents
-      .gsub(/-framework\s+"?UIKit"?/, '')
-      .gsub(/-framework\s+"?MobileCoreServices"?/, '-framework "CoreServices"')
-    File.write(xcconfig, updated) if updated != contents
   end
 end

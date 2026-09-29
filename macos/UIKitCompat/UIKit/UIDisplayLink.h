@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h>
 #import <TargetConditionals.h>

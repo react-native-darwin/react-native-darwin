@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
-@interface RCTAlertController : UIAlertController
+@interface RCTAlertController : RCTPlatformAlertController
 
 - (void)show:(BOOL)animated completion:(void (^)(void))completion;
 - (void)hide;

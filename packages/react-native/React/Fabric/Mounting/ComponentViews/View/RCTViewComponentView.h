@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -37,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  * to embed/bridge pure native views as component views.
  * Defaults to `nil`. Assign `nil` to remove view as subview.
  */
-@property (nonatomic, strong, nullable) UIView *contentView;
+@property (nonatomic, strong, nullable) RCTPlatformView *contentView;
 
 /**
  * Provides access to `nativeId` prop of the component.
@@ -61,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Insets used when hit testing inside this view.
  */
-@property (nonatomic, assign) UIEdgeInsets hitTestEdgeInsets;
+@property (nonatomic, assign) RCTPlatformEdgeInsets hitTestEdgeInsets;
 
 /**
  * Enforcing `call super` semantic for overridden methods from `RCTComponentViewProtocol`.
@@ -74,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
            oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics NS_REQUIRES_SUPER;
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask NS_REQUIRES_SUPER;
 - (void)prepareForRecycle NS_REQUIRES_SUPER;
-- (UIView *)betterHitTest:(CGPoint)point withEvent:(UIEvent *)event;
+- (RCTPlatformView *)betterHitTest:(CGPoint)point withEvent:(RCTPlatformEvent *)event;
 
 /*
  * This is the label that would be coopted by another element

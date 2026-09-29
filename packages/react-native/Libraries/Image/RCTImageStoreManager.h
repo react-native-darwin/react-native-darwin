@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridge.h>
@@ -25,7 +26,7 @@
  * Convenience method to store an image directly (image is converted to data
  * internally, so any metadata such as scale or orientation will be lost).
  */
-- (void)storeImage:(UIImage *)image withBlock:(void (^)(NSString *imageTag))block;
+- (void)storeImage:(RCTPlatformImage *)image withBlock:(void (^)(NSString *imageTag))block;
 
 @end
 
@@ -34,9 +35,9 @@
 /**
  * These methods are deprecated - use the data-based alternatives instead.
  */
-- (NSString *)storeImage:(UIImage *)image __deprecated;
-- (UIImage *)imageForTag:(NSString *)imageTag __deprecated;
-- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(UIImage *image))block __deprecated;
+- (NSString *)storeImage:(RCTPlatformImage *)image __deprecated;
+- (RCTPlatformImage *)imageForTag:(NSString *)imageTag __deprecated;
+- (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(RCTPlatformImage *image))block __deprecated;
 
 @end
 

@@ -37,16 +37,22 @@
 
 #include <TargetConditionals.h>
 
+// The include below is quoted, not angled, and that is load-bearing. A
+// second <UIKit/UIKit.h> is installed as a public pod header for everybody
+// else -- it satisfies the import and declares nothing. Angle brackets would
+// find whichever came first on the search path; quotes resolve relative to
+// this file, which is the real shim.
+
 #ifdef __OBJC__
 
 #if TARGET_OS_OSX
 
 // Resolves to macos/UIKitCompat/UIKit/UIKit.h, which declares both names.
-#import <UIKit/UIKit.h>
+#import "UIKit/UIKit.h"
 
 #else
 
-#import <UIKit/UIKit.h>
+#import "UIKit/UIKit.h"
 
 #import <QuartzCore/QuartzCore.h>
 

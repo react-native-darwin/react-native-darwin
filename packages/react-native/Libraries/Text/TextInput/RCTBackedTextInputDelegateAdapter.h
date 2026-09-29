@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import "RCTBackedTextInputDelegate.h"
@@ -12,24 +13,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#pragma mark - RCTBackedTextFieldDelegateAdapter (for UITextField)
+#pragma mark - RCTBackedTextFieldDelegateAdapter (for RCTPlatformTextField)
 
 @interface RCTBackedTextFieldDelegateAdapter : NSObject
 
-- (instancetype)initWithTextField:(UITextField<RCTBackedTextInputViewProtocol> *)backedTextInputView;
+- (instancetype)initWithTextField:(RCTPlatformTextField<RCTBackedTextInputViewProtocol> *)backedTextInputView;
 
-- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(UITextRange *)textRange;
+- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(RCTPlatformTextRange *)textRange;
 - (void)selectedTextRangeWasSet;
 
 @end
 
-#pragma mark - RCTBackedTextViewDelegateAdapter (for UITextView)
+#pragma mark - RCTBackedTextViewDelegateAdapter (for RCTPlatformTextView)
 
 @interface RCTBackedTextViewDelegateAdapter : NSObject
 
-- (instancetype)initWithTextView:(UITextView<RCTBackedTextInputViewProtocol> *)backedTextInputView;
+- (instancetype)initWithTextView:(RCTPlatformTextView<RCTBackedTextInputViewProtocol> *)backedTextInputView;
 
-- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(UITextRange *)textRange;
+- (void)skipNextTextInputDidChangeSelectionEventWithTextRange:(RCTPlatformTextRange *)textRange;
 
 @end
 

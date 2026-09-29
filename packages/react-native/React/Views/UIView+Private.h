@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
-@interface UIView (Private)
+@interface RCTPlatformView (Private)
 
 // remove clipped subviews implementation
 - (void)react_remountAllSubviews;
-- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(UIView *)clipView;
-- (UIView *)react_findClipView;
+- (void)react_updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(RCTPlatformView *)clipView;
+- (RCTPlatformView *)react_findClipView;
 
 @end

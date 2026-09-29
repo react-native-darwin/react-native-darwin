@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridgeModule.h>
@@ -30,10 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readwrite) NSDictionary *appProperties;
 @property (nonatomic, assign) RCTRootViewSizeFlexibility sizeFlexibility;
 @property (nonatomic, weak) id<RCTRootViewDelegate> delegate;
-@property (nonatomic, weak) UIViewController *reactViewController;
-@property (nonatomic, strong, readonly) UIView *view;
-@property (nonatomic, strong, readonly) UIView *contentView;
-@property (nonatomic, strong) UIView *loadingView;
+@property (nonatomic, weak) RCTPlatformViewController *reactViewController;
+@property (nonatomic, strong, readonly) RCTPlatformView *view;
+@property (nonatomic, strong, readonly) RCTPlatformView *contentView;
+@property (nonatomic, strong) RCTPlatformView *loadingView;
 @property (nonatomic, assign) BOOL passThroughTouches;
 @property (nonatomic, assign) NSTimeInterval loadingViewFadeDelay;
 @property (nonatomic, assign) NSTimeInterval loadingViewFadeDuration;
@@ -41,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #if TARGET_OS_TV
 @property (nonatomic, copy, nullable) NSArray<id<UIFocusEnvironment>> *reactPreferredFocusEnvironments;
-@property (nonatomic, weak, nullable) UIView *reactPreferredFocusedView;
+@property (nonatomic, weak, nullable) RCTPlatformView *reactPreferredFocusedView;
 #endif
 
 - (instancetype)init NS_UNAVAILABLE;

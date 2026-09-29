@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTPrimitives.h>
@@ -80,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 /*
  * Please do not use this, this will be deleted soon.
  */
-- (nullable UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
+- (nullable RCTPlatformView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
 
 @end
 

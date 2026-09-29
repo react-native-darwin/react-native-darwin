@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTSurfaceDelegate.h>
@@ -12,7 +13,7 @@
 #import <React/RCTSurfaceSizeMeasureMode.h>
 #import <React/RCTSurfaceStage.h>
 
-typedef UIView *_Nullable (^RCTSurfaceHostingViewActivityIndicatorViewFactory)(void);
+typedef RCTPlatformView *_Nullable (^RCTSurfaceHostingViewActivityIndicatorViewFactory)(void);
 
 NS_ASSUME_NONNULL_BEGIN
 

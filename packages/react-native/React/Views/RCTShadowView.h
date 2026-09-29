@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTComponent.h>
@@ -16,7 +17,7 @@
 
 @class RCTSparseArray;
 
-typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, UIView *> *viewRegistry);
+typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, RCTPlatformView *> *viewRegistry);
 
 /**
  * ShadowView tree mirrors RCT view tree. Every node is highly stateful.
@@ -181,7 +182,7 @@ typedef void (^RCTApplierBlock)(NSDictionary<NSNumber *, UIView *> *viewRegistry
  */
 - (void)layoutWithMinimumSize:(CGSize)minimumSize
                   maximumSize:(CGSize)maximumSize
-              layoutDirection:(UIUserInterfaceLayoutDirection)layoutDirection
+              layoutDirection:(RCTPlatformUserInterfaceLayoutDirection)layoutDirection
                 layoutContext:(RCTLayoutContext)layoutContext;
 
 /**

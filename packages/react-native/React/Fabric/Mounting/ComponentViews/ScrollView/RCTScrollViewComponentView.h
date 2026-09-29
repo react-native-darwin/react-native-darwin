@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
@@ -31,31 +32,31 @@ NS_ASSUME_NONNULL_BEGIN
 /*
  * Finds and returns the closet RCTScrollViewComponentView component to the given view
  */
-+ (nullable RCTScrollViewComponentView *)findScrollViewComponentViewForView:(UIView *)view;
++ (nullable RCTScrollViewComponentView *)findScrollViewComponentViewForView:(RCTPlatformView *)view;
 
 /*
  * Returns an actual UIScrollView that this component uses under the hood.
  */
-@property (nonatomic, strong, readwrite) UIScrollView *scrollView;
+@property (nonatomic, strong, readwrite) RCTPlatformScrollView *scrollView;
 
 /** Focus area of newly-activated text input relative to the window to compare against UIKeyboardFrameBegin/End */
 @property (nonatomic, assign) CGRect firstResponderFocus;
 
 /** newly-activated text input outside of the scroll view */
-@property (nonatomic, weak) UIView *firstResponderViewOutsideScrollView;
+@property (nonatomic, weak) RCTPlatformView *firstResponderViewOutsideScrollView;
 
 /*
  * Returns the subview of the scroll view that the component uses to mount all subcomponents into. That's useful to
  * separate component views from auxiliary views to be able to reliably implement pull-to-refresh- and RTL-related
  * functionality.
  */
-@property (nonatomic, strong, readonly) UIView *containerView;
+@property (nonatomic, strong, readonly) RCTPlatformView *containerView;
 
 /*
  * Returns a delegate splitter that can be used to subscribe for UIScrollView delegate.
  */
 @property (nonatomic, strong, readonly)
-    RCTGenericDelegateSplitter<id<UIScrollViewDelegate>> *scrollViewDelegateSplitter;
+    RCTGenericDelegateSplitter<id<RCTPlatformScrollViewDelegate>> *scrollViewDelegateSplitter;
 
 @end
 
@@ -68,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface UIView (RCTScrollViewComponentView)
+@interface RCTPlatformView (RCTScrollViewComponentView)
 
 - (void)reactUpdateResponderOffsetForScrollView:(RCTScrollViewComponentView *)scrollView;
 

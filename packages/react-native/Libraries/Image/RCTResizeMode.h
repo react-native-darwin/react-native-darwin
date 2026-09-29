@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTConvert.h>
 
 typedef NS_ENUM(NSInteger, RCTResizeMode) {
@@ -16,7 +17,7 @@ typedef NS_ENUM(NSInteger, RCTResizeMode) {
   RCTResizeModeNone = UIViewContentModeTopLeft,
 };
 
-static inline RCTResizeMode RCTResizeModeFromUIViewContentMode(UIViewContentMode mode)
+static inline RCTResizeMode RCTResizeModeFromUIViewContentMode(RCTPlatformViewContentMode mode)
 {
   switch (mode) {
     case UIViewContentModeScaleToFill:

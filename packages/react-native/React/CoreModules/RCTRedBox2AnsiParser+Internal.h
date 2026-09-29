@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 /**
@@ -16,7 +17,7 @@
 @interface RCTRedBox2AnsiParser : NSObject
 
 + (NSAttributedString *)attributedStringFromAnsiText:(NSString *)text
-                                            baseFont:(UIFont *)font
-                                           baseColor:(UIColor *)color;
+                                            baseFont:(RCTPlatformFont *)font
+                                           baseColor:(RCTUIColor *)color;
 
 @end

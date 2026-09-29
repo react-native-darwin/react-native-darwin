@@ -16,6 +16,7 @@
 
 #pragma once
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <AppKit/AppKit.h>
 
 #import "UIKeyCommand.h"
@@ -62,30 +63,26 @@ NS_ASSUME_NONNULL_BEGIN
 @property (class, nonatomic, readonly, nullable) UITextInputMode *currentInputMode;
 @end
 
-typedef NS_ENUM(NSInteger, UITextAutocapitalizationType) {
-  UITextAutocapitalizationTypeNone = 0,
-  UITextAutocapitalizationTypeWords,
-  UITextAutocapitalizationTypeSentences,
-  UITextAutocapitalizationTypeAllCharacters,
-};
+typedef RCTPlatformTextAutocapitalizationType UITextAutocapitalizationType;
+#define UITextAutocapitalizationTypeNone RCTPlatformTextAutocapitalizationTypeNone
+#define UITextAutocapitalizationTypeWords RCTPlatformTextAutocapitalizationTypeWords
+#define UITextAutocapitalizationTypeSentences RCTPlatformTextAutocapitalizationTypeSentences
+#define UITextAutocapitalizationTypeAllCharacters RCTPlatformTextAutocapitalizationTypeAllCharacters
 
-typedef NS_ENUM(NSInteger, UITextAutocorrectionType) {
-  UITextAutocorrectionTypeDefault = 0,
-  UITextAutocorrectionTypeNo,
-  UITextAutocorrectionTypeYes,
-};
+typedef RCTPlatformTextAutocorrectionType UITextAutocorrectionType;
+#define UITextAutocorrectionTypeDefault RCTPlatformTextAutocorrectionTypeDefault
+#define UITextAutocorrectionTypeNo RCTPlatformTextAutocorrectionTypeNo
+#define UITextAutocorrectionTypeYes RCTPlatformTextAutocorrectionTypeYes
 
-typedef NS_ENUM(NSInteger, UITextSpellCheckingType) {
-  UITextSpellCheckingTypeDefault = 0,
-  UITextSpellCheckingTypeNo,
-  UITextSpellCheckingTypeYes,
-};
+typedef RCTPlatformTextSpellCheckingType UITextSpellCheckingType;
+#define UITextSpellCheckingTypeDefault RCTPlatformTextSpellCheckingTypeDefault
+#define UITextSpellCheckingTypeNo RCTPlatformTextSpellCheckingTypeNo
+#define UITextSpellCheckingTypeYes RCTPlatformTextSpellCheckingTypeYes
 
-typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
-  UIKeyboardAppearanceDefault = 0,
-  UIKeyboardAppearanceDark,
-  UIKeyboardAppearanceLight,
-};
+typedef RCTPlatformKeyboardAppearance UIKeyboardAppearance;
+#define UIKeyboardAppearanceDefault RCTPlatformKeyboardAppearanceDefault
+#define UIKeyboardAppearanceDark RCTPlatformKeyboardAppearanceDark
+#define UIKeyboardAppearanceLight RCTPlatformKeyboardAppearanceLight
 
 // UITextContentType is a string enum, declared alongside its values in
 // UIViewAnimation.h.
@@ -95,22 +92,7 @@ typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
  * RCTBackedTextInputViewProtocol inherits from it, so the properties have to
  * exist on the protocol rather than only on the concrete classes.
  */
-@protocol UITextInputTraits <NSObject>
-@optional
-@property (nonatomic, assign) UIKeyboardType keyboardType;
-@property (nonatomic, assign) UIReturnKeyType returnKeyType;
-@property (nonatomic, assign) UITextAutocapitalizationType autocapitalizationType;
-@property (nonatomic, assign) UITextAutocorrectionType autocorrectionType;
-@property (nonatomic, assign) UITextSpellCheckingType spellCheckingType;
-@property (nonatomic, assign) UIKeyboardAppearance keyboardAppearance;
-@property (nonatomic, assign) UITextSmartInsertDeleteType smartInsertDeleteType;
-@property (nonatomic, assign) UITextSmartQuotesType smartQuotesType;
-@property (nonatomic, assign) UITextSmartDashesType smartDashesType;
-@property (nonatomic, assign, getter=isSecureTextEntry) BOOL secureTextEntry;
-@property (nonatomic, assign) BOOL enablesReturnKeyAutomatically;
-@property (nonatomic, copy, nullable) NSString *textContentType;
-@property (nonatomic, strong, nullable) id passwordRules;
-@end
+#define UITextInputTraits RCTPlatformTextInputTraits
 
 // UIKit models a caret position as an opaque object so it can survive text
 // mutation. AppKit uses plain integer offsets. These wrap an offset so the
@@ -127,28 +109,7 @@ typedef NS_ENUM(NSInteger, UIKeyboardAppearance) {
 + (instancetype)rangeWithStart:(UITextPosition *)start end:(UITextPosition *)end;
 @end
 
-@protocol UITextInput <UITextInputTraits>
-@optional
-@property (nonatomic, copy, nullable) UITextRange *selectedTextRange;
-@property (nonatomic, readonly) UITextPosition *beginningOfDocument;
-@property (nonatomic, readonly) UITextPosition *endOfDocument;
-- (nullable NSString *)textInRange:(UITextRange *)range;
-- (void)replaceRange:(UITextRange *)range withText:(NSString *)text;
-- (NSInteger)offsetFromPosition:(UITextPosition *)from toPosition:(UITextPosition *)toPosition;
-- (nullable UITextRange *)textRangeFromPosition:(UITextPosition *)from toPosition:(UITextPosition *)toPosition;
-- (nullable UITextPosition *)positionFromPosition:(UITextPosition *)position offset:(NSInteger)offset;
-// Caret and selection geometry. NSTextView exposes this through its layout
-// manager, so the concrete classes compute it there.
-- (CGRect)caretRectForPosition:(UITextPosition *)position;
-- (CGRect)firstRectForRange:(UITextRange *)range;
-- (NSArray<UITextSelectionRect *> *)selectionRectsForRange:(UITextRange *)range;
-// Marked text is the in-progress IME composition. AppKit tracks it on the text
-// view itself, so this is nil unless a concrete class overrides it.
-@property (nonatomic, readonly, nullable) UITextRange *markedTextRange;
-// The active input source. There is no software keyboard on macOS, but the
-// current input source still tells you the composition language.
-@property (nonatomic, readonly, nullable) UITextInputMode *textInputMode;
-@end
+#define UITextInput RCTPlatformTextInput
 
 @protocol UITextFieldDelegate <NSTextFieldDelegate>
 @optional

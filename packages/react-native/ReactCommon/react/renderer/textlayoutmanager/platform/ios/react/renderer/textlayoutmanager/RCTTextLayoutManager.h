@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <react/renderer/attributedstring/AttributedString.h>
@@ -40,7 +41,7 @@ using RCTTextLayoutFragmentEnumerationBlock =
 - (void)drawAttributedString:(facebook::react::AttributedString)attributedString
          paragraphAttributes:(facebook::react::ParagraphAttributes)paragraphAttributes
                        frame:(CGRect)frame
-           drawHighlightPath:(void (^_Nullable)(UIBezierPath *highlightPath))block;
+           drawHighlightPath:(void (^_Nullable)(RCTPlatformBezierPath *highlightPath))block;
 
 - (facebook::react::LinesMeasurements)getLinesForAttributedString:(facebook::react::AttributedString)attributedString
                                               paragraphAttributes:

@@ -32,14 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class RCTUIKitCompatScrollView;
 
-@protocol UIScrollViewDelegate <NSObject>
-@optional
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView;
-- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView;
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate;
-- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView;
-- (void)scrollViewDidZoom:(UIScrollView *)scrollView;
-@end
+#define UIScrollViewDelegate RCTPlatformScrollViewDelegate
 
 /**
  * NSScrollView presented as a UIScrollView.

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 #import "RCTDefaultReactNativeFactoryDelegate.h"
 #import "RCTReactNativeFactory.h"
@@ -56,10 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 __attribute__((deprecated(
     "RCTAppDelegate is deprecated and will be removed in a future version of React Native. Use `RCTReactNativeFactory` instead.")))
-@interface RCTAppDelegate : RCTDefaultReactNativeFactoryDelegate<UIApplicationDelegate>
+@interface RCTAppDelegate : RCTDefaultReactNativeFactoryDelegate<RCTPlatformApplicationDelegate>
 
 /// The window object, used to render the UViewControllers
-@property (nonatomic, strong, nonnull) UIWindow *window;
+@property (nonatomic, strong, nonnull) RCTPlatformWindow *window;
 
 #if !defined(RCT_REMOVE_LEGACY_ARCH)
 @property (nonatomic, nullable) RCTBridge *bridge

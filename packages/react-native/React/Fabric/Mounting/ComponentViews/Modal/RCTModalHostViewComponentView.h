@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTViewComponentView.h>
 
 /**
  * UIView class for root <ModalHostView> component.
  */
-@interface RCTModalHostViewComponentView : RCTViewComponentView <UIAdaptivePresentationControllerDelegate>
+@interface RCTModalHostViewComponentView : RCTViewComponentView <RCTPlatformAdaptivePresentationControllerDelegate>
 
 /**
  * Subclasses may override this method and present the modal on different view controller.
  * Default implementation presents the modal on `[self reactViewController]`.
  */
-- (void)presentViewController:(UIViewController *)modalViewController
+- (void)presentViewController:(RCTPlatformViewController *)modalViewController
                      animated:(BOOL)animated
                    completion:(void (^)(void))completion;
 
@@ -24,7 +25,7 @@
  * Subclasses may override this method.
  * Default implementation calls `[UIViewController dismissViewControllerAnimated:completion:]`.
  */
-- (void)dismissViewController:(UIViewController *)modalViewController
+- (void)dismissViewController:(RCTPlatformViewController *)modalViewController
                      animated:(BOOL)animated
                    completion:(void (^)(void))completion;
 

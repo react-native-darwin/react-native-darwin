@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <objc/runtime.h>
 
 #import <React/RCTBridge.h>
@@ -31,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id<RCTSurfaceProtocol>)createFabricSurfaceForModuleName:(NSString *)moduleName
                                          initialProperties:(NSDictionary *)initialProperties;
-- (nullable UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
+- (nullable RCTPlatformView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag;
 - (void)synchronouslyUpdateViewOnUIThread:(NSNumber *)reactTag props:(NSDictionary *)props;
 - (void)addObserver:(id<RCTSurfacePresenterObserver>)observer;
 - (void)removeObserver:(id<RCTSurfacePresenterObserver>)observer;

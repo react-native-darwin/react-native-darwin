@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridgeModule.h>
@@ -15,7 +16,7 @@ RCT_EXTERN void RCTEnableAppearancePreference(BOOL enabled);
 RCT_EXTERN void RCTOverrideAppearancePreference(NSString * /*colorSchemeOverride*/);
 RCT_EXTERN void RCTUseKeyWindowForSystemStyle(BOOL useMainScreen);
 RCT_EXTERN NSString *RCTCurrentOverrideAppearancePreference(void);
-RCT_EXTERN NSString *RCTColorSchemePreference(UITraitCollection *traitCollection);
+RCT_EXTERN NSString *RCTColorSchemePreference(RCTPlatformTraitCollection *traitCollection);
 
 @interface RCTAppearance : RCTEventEmitter <RCTBridgeModule>
 - (instancetype)init;

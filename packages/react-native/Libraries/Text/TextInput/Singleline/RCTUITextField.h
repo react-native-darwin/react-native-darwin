@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBackedTextInputDelegate.h>
@@ -15,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 /*
  * Just regular UITextField... but much better!
  */
-@interface RCTUITextField : UITextField <RCTBackedTextInputViewProtocol>
+@interface RCTUITextField : RCTPlatformTextField <RCTBackedTextInputViewProtocol>
 
 - (instancetype)initWithCoder:(NSCoder *)decoder NS_UNAVAILABLE;
 
@@ -25,15 +26,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL contextMenuHidden;
 @property (nonatomic, assign, readonly) BOOL textWasPasted;
 @property (nonatomic, assign, readonly) BOOL dictationRecognizing;
-@property (nonatomic, strong, nullable) UIColor *placeholderColor;
-@property (nonatomic, assign) UIEdgeInsets textContainerInset;
+@property (nonatomic, strong, nullable) RCTUIColor *placeholderColor;
+@property (nonatomic, assign) RCTPlatformEdgeInsets textContainerInset;
 @property (nonatomic, assign, getter=isEditable) BOOL editable;
 @property (nonatomic, getter=isScrollEnabled) BOOL scrollEnabled;
 @property (nonatomic, strong, nullable) NSString *inputAccessoryViewID;
 @property (nonatomic, strong, nullable) NSString *inputAccessoryViewButtonLabel;
 @property (nonatomic, assign, readonly) CGFloat zoomScale;
 @property (nonatomic, assign, readonly) CGPoint contentOffset;
-@property (nonatomic, assign, readonly) UIEdgeInsets contentInset;
+@property (nonatomic, assign, readonly) RCTPlatformEdgeInsets contentInset;
 @property (nonatomic, assign) BOOL disableKeyboardShortcuts;
 
 @end

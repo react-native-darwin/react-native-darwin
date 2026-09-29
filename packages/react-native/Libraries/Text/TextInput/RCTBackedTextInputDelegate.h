@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @protocol RCTBackedTextInputViewProtocol;
@@ -39,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @optional
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView;
+- (void)scrollViewDidScroll:(RCTPlatformScrollView *)scrollView;
 
 @end
 

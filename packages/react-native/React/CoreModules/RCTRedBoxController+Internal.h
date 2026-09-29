@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTDefines.h>
 
 #import "RCTRedBox+Internal.h"
@@ -12,7 +13,7 @@
 
 #if RCT_DEV_MENU
 
-@interface RCTRedBoxController : UIViewController <RCTRedBoxControlling, UITableViewDelegate, UITableViewDataSource>
+@interface RCTRedBoxController : RCTPlatformViewController <RCTRedBoxControlling, RCTPlatformTableViewDelegate, RCTPlatformTableViewDataSource>
 
 @property (nonatomic, weak) id<RCTRedBoxControllerActionDelegate> actionDelegate;
 

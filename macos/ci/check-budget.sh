@@ -18,19 +18,36 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
 UPSTREAM_REF="${1:-$(sed -n 's/^UPSTREAM_TAG = //p' MACOS-FORK.md | head -1)}"
 
-MAX_UPSTREAM_FILES_MODIFIED=135
+# Raised from 135 for the migration off @compatibility_alias. Every public
+# header that named a UIKit type now names an RCT* one instead, because a
+# dependency must not claim global names: any library declaring `UIView` --
+# expo-modules-core, reanimated, safe-area-context and screens all do -- could
+# not compile alongside this fork. See macos/PLAN-drop-uikit-aliases.md.
+#
+# The fork gets bigger in order to stop being invasive. That is the right
+# trade, and it is worth stating plainly rather than hiding: a 4.5x smaller
+# fork is worth nothing if adopting it forces every user to patch their other
+# dependencies. The anchor to hold to is react-native-macos's 526 modified
+# files; this budget keeps us well under half of that.
+MAX_UPSTREAM_FILES_MODIFIED=200
 # Raised from 50. Deletions turned out to be the wrong proxy for fork size:
 # almost every one is half of a -1/+1 line replacement, such as changing
 # `CADisplayLink *x` to `RCTPlatformDisplayLink *x`. That is not upstream code
 # being removed, and contorting to avoid it would mean writing worse edits.
 # Upstream *files touched* is the metric that actually tracks rebase cost.
-MAX_UPSTREAM_LINES_REMOVED=200
+# Raised from 200 alongside the file budget above, and for the same reason:
+# renaming a type in a header is a -1/+1 line replacement, so the migration
+# adds roughly one deletion per renamed line.
+MAX_UPSTREAM_LINES_REMOVED=450
 # Raised from 13 to admit one commit for the bugs that only surface when the
 # host app is actually driven: the animated module, the scroll crash and
 # Modal. The cap exists to keep review burden down, not to force unrelated
 # work into one commit, so new topics get their own commit and the diff
 # budgets above stay the real measure of fork size.
-MAX_COMMITS=14
+# 15 admits the alias migration as one commit. It stays one commit -- each
+# wave of the migration amends it rather than appending -- so this number
+# should not need to move again for that work.
+MAX_COMMITS=15
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2
@@ -135,28 +152,81 @@ fi
 
 # --- 4. every upstream hunk carries a [macOS] marker --------------------------
 #
-# Walks the diff hunk by hunk. A hunk passes if a [macOS] marker appears on any
-# added line in it, or in the three lines of context either side -- which is
-# what an existing marker on an enclosing #if block looks like.
+# Walks the diff hunk by hunk. A hunk passes if a [macOS] marker appears in it
+# or in the three lines of context either side -- which is what an existing
+# marker on an enclosing #if block looks like.
+#
+# A hunk also passes if its only change is the platform vocabulary: `UIView *`
+# to `RCTPlatformView *` and the rest of the map below, plus the import that
+# declares them. Those renames are the alias migration, they run to hundreds of
+# hunks across the installed headers, and a marker on each would be noise that
+# teaches a reader nothing. Anything else in the hunk still needs its marker,
+# so the rule keeps its point: no unexplained change to upstream code.
 
-unmarked=$(git diff --unified=3 "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" | awk '
-  function flush() {
-    # Report against the file the hunk belonged to, not the one being started.
-    if (inhunk && changed && !marked) print file ":" hunkline
-    inhunk = 0; changed = 0; marked = 0
-  }
-  /^diff --git/ { flush(); file = $3; sub(/^a\//, "", file); next }
-  /^@@/ {
-    flush()
-    inhunk = 1
-    hunkline = $0
-    sub(/^@@ -/, "", hunkline); sub(/ .*/, "", hunkline); sub(/,.*/, "", hunkline)
-    next
-  }
-  !inhunk { next }
-  /\[macOS/ || /macOS\]/ { marked = 1 }
-  /^[+-]/ && !/^(\+\+\+|---)/ { changed = 1 }
-  END { flush() }
+unmarked=$(git diff --unified=3 "$UPSTREAM_REF"..HEAD -- . "${OURS[@]}" | python3 -c '
+import re, sys
+
+# The vocabulary is derived, not listed: every neutral name is the UIKit one
+# with the prefix swapped, so this needs no maintenance as the map grows.
+PAT = re.compile(r"\bRCT(?:Platform|UI)(\w+)\b")
+
+def to_uikit(m):
+    return "UI" + m.group(1)
+IMPORT = "#import <RCTPlatformTypes/RCTPlatformTypes.h>"
+
+def normalise(lines):
+    out = []
+    for ln in lines:
+        body = ln[1:]
+        if body.strip() in (IMPORT, "#ifdef __OBJC__", "#endif"):
+            continue
+        out.append(PAT.sub(to_uikit, body))
+    return out
+
+def report(state):
+    if not state["changed"]:
+        return
+    if state["marked"]:
+        return
+    if normalise(state["minus"]) == normalise(state["plus"]):
+        return
+    print(state["file"] + ":" + state["line"])
+
+state = {"file": "", "line": "", "changed": False, "marked": False,
+         "minus": [], "plus": [], "inhunk": False}
+
+def reset():
+    state.update(changed=False, marked=False, minus=[], plus=[])
+
+for raw in sys.stdin:
+    ln = raw.rstrip("\n")
+    if ln.startswith("diff --git"):
+        if state["inhunk"]:
+            report(state)
+        state["inhunk"] = False
+        reset()
+        state["file"] = re.sub(r"^a/", "", ln.split()[2])
+        continue
+    if ln.startswith("@@"):
+        if state["inhunk"]:
+            report(state)
+        reset()
+        state["inhunk"] = True
+        state["line"] = ln.split()[1].lstrip("-").split(",")[0]
+        continue
+    if not state["inhunk"]:
+        continue
+    if "[macOS" in ln or "macOS]" in ln:
+        state["marked"] = True
+    if ln.startswith("+") and not ln.startswith("+++"):
+        state["changed"] = True
+        state["plus"].append(ln)
+    elif ln.startswith("-") and not ln.startswith("---"):
+        state["changed"] = True
+        state["minus"].append(ln)
+
+if state["inhunk"]:
+    report(state)
 ')
 
 if [ -z "$unmarked" ]; then
@@ -255,6 +325,50 @@ if [ -z "$ours_marked" ]; then
 else
   bad "[macOS] markers found inside macos/, where everything is already ours:"
   echo "$ours_marked" | sed 's/^/    /'
+fi
+
+# --- 8. no header a third party can see declares a UIKit name -----------------
+#
+# The invariant the whole alias migration buys, and the one that decides
+# whether adopting this fork breaks somebody else's library. Only the private
+# shim -- macos/UIKitCompat/UIKit/, which no other pod gets on its search path
+# -- may declare `UIView` and the rest. See macos/PLAN-drop-uikit-aliases.md.
+
+leaking=$(git ls-files -- '*.h' \
+  ':(exclude)macos/UIKitCompat/UIKit/*' \
+  ':(exclude)macos/tests/*' \
+  | python3 -c '
+import re, sys
+
+DECL = re.compile(
+    r"@compatibility_alias\s+(UI[A-Z]\w*)"
+    # A real class declaration names a superclass; `@interface UIView (X)`
+    # is a category on it, which declares nothing.
+    r"|@interface\s+(UI[A-Z]\w*)\s*:"
+    r"|@protocol\s+(UI[A-Z]\w*)\s*[<{]"
+    r"|typedef[^;{]*\b(UI[A-Z]\w*)\s*;"
+    r"|NS_(?:ENUM|OPTIONS)\s*\([^,]+,\s*(UI[A-Z]\w*)\s*\)")
+
+for path in sys.stdin.read().split():
+    try:
+        text = open(path, errors="replace").read()
+    except OSError:
+        continue
+    # A UIKit name is fine on the iOS side of a platform split: there it is
+    # UIKit that owns it, and UIKit is real.
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    text = re.sub(r"//[^\n]*", "", text)
+    names = sorted({g for m in DECL.finditer(text) for g in m.groups() if g})
+    if names:
+        print(path + ": " + ", ".join(names))
+')
+
+if [ -z "$leaking" ]; then
+  pass "no header outside the private shim declares a UIKit name"
+else
+  bad "headers declaring a UIKit name outside the private shim:"
+  echo "$leaking" | sed 's/^/    /'
+  note "Use the RCTPlatform* vocabulary from RCTPlatformTypes.h instead."
 fi
 
 echo

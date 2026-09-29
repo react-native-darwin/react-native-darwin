@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <React/RCTDefines.h>
 #import <UIKit/UIKit.h>
 
@@ -14,8 +15,8 @@
 
 @protocol RCTRedBoxControllerActionDelegate <NSObject>
 
-- (void)redBoxController:(UIViewController *)redBoxController openStackFrameInEditor:(RCTJSStackFrame *)stackFrame;
-- (void)reloadFromRedBoxController:(UIViewController *)redBoxController;
+- (void)redBoxController:(RCTPlatformViewController *)redBoxController openStackFrameInEditor:(RCTJSStackFrame *)stackFrame;
+- (void)reloadFromRedBoxController:(RCTPlatformViewController *)redBoxController;
 - (void)loadExtraDataViewController;
 
 @end

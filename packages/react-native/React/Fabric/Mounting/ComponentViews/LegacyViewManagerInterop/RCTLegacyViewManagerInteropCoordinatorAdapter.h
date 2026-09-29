@@ -7,6 +7,7 @@
 
 #ifndef RCT_REMOVE_LEGACY_COMPONENT_INTEROP
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <react/renderer/components/legacyviewmanagerinterop/RCTLegacyViewManagerInteropCoordinator.h>
 
@@ -16,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithCoordinator:(RCTLegacyViewManagerInteropCoordinator *)coordinator reactTag:(NSInteger)tag;
 
-@property (strong, nonatomic) UIView *paperView;
+@property (strong, nonatomic) RCTPlatformView *paperView;
 
 @property (nonatomic, copy, nullable) void (^eventInterceptor)(std::string eventName, folly::dynamic &&event);
 

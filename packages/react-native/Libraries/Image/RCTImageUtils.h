@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTDefines.h>
@@ -60,7 +61,7 @@ RCT_EXTERN BOOL RCTUpscalingRequired(
  * width/height of the returned image is guaranteed to be >= destSize.
  * Pass a destSize of CGSizeZero to decode the image at its original size.
  */
-RCT_EXTERN UIImage *__nullable
+RCT_EXTERN RCTPlatformImage *__nullable
 RCTDecodeImageWithData(NSData *data, CGSize destSize, CGFloat destScale, RCTResizeMode resizeMode);
 
 /**
@@ -76,15 +77,15 @@ RCT_EXTERN NSDictionary<NSString *, id> *__nullable RCTGetImageMetadata(NSData *
  * conversion, with 1.0 being maximum quality. It has no effect for images
  * using PNG compression.
  */
-RCT_EXTERN NSData *__nullable RCTGetImageData(UIImage *image, float quality);
+RCT_EXTERN NSData *__nullable RCTGetImageData(RCTPlatformImage *image, float quality);
 
 /**
  * This function transforms an image. `destSize` is the size of the final image,
  * and `destScale` is its scale. The `transform` argument controls how the
  * source image will be mapped to the destination image.
  */
-RCT_EXTERN UIImage *__nullable
-RCTTransformImage(UIImage *image, CGSize destSize, CGFloat destScale, CGAffineTransform transform);
+RCT_EXTERN RCTPlatformImage *__nullable
+RCTTransformImage(RCTPlatformImage *image, CGSize destSize, CGFloat destScale, CGAffineTransform transform);
 
 /*
  * Return YES if image has an alpha component

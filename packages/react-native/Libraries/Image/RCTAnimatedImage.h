@@ -5,17 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 @protocol RCTAnimatedImage <NSObject>
 @property (nonatomic, assign, readonly) NSUInteger animatedImageFrameCount;
 @property (nonatomic, assign, readonly) NSUInteger animatedImageLoopCount;
 
-- (nullable UIImage *)animatedImageFrameAtIndex:(NSUInteger)index;
+- (nullable RCTPlatformImage *)animatedImageFrameAtIndex:(NSUInteger)index;
 - (NSTimeInterval)animatedImageDurationAtIndex:(NSUInteger)index;
 
 @end
 
-@interface RCTAnimatedImage : UIImage <RCTAnimatedImage>
+@interface RCTAnimatedImage : RCTPlatformImage <RCTAnimatedImage>
 
 @end

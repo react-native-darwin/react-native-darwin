@@ -7,6 +7,7 @@
 
 #ifndef RCT_REMOVE_LEGACY_COMPONENT_INTEROP
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 #import <React/RCTBridgeModuleDecorator.h>
 #import <UIKit/UIKit.h>
@@ -27,20 +28,20 @@ typedef void (^InterceptorBlock)(std::string eventName, folly::dynamic &&event);
                           bridgeProxy:(nullable RCTBridgeProxy *)bridgeProxy
                 bridgelessInteropData:(RCTBridgeModuleDecorator *)bridgelessInteropData;
 
-- (UIView *)createPaperViewWithTag:(NSInteger)tag;
+- (RCTPlatformView *)createPaperViewWithTag:(NSInteger)tag;
 
 - (void)addObserveForTag:(NSInteger)tag usingBlock:(InterceptorBlock)block;
 
 - (void)removeObserveForTag:(NSInteger)tag;
 
-- (void)setProps:(NSDictionary<NSString *, id> *)props forView:(UIView *)view;
+- (void)setProps:(NSDictionary<NSString *, id> *)props forView:(RCTPlatformView *)view;
 
 - (NSString *)componentViewName;
 
 - (void)handleCommand:(NSString *)commandName
                  args:(NSArray *)args
              reactTag:(NSInteger)tag
-            paperView:(UIView *)paperView;
+            paperView:(RCTPlatformView *)paperView;
 @end
 
 NS_ASSUME_NONNULL_END

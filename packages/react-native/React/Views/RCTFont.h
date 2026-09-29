@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <Foundation/Foundation.h>
 
 #import <React/RCTConvert.h>
 
-typedef UIFont * (^RCTFontHandler)(CGFloat fontSize, NSString *fontWeightDescription);
+typedef RCTPlatformFont * (^RCTFontHandler)(CGFloat fontSize, NSString *fontWeightDescription);
 typedef CGFloat RCTFontWeight;
 
 /**
@@ -22,7 +23,7 @@ typedef CGFloat RCTFontWeight;
  */
 RCT_EXTERN void RCTSetDefaultFontHandler(RCTFontHandler handler) __attribute__((deprecated));
 RCT_EXTERN BOOL RCTHasFontHandlerSet(void);
-RCT_EXTERN RCTFontWeight RCTGetFontWeight(UIFont *font);
+RCT_EXTERN RCTFontWeight RCTGetFontWeight(RCTPlatformFont *font);
 
 @interface RCTFont : NSObject
 
@@ -31,7 +32,7 @@ RCT_EXTERN RCTFontWeight RCTGetFontWeight(UIFont *font);
  * If parameters are not specified, they'll be kept as-is.
  * If font is nil, the default system font of size 14 will be used.
  */
-+ (UIFont *)updateFont:(UIFont *)font
++ (RCTPlatformFont *)updateFont:(RCTPlatformFont *)font
             withFamily:(NSString *)family
                   size:(NSNumber *)size
                 weight:(NSString *)weight
@@ -39,15 +40,15 @@ RCT_EXTERN RCTFontWeight RCTGetFontWeight(UIFont *font);
                variant:(NSArray<NSString *> *)variant
        scaleMultiplier:(CGFloat)scaleMultiplier;
 
-+ (UIFont *)updateFont:(UIFont *)font withFamily:(NSString *)family;
-+ (UIFont *)updateFont:(UIFont *)font withSize:(NSNumber *)size;
-+ (UIFont *)updateFont:(UIFont *)font withWeight:(NSString *)weight;
-+ (UIFont *)updateFont:(UIFont *)font withStyle:(NSString *)style;
++ (RCTPlatformFont *)updateFont:(RCTPlatformFont *)font withFamily:(NSString *)family;
++ (RCTPlatformFont *)updateFont:(RCTPlatformFont *)font withSize:(NSNumber *)size;
++ (RCTPlatformFont *)updateFont:(RCTPlatformFont *)font withWeight:(NSString *)weight;
++ (RCTPlatformFont *)updateFont:(RCTPlatformFont *)font withStyle:(NSString *)style;
 
 @end
 
 @interface RCTConvert (RCTFont)
 
-+ (UIFont *)UIFont:(id)json;
++ (RCTPlatformFont *)UIFont:(id)json;
 
 @end

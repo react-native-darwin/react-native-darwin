@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#import <RCTPlatformTypes/RCTPlatformTypes.h>
 #import <UIKit/UIKit.h>
 
 #import <React/RCTBridge.h>
@@ -120,24 +121,24 @@ __deprecated_msg("This API will be removed along with the legacy architecture.")
 /**
  * The backing view controller of the root view.
  */
-@property (nonatomic, weak, nullable) UIViewController *reactViewController;
+@property (nonatomic, weak, nullable) RCTPlatformViewController *reactViewController;
 
 /**
  * The root view casted as UIView. Used by splash screen libraries.
  */
-@property (nonatomic, strong, readonly) UIView *view;
+@property (nonatomic, strong, readonly) RCTPlatformView *view;
 
 /**
  * The React-managed contents view of the root view.
  */
-@property (nonatomic, strong, readonly) UIView *contentView;
+@property (nonatomic, strong, readonly) RCTPlatformView *contentView;
 
 /**
  * A view to display while the JavaScript is loading, so users aren't presented
  * with a blank screen. By default this is nil, but you can override it with
  * (for example) a UIActivityIndicatorView or a placeholder image.
  */
-@property (nonatomic, strong, nullable) UIView *loadingView;
+@property (nonatomic, strong, nullable) RCTPlatformView *loadingView;
 
 /**
  * When set, any touches on the RCTRootView that are not matched up to any of the child
