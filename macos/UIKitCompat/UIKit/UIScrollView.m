@@ -40,7 +40,7 @@
     _zoomScale = 1.0;
 
     UIScrollViewClipView *clipView = [[UIScrollViewClipView alloc] initWithFrame:self.bounds];
-    clipView.constrainScrolling = NO;
+    clipView.constrainScrolling = YES;
     clipView.drawsBackground = NO;
     self.contentView = clipView;
 
@@ -106,9 +106,24 @@
   return NSPointToCGPoint(self.contentView.bounds.origin);
 }
 
+- (void)UIKitCompatSetClipConstraining:(BOOL)constrain
+{
+  NSClipView *clipView = self.contentView;
+  if ([clipView isKindOfClass:[UIScrollViewClipView class]]) {
+    ((UIScrollViewClipView *)clipView).constrainScrolling = constrain;
+  }
+}
+
 - (void)setContentOffset:(CGPoint)contentOffset
 {
+  // UIKit honours a programmatic offset exactly, even past the content bounds.
+  // AppKit clamps instead, so the constraint is lifted for this one call.
+  // User-driven scrolling must stay clamped: an unconstrained clip view lets
+  // the momentum animator advance the bounds origin without a limit until
+  // AppKit's geometry validation traps and kills the process.
+  [self UIKitCompatSetClipConstraining:NO];
   [self.contentView scrollToPoint:NSPointFromCGPoint(contentOffset)];
+  [self UIKitCompatSetClipConstraining:YES];
   [self reflectScrolledClipView:self.contentView];
 }
 
@@ -118,11 +133,13 @@
     self.contentOffset = contentOffset;
     return;
   }
+  [self UIKitCompatSetClipConstraining:NO];
   [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
     context.allowsImplicitAnimation = YES;
     [self.contentView.animator setBoundsOrigin:NSPointFromCGPoint(contentOffset)];
   }
       completionHandler:^{
+        [self UIKitCompatSetClipConstraining:YES];
         [self reflectScrolledClipView:self.contentView];
       }];
 }
@@ -134,7 +151,11 @@
 
 - (void)setContentSize:(CGSize)contentSize
 {
-  _documentView.frame = NSMakeRect(0, 0, contentSize.width, contentSize.height);
+  // A non-finite or negative dimension here is fatal: AppKit validates the
+  // document view geometry on every scroll and traps on a bad value.
+  CGFloat width = isfinite(contentSize.width) ? MAX(contentSize.width, 0) : 0;
+  CGFloat height = isfinite(contentSize.height) ? MAX(contentSize.height, 0) : 0;
+  _documentView.frame = NSMakeRect(0, 0, width, height);
 }
 
 - (void)setContentInset:(UIEdgeInsets)contentInset

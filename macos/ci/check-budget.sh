@@ -25,7 +25,12 @@ MAX_UPSTREAM_FILES_MODIFIED=135
 # being removed, and contorting to avoid it would mean writing worse edits.
 # Upstream *files touched* is the metric that actually tracks rebase cost.
 MAX_UPSTREAM_LINES_REMOVED=200
-MAX_COMMITS=13
+# Raised from 13 to admit one commit for the bugs that only surface when the
+# host app is actually driven: the animated module, the scroll crash and
+# Modal. The cap exists to keep review burden down, not to force unrelated
+# work into one commit, so new topics get their own commit and the diff
+# budgets above stay the real measure of fork size.
+MAX_COMMITS=14
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2

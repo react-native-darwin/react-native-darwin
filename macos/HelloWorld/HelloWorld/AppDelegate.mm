@@ -23,6 +23,18 @@
 #import <React/RCTSurfaceHostingView.h>
 #import <React/RCTSurfaceSizeMeasureMode.h>
 #import <ReactCommon/RCTHermesInstance.h>
+#import <React/CoreModulesPlugins.h>
+// The per-pod module providers. Each React Native pod vends its own Objective-C
+// modules through one of these; there is no single registry to ask.
+#import <React/RCTAnimationPlugins.h>
+#import <RCTBlob/RCTBlobPlugins.h>
+#import <React/RCTImagePlugins.h>
+#import <React/RCTLinkingPlugins.h>
+#import <React/RCTNetworkPlugins.h>
+#import <React/RCTSettingsPlugins.h>
+#import <React/RCTVibrationPlugins.h>
+#import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
+#import <React-RCTAppDelegate/RCTAppSetupUtils.h>
 #import <ReactCommon/RCTHost.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 #import <react/featureflags/ReactNativeFeatureFlags.h>
@@ -30,9 +42,11 @@
 #import <react/nativemodule/defaults/DefaultTurboModules.h>
 
 @interface AppDelegate () <RCTHostDelegate, RCTTurboModuleManagerDelegate>
+@property (nonatomic, readonly) RCTAppDependencyProvider *dependencyProvider;
 @end
 
 @implementation AppDelegate {
+  RCTAppDependencyProvider *_dependencyProvider;
   RCTHost *_host;
   RCTFabricSurface *_surface;
   RCTSurfaceHostingView *_surfaceHostingView;
@@ -87,7 +101,16 @@
   _surfaceHostingView.frame = frame;
   _surfaceHostingView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 
-  self.window.contentView = _surfaceHostingView;
+  // Host the surface inside an NSViewController rather than assigning it
+  // straight to contentView. RCTUIKit's -reactViewController walks the
+  // responder chain looking for a UIViewController; on macOS that is
+  // NSViewController, and a window with no content view controller has none.
+  // Modal presentation goes through it, so without this <Modal> silently
+  // never opens.
+  NSViewController *rootViewController = [NSViewController new];
+  rootViewController.view = _surfaceHostingView;
+  self.window.contentViewController = rootViewController;
+
   [self.window makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
 }
@@ -108,12 +131,36 @@
 
 #pragma mark - RCTTurboModuleManagerDelegate
 
-- (Class)getModuleClassFromName:(__unused const char *)name
+- (Class)getModuleClassFromName:(const char *)name
 {
-  // nil on purpose, matching RCTDefaultReactNativeFactoryDelegate.
-  // RCTTurboModuleManager resolves Objective-C modules through the codegen'd
-  // RCTModuleProviders; answering here instead bypasses that and leaves the
-  // module half-constructed, which surfaces in JS as a missing EventEmitter.
+  // Every pod vends its own modules through its own provider function, and
+  // there is no registry that knows about all of them -- iOS reaches them
+  // through a generated RCTTurboModulePluginClassProvider that is not built
+  // here. So they are asked in turn.
+  //
+  // CoreModules alone is not enough, and the way it fails is memorable:
+  // RCTNativeAnimatedModule lives in React-RCTAnimation, so every
+  // `useNativeDriver: true` throws. That is not only Animated -- TouchableOpacity
+  // animates opacity, <Button> wraps TouchableOpacity, and LogBox animates
+  // too, which makes *any* warning blank the screen.
+  using ClassProvider = Class (*)(const char *);
+  static const ClassProvider providers[] = {
+      RCTCoreModulesClassProvider,
+      RCTAnimationClassProvider,
+      RCTImageClassProvider,
+      RCTNetworkClassProvider,
+      RCTBlobClassProvider,
+      RCTLinkingClassProvider,
+      RCTSettingsClassProvider,
+      RCTVibrationClassProvider,
+  };
+
+  for (ClassProvider provider : providers) {
+    Class moduleClass = provider(name);
+    if (moduleClass != nil) {
+      return moduleClass;
+    }
+  }
   return nil;
 }
 
@@ -126,9 +173,21 @@
   return facebook::react::DefaultTurboModules::getTurboModule(name, jsInvoker);
 }
 
-- (id<RCTTurboModule>)getModuleInstanceFromClass:(__unused Class)moduleClass
+- (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
 {
-  return nil;
+  // The dependency provider is codegen output: it carries the autolinked
+  // modules and, importantly, the URL request handlers and image loaders that
+  // RCTNetworking and RCTImageLoader ask it for. Constructing the module
+  // without it is what leaves it half-wired.
+  return RCTAppSetupDefaultModuleFromClass(moduleClass, self.dependencyProvider);
+}
+
+- (RCTAppDependencyProvider *)dependencyProvider
+{
+  if (_dependencyProvider == nil) {
+    _dependencyProvider = [RCTAppDependencyProvider new];
+  }
+  return _dependencyProvider;
 }
 
 #pragma mark - Bundle
@@ -136,12 +195,23 @@
 - (NSURL *)bundleURL
 {
 #if DEBUG
-  // Pin the packager host explicitly. `localhost` resolves to ::1 before
-  // 127.0.0.1, so any other dev server already bound to *:8081 would be served
-  // instead of ours -- silently, with a valid but completely unrelated bundle.
-  // start-metro.js listens on the matching port.
-  NSString *hostPort = NSProcessInfo.processInfo.environment[@"RCT_METRO_HOST_PORT"] ?: @"127.0.0.1:8082";
-  RCTBundleURLProvider.sharedSettings.jsLocation = hostPort;
+  // Pin the packager host explicitly rather than letting it default.
+  //
+  // `localhost` resolves to ::1 before 127.0.0.1, so any *other* dev server
+  // already bound to *:8081 -- another project's Metro, which on a shared
+  // machine is common -- is served instead, silently, with a bundle that is
+  // valid and completely unrelated. The symptom is "main has not been
+  // registered", and it sends you looking in the wrong place entirely.
+  //
+  // RCT_METRO_HOST_PORT overrides it for a one-off run; the stored jsLocation
+  // (`defaults write <bundle-id> RCT_jsLocation 127.0.0.1:8099`) is the
+  // persistent form, and is honoured when the variable is unset.
+  NSString *hostPort = NSProcessInfo.processInfo.environment[@"RCT_METRO_HOST_PORT"];
+  if (hostPort.length > 0) {
+    RCTBundleURLProvider.sharedSettings.jsLocation = hostPort;
+  } else if (RCTBundleURLProvider.sharedSettings.jsLocation.length == 0) {
+    RCTBundleURLProvider.sharedSettings.jsLocation = @"127.0.0.1:8081";
+  }
   return [RCTBundleURLProvider.sharedSettings jsBundleURLForBundleRoot:@"index"];
 #else
   return [NSBundle.mainBundle URLForResource:@"main" withExtension:@"jsbundle"];

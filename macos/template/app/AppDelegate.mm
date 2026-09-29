@@ -101,7 +101,16 @@
   _surfaceHostingView.frame = frame;
   _surfaceHostingView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 
-  self.window.contentView = _surfaceHostingView;
+  // Host the surface inside an NSViewController rather than assigning it
+  // straight to contentView. RCTUIKit's -reactViewController walks the
+  // responder chain looking for a UIViewController; on macOS that is
+  // NSViewController, and a window with no content view controller has none.
+  // Modal presentation goes through it, so without this <Modal> silently
+  // never opens.
+  NSViewController *rootViewController = [NSViewController new];
+  rootViewController.view = _surfaceHostingView;
+  self.window.contentViewController = rootViewController;
+
   [self.window makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
 }

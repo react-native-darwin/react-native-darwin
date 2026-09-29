@@ -281,6 +281,20 @@ static void updateTransform(UIView *view)
 
 - (UIViewController *)reactViewController
 {
+#if TARGET_OS_OSX // [macOS]
+  // AppKit does not link a view to its superview through -nextResponder, so
+  // the UIKit walk below stops immediately. Walk the view hierarchy instead,
+  // checking each view's own next responder, and fall back to the window's
+  // content view controller. Modal presentation depends on this: with no
+  // controller the present call goes to nil and <Modal> never opens.
+  for (NSView *view = self; view != nil; view = view.superview) {
+    id responder = [view nextResponder];
+    if ([responder isKindOfClass:[UIViewController class]]) {
+      return responder;
+    }
+  }
+  return self.window.contentViewController;
+#else // [macOS]
   id responder = [self nextResponder];
   while (responder) {
     if ([responder isKindOfClass:[UIViewController class]]) {
@@ -289,6 +303,7 @@ static void updateTransform(UIView *view)
     responder = [responder nextResponder];
   }
   return nil;
+#endif // [macOS]
 }
 
 - (void)reactAddControllerToClosestParent:(UIViewController *)controller
