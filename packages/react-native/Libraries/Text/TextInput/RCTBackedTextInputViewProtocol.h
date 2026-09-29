@@ -40,6 +40,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, copy) NSDictionary<NSAttributedStringKey, id> *typingAttributes;
 @property (nonatomic, strong, nullable) NSArray<NSString *> *acceptDragAndDropTypes;
 
+// [macOS
+// Grammar checking, which AppKit tracks separately from spell checking. A
+// negative value means "leave the platform default alone".
+@property (nonatomic, assign) NSInteger grammarCheck;
+// Multiline only: keep the text scrollable but draw no vertical scroller.
+@property (nonatomic, assign) BOOL hideVerticalScrollIndicator;
+// macOS]
+
 // This protocol disallows direct access to `selectedTextRange` property because
 // unwise usage of it can break the `delegate` behavior. So, we always have to
 // explicitly specify should `delegate` be notified about the change or not.

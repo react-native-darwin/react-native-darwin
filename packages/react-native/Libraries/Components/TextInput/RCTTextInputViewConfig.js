@@ -162,6 +162,14 @@ const RCTTextInputViewConfig: PartialViewConfigWithoutName = {
     lineBreakStrategyIOS: true,
     lineBreakModeIOS: true,
     smartInsertDelete: true,
+    // [macOS
+    // A prop absent from validAttributes never reaches C++ at all, so these
+    // have to be listed even though only macOS acts on them.
+    clearTextOnSubmit: true,
+    grammarCheck: true,
+    hideVerticalScrollIndicator: true,
+    pastedTypes: true,
+    // macOS]
     ...ConditionallyIgnoredEventHandlers({
       onChange: true,
       onSelectionChange: true,
