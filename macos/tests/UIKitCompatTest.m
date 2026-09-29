@@ -171,6 +171,24 @@ int main(void)
     scrollView.contentInset = UIEdgeInsetsMake(5, 0, 0, 0);
     CHECK(fabs(scrollView.contentInset.top - 5) < 0.001, "UIScrollView.contentInset round-trips");
 
+    // The clip view must constrain user-driven scrolling. When it does not,
+    // AppKit's momentum scroller advances the bounds origin without a limit
+    // until -_NSViewValidateGeometry traps and the process dies.
+    UIScrollViewClipView *clipView = (UIScrollViewClipView *)scrollView.contentView;
+    CHECK(clipView.constrainScrolling, "UIScrollView clip view constrains scrolling");
+    NSRect wild = [clipView constrainBoundsRect:NSMakeRect(0, 100000, 100, 100)];
+    CHECK(wild.origin.y < 100000, "constrainBoundsRect clamps an out-of-range origin");
+
+    // A programmatic offset is still honoured exactly, as it is in UIKit.
+    scrollView.contentOffset = CGPointMake(0, 480);
+    CHECK(fabs(scrollView.contentOffset.y - 480) < 0.001, "programmatic contentOffset is not clamped");
+    CHECK(clipView.constrainScrolling, "the constraint is restored after a programmatic offset");
+
+    // A non-finite content size would make every later scroll fatal.
+    scrollView.contentSize = CGSizeMake(NAN, INFINITY);
+    CHECK(scrollView.contentSize.width == 0 && scrollView.contentSize.height == 0,
+          "non-finite contentSize is rejected");
+
     // Application.
     CHECK(NSApplication.sharedApplication.applicationState == UIApplicationStateInactive, "UIApplicationState maps");
 

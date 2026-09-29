@@ -24,12 +24,28 @@ if [ -d "$SDK/System/Library/Frameworks/UIKit.framework" ]; then
 fi
 echo "    ok: no UIKit.framework in $SDK"
 
+echo "==> Checking HelloWorld has not drifted from the app template"
+# HelloWorld is the demo *and* the thing that proves the template works. When
+# they drift the demo stops exercising what we ship: it sat 101 lines behind
+# once, which is how it kept its own broken module lookup long after the
+# template was fixed.
+for f in AppDelegate.h AppDelegate.mm main.m Info.plist; do
+  if ! diff -q \
+      <(sed 's/__APP_NAME__/HelloWorld/g; s/__BUNDLE_ID__/dev.reactnative.macos.helloworld/g' "macos/template/app/$f") \
+      "macos/HelloWorld/HelloWorld/$f" >/dev/null; then
+    echo "error: macos/HelloWorld/HelloWorld/$f differs from the template." >&2
+    echo "       Regenerate it from macos/template/app/$f." >&2
+    exit 1
+  fi
+done
+echo "    ok: HelloWorld matches the template"
+
 echo "==> Checking for recursive category methods"
 python3 macos/tests/check-no-self-recursion.py
 
 echo "==> Building"
 clang -fobjc-arc -fmodules -Wall -Werror \
-  -mmacosx-version-min=11.0 \
+  -mmacosx-version-min=14.0 \
   -I macos/UIKitCompat \
   -framework AppKit -framework Foundation -framework QuartzCore \
   -o "$OUT" \
