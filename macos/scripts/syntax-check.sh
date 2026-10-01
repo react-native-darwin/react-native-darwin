@@ -130,10 +130,19 @@ INCLUDES=(
   # as well as under React/.
   -I "$INC/React"
   -I "$REPO/macos/UIKitCompat"
+  # The public half of the layer, added by the migration off the UIKit
+  # aliases. Without it nothing parses at all: the prelude's first import is
+  # <RCTPlatformTypes/RCTPlatformTypes.h>, so every translation unit dies on a
+  # missing header before it reaches any React Native code.
+  -I "$REPO/macos/UIKitCompat/Public"
   -I "$RN"
   -I "$RN/ReactCommon"
   -I "$RN/ReactCommon/jsi"
   -I "$RN/ReactCommon/yoga"
+  # KeyEvent.h lives in the macos host-platform directory this fork adds. The
+  # pod graph puts it on the search path; without it here, 24 Fabric component
+  # views fail on the include and their real diagnostics stay hidden.
+  -I "$RN/ReactCommon/react/renderer/components/view/platform/macos"
   -I "$RN/ReactCommon/react/renderer/components/view/platform/cxx"
   -I "$RN/ReactCommon/react/renderer/graphics/platform/ios"
   -I "$RN/ReactCommon/react/renderer/imagemanager/platform/ios"
@@ -225,9 +234,14 @@ echo "==> Why the failures happen"
 
 # A missing codegen header is this harness's limitation, not a macOS problem:
 # FBReactNativeSpec and friends only exist after `pod install` runs codegen.
-codegen=$(grep -c "fatal error: '\(FBReactNativeSpec\|React_Codegen\|ReactCodegen\|rncore\|RCTModulesConformingToProtocolsProvider\)" "$LOG" 2>/dev/null || echo 0)
-uikitgap=$(grep -cE "error: (unknown type name|use of undeclared identifier|no known instance method|property '[^']*' not found|no visible @interface).*'?UI[A-Z]" "$LOG" 2>/dev/null || echo 0)
-missinghdr=$(grep -c "fatal error: '" "$LOG" 2>/dev/null || echo 0)
+# `grep -c` already prints 0 when it matches nothing, and *also* exits 1. With
+# `|| echo 0` inside the substitution that produces the two-line string "0\n0",
+# which breaks the subtraction below with a shell syntax error -- exactly when
+# the news is good and there is nothing to report. Let the count stand and only
+# default on a real failure.
+codegen=$(grep -c "fatal error: '\(FBReactNativeSpec\|React_Codegen\|ReactCodegen\|rncore\|RCTModulesConformingToProtocolsProvider\)" "$LOG" 2>/dev/null) || codegen=0
+uikitgap=$(grep -cE "error: (unknown type name|use of undeclared identifier|no known instance method|property '[^']*' not found|no visible @interface).*'?UI[A-Z]" "$LOG" 2>/dev/null) || uikitgap=0
+missinghdr=$(grep -c "fatal error: '" "$LOG" 2>/dev/null) || missinghdr=0
 
 echo "    missing codegen header (harness limitation):  $codegen"
 echo "    missing header, other (harness limitation):   $((missinghdr - codegen))"

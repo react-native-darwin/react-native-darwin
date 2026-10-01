@@ -51,7 +51,12 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # work-in-progress commit has to be noticed and folded in rather than
 # accumulating. Raising it should mean a genuinely new topic; the diff budgets
 # above are the real measure of fork size.
-MAX_COMMITS=15
+# Raised from 15 for the upgrade notes and the syntax-check repairs. Both are a
+# separate topic from the fork's own series -- they are about how an upgrade is
+# measured, not about what the fork changes -- and neither touches an upstream
+# file, so the two diff budgets above, which are the real measure of fork size,
+# do not move at all.
+MAX_COMMITS=16
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2

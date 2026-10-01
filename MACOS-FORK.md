@@ -700,6 +700,10 @@ Upstream lines removed:   114 / 200
 Commits:                  13 / 13
 ```
 
+`MAX_COMMITS` went 15 -> 16 for the upgrade notes in §7 and the syntax-check repairs they
+came from. That work is about how an upgrade is *measured* rather than what the fork
+changes; it touches no upstream file, so neither diff budget moves.
+
 **Upstream files modified is the primary health metric of this fork.** Track it on every PR. If it
 climbs, the shim is being under-used and rung 4 is being over-used.
 
@@ -755,6 +759,24 @@ Commits:                 n / 13
 7. Update the real line counts in §5.2.
 
 Do not regenerate snapshots, lockfiles, or API files. We do not own them.
+
+**`v0.88.0-rc.3` has been done end to end** -- rebase, conflicts, shim work, `pod install`,
+`xcodebuild`, and a running app. [`macos/PORT-0.88.md`](macos/PORT-0.88.md) is the write-up:
+the conflict table, the one theme that actually cost anything (0.88 routes deep links
+through the UIScene lifecycle, and macOS has no scenes), and the patch that upstream made
+obsolete. Read it before the next upgrade; most of it generalises.
+
+Three things it is worth carrying forward into any upgrade:
+
+- **A release tag is not a descendant of the previous one.** The branches diverge at the
+  release cut, so `git merge-tree` reports every backport as a conflict and tells you
+  nothing. Only `rebase --onto` gives an honest number. For 0.88 it was 13 files.
+- **Verify §2.4 against the artifacts, not the podspec.** A podspec can declare
+  `:osx` for a slice that was never published. Download the tarball and run `lipo`.
+- **A green syntax check is only as wide as its `find`.** The checker walks `React/`,
+  `Libraries/` and `ReactApple/`, not `ReactCommon/` -- which is why the single genuine
+  build failure of the 0.88 port read as 245/245 clean and only surfaced in `xcodebuild`.
+  Trust it for what it covers and nothing more.
 
 ---
 
