@@ -130,10 +130,12 @@ INCLUDES=(
   # as well as under React/.
   -I "$INC/React"
   -I "$REPO/macos/UIKitCompat"
+  -I "$REPO/macos/UIKitCompat/Public"
   -I "$RN"
   -I "$RN/ReactCommon"
   -I "$RN/ReactCommon/jsi"
   -I "$RN/ReactCommon/yoga"
+  -I "$RN/ReactCommon/react/renderer/components/view/platform/macos"
   -I "$RN/ReactCommon/react/renderer/components/view/platform/cxx"
   -I "$RN/ReactCommon/react/renderer/graphics/platform/ios"
   -I "$RN/ReactCommon/react/renderer/imagemanager/platform/ios"

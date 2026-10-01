@@ -289,6 +289,19 @@ typedef NS_ENUM(NSInteger, RCTPlatformStatusBarStyle) {
 @class RCTUIKitCompatTextInputMode;
 @compatibility_alias RCTPlatformTextInputMode RCTUIKitCompatTextInputMode;
 
+// 0.88 routes deep links and launch options through the UIScene lifecycle.
+// macOS has no scenes, so these types exist only so the scene entry points
+// have a signature; they are never instantiated. See RCTIsSceneDelegateApp(),
+// which is always NO here.
+@class RCTUIKitCompatScene;
+@compatibility_alias RCTPlatformScene RCTUIKitCompatScene;
+
+@class RCTUIKitCompatOpenURLContext;
+@compatibility_alias RCTPlatformOpenURLContext RCTUIKitCompatOpenURLContext;
+
+@class RCTUIKitCompatSceneConnectionOptions;
+@compatibility_alias RCTPlatformSceneConnectionOptions RCTUIKitCompatSceneConnectionOptions;
+
 typedef NSString *RCTPlatformApplicationLaunchOptionsKey NS_TYPED_ENUM;
 
 typedef NSString *RCTPlatformApplicationOpenURLOptionsKey NS_TYPED_ENUM;
@@ -671,6 +684,10 @@ typedef UIStatusBarStyle RCTPlatformStatusBarStyle;
 @compatibility_alias RCTPlatformTableView UITableView;
 
 @compatibility_alias RCTPlatformTextPosition UITextPosition;
+
+@compatibility_alias RCTPlatformScene UIScene;
+@compatibility_alias RCTPlatformOpenURLContext UIOpenURLContext;
+@compatibility_alias RCTPlatformSceneConnectionOptions UISceneConnectionOptions;
 
 @compatibility_alias RCTPlatformTextSelectionRect UITextSelectionRect;
 

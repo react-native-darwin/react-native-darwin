@@ -33,6 +33,8 @@
 @class RCTUIKitCompatScene;
 @class RCTUIKitCompatWindowScene;
 @compatibility_alias UIScene RCTUIKitCompatScene;
+@compatibility_alias UIOpenURLContext RCTUIKitCompatOpenURLContext;
+@compatibility_alias UISceneConnectionOptions RCTUIKitCompatSceneConnectionOptions;
 @compatibility_alias UIWindowScene RCTUIKitCompatWindowScene;
 
 
@@ -103,6 +105,17 @@ typedef NS_ENUM(NSInteger, UISceneActivationState) {
 @property (nonatomic, readonly) UISceneActivationState activationState;
 @end
 @interface RCTUIKitCompatWindowScene : UIScene
+@end
+
+// A scene connection on macOS carries nothing: there is no scene to connect.
+// Declared so the 0.88 scene entry points compile; never instantiated.
+@interface RCTUIKitCompatOpenURLContext : NSObject
+@property (nonatomic, readonly, nullable) NSURL *URL;
+@end
+
+@interface RCTUIKitCompatSceneConnectionOptions : NSObject
+@property (nonatomic, readonly) NSSet<RCTUIKitCompatOpenURLContext *> *URLContexts;
+@property (nonatomic, readonly) NSSet<NSUserActivity *> *userActivities;
 @end
 
 typedef NS_ENUM(NSInteger, UIButtonType) {
@@ -181,6 +194,9 @@ extern NSNotificationName const UIApplicationDidReceiveMemoryWarningNotification
 #define UIFontDescriptorSizeAttribute NSFontSizeAttribute
 #define UIFontDescriptorTraitsAttribute NSFontTraitsAttribute
 #define UIFontDescriptorFeatureSettingsAttribute NSFontFeatureSettingsAttribute
+// 0.88 casts a CoreText attribute name to this. AppKit spells the type
+// NSFontDescriptorAttributeName; it is the same NSString * either way.
+#define UIFontDescriptorAttributeName NSFontDescriptorAttributeName
 #define UIFontSymbolicTrait NSFontSymbolicTrait
 #define UIFontWeightTrait NSFontWeightTrait
 #define UIFontFeatureTypeIdentifierKey NSFontFeatureTypeIdentifierKey

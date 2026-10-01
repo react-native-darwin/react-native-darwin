@@ -51,7 +51,11 @@ MAX_UPSTREAM_LINES_REMOVED=600
 # work-in-progress commit has to be noticed and folded in rather than
 # accumulating. Raising it should mean a genuinely new topic; the diff budgets
 # above are the real measure of fork size.
-MAX_COMMITS=15
+# Raised from 15 for the 0.88.0-rc.3 upgrade. Absorbing a new upstream tag is a
+# genuinely separate topic, and one commit for it is what lets a reviewer see
+# what the upgrade cost instead of hunting for it folded into the alias
+# migration. The diff budgets above stay the real measure of fork size.
+MAX_COMMITS=16
 
 if ! git rev-parse --verify --quiet "$UPSTREAM_REF" >/dev/null; then
   echo "error: cannot resolve upstream ref '$UPSTREAM_REF'." >&2

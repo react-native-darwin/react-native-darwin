@@ -108,15 +108,25 @@ The rename is what forces `react-native-macos` to fork Hermes version resolution
 Track one upstream tag at a time. Record it here on every upgrade.
 
 ```
-UPSTREAM_TAG = v0.87.1
-UPSTREAM_SHA = a59eff64fa
+UPSTREAM_TAG = v0.88.0-rc.3
+UPSTREAM_SHA = 0782c61fe6
 ```
 
-Verified present at this tag:
+Verified present at this tag, against the published artifacts rather than the podspec text:
 - Hermes tarball ships `destroot/Library/Frameworks/macosx/hermesvm.framework`, universal x86_64+arm64.
-- `ReactNativeDependencies.xcframework` ships a `macos-arm64_x86_64` slice.
+- `ReactNativeDependencies.xcframework` ships a `macos-arm64_x86_64` slice, and so does the
+  `ReactNativeDependenciesHeaders.xcframework` the syntax checker reads.
 - 2 Swift files in Apple-facing directories, so no Swift module-map problem.
 - All podspecs share one `min_supported_versions` helper.
+- No new iOS-only JS platform gate was added between the tags, so nothing new silently
+  takes the Android path.
+
+`v0.88.0-rc.3` is **not** a descendant of `v0.87.1` -- the release branches diverged at
+`ce057d6554`. `git merge-tree` is therefore useless for sizing an upgrade; it reports the
+0.87-stable backports as conflicts. Rebase, as §7 says.
+
+The cost of this upgrade, and the two harness bugs it exposed, are in
+[`macos/PORT-0.88.md`](macos/PORT-0.88.md).
 
 ### 2.5 Branch model
 
@@ -690,15 +700,20 @@ when the history is just iteration.
 For reference, `react-native-macos` at `0.81-stable` touches 603 files in `packages/react-native` and
 removes 1,870 lines.
 
-Current reading, with the app rendering:
+Current reading, with the app rendering on `v0.88.0-rc.3`:
 
 ```
-Upstream files modified:  69 / 75
-Files added by the fork:  27
-Platform-gate one-liners: 14
-Upstream lines removed:   114 / 200
-Commits:                  13 / 13
+Upstream files modified:  182 / 200
+Files added by the fork:   27
+Platform-gate one-liners:  13
+Upstream lines removed:   449 / 600
+Commits:                   16 / 16
 ```
+
+`MAX_COMMITS` went 15 -> 16 for the 0.88 upgrade. Absorbing a new upstream tag is a
+genuinely separate topic, and keeping it as one commit is what lets a reviewer see what
+0.88 cost on its own rather than hunting for it folded into the alias migration. The diff
+budgets above remain the real measure of fork size.
 
 **Upstream files modified is the primary health metric of this fork.** Track it on every PR. If it
 climbs, the shim is being under-used and rung 4 is being over-used.

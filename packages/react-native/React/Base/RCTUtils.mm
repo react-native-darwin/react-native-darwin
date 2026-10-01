@@ -670,11 +670,22 @@ UIWindow *__nullable RCTKeyWindow(void)
   // scene app returns the wrong window instead of the correct `nil`, regressing
   // scene-based hosts (e.g. RNTester's SceneDelegate scheme). Keep the fallback
   // strictly for the legacy path.
+#if TARGET_OS_OSX // [macOS
+  // NSApplicationDelegate has no `window`: on macOS the window is not owned by
+  // the app delegate. There is also no scene model, so the loop above never
+  // matches and this function returns nil here exactly as it did at 0.87.1 --
+  // callers already fall back to the screen. Making this return
+  // NSApp.keyWindow is the obvious improvement, but it changes what
+  // RCTDeviceInfo, RCTPresentedViewController and the modal path see, so it
+  // wants its own commit and a runtime check.
+  return nil;
+#else // macOS]
   if (!RCTIsSceneDelegateApp()) {
     return RCTSharedApplication().delegate.window;
   }
 
   return nil;
+#endif // [macOS]
 }
 
 BOOL RCTIsSceneDelegateApp(void)

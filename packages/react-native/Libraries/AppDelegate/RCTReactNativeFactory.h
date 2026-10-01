@@ -92,7 +92,7 @@ typedef NS_ENUM(NSInteger, RCTReleaseLevel) { Canary, Experimental, Stable };
  */
 - (void)startReactNativeWithModuleName:(NSString *)moduleName
                               inWindow:(UIWindow *_Nullable)window
-                     connectionOptions:(UISceneConnectionOptions *_Nullable)connectionOptions;
+                     connectionOptions:(RCTPlatformSceneConnectionOptions *_Nullable)connectionOptions; // [macOS]
 
 /**
  * SceneDelegate entrypoint to start a React Native instance with the specified module name, window, initial properties,
@@ -105,7 +105,7 @@ typedef NS_ENUM(NSInteger, RCTReleaseLevel) { Canary, Experimental, Stable };
 - (void)startReactNativeWithModuleName:(NSString *)moduleName
                               inWindow:(UIWindow *_Nullable)window
                      initialProperties:(NSDictionary *_Nullable)initialProperties
-                     connectionOptions:(UISceneConnectionOptions *_Nullable)connectionOptions;
+                     connectionOptions:(RCTPlatformSceneConnectionOptions *_Nullable)connectionOptions; // [macOS]
 
 #if !defined(RCT_REMOVE_LEGACY_ARCH)
 @property (nonatomic, nullable) RCTBridge *bridge

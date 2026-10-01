@@ -292,6 +292,29 @@ static NSAppearance *_Nullable UIKitCompatAppearanceForStyle(UIUserInterfaceStyl
 
 @end
 
+@implementation RCTUIKitCompatOpenURLContext
+
+- (NSURL *)URL
+{
+  return nil;
+}
+
+@end
+
+@implementation RCTUIKitCompatSceneConnectionOptions
+
+- (NSSet<RCTUIKitCompatOpenURLContext *> *)URLContexts
+{
+  return [NSSet set];
+}
+
+- (NSSet<NSUserActivity *> *)userActivities
+{
+  return [NSSet set];
+}
+
+@end
+
 @implementation NSWindow (UIKitCompatBounds)
 
 - (CGRect)bounds

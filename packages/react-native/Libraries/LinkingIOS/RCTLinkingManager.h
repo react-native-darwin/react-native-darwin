@@ -47,9 +47,11 @@
 #pragma mark - SceneDelegate methods
 
 /// Handles user activity for scene-based apps. Invoke from your SceneDelegate.
-+ (void)scene:(nonnull UIScene *)scene continueUserActivity:(nonnull NSUserActivity *)userActivity;
++ (void)scene:(nonnull RCTPlatformScene *)scene // [macOS]
+    continueUserActivity:(nonnull NSUserActivity *)userActivity;
 
 /// Handles URLs opened while the app is running for scene-based apps. Invoke from your SceneDelegate.
-+ (void)scene:(nonnull UIScene *)scene openURLContexts:(nonnull NSSet<UIOpenURLContext *> *)URLContexts;
++ (void)scene:(nonnull RCTPlatformScene *)scene // [macOS]
+    openURLContexts:(nonnull NSSet<RCTPlatformOpenURLContext *> *)URLContexts;
 
 @end
